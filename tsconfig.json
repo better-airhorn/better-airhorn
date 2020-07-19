@@ -1,0 +1,22 @@
+{
+	"compilerOptions": {
+		"outDir": "./dist",
+		"module": "commonjs",
+		"target": "ES2019",
+		"strict": true,
+		"strictNullChecks": false,
+		"moduleResolution": "node",
+		"experimentalDecorators": true,
+		"emitDecoratorMetadata": true,
+		"esModuleInterop": true,
+		"declaration": true,
+		"sourceMap": true,
+		"removeComments": true,
+		"alwaysStrict": true,
+		"pretty": true,
+		"incremental": true,
+		"noEmitHelpers": true,
+		"importHelpers": true,
+		"skipLibCheck": true
+	}
+}

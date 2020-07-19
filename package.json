@@ -1,0 +1,113 @@
+{
+	"$schema": "http://json.schemastore.org/package",
+	"name": "better-airhorn-next",
+	"version": "3.0.0-dev",
+	"description": "A feature-rich discord bot to use as soundboard, including a web dashboard",
+	"contributors": [
+		"Clemens Ertle"
+	],
+	"license": "GPL-3.0",
+	"private": true,
+	"scripts": {
+		"bootstrap": "lerna bootstrap --hoist",
+		"installAll": "lerna exec \"npm i\" --parallel",
+		"build": "lerna run build --stream",
+		"build:bot": "sh ./scripts/buildprod.sh",
+		"lint": "eslint . --ext .ts",
+		"test": "lerna exec \"npm run test --if-present\" --stream",
+		"lint:fix": "eslint . --ext .ts --fix",
+		"prettier": "prettier --write --use-tabs --single-quote --print-width 120 --trailing-comma all --end-of-line lf"
+	},
+	"publishConfig": {
+		"registry": "https://npm.pkg.github.com/"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/Clemens-E/better-airhorn-next.git"
+	},
+	"bugs": {
+		"url": "https://github.com/Clemens-E/better-airhorn-next/issues"
+	},
+	"homepage": "https://github.com/Clemens-E/better-airhorn-next#readme",
+	"keywords": [
+		"discord",
+		"better-airhorn",
+		"soundboard",
+		"web-dashboard"
+	],
+	"devDependencies": {
+		"@commitlint/cli": "^9.1.2",
+		"@commitlint/config-angular": "^8.3.4",
+		"@typescript-eslint/eslint-plugin": "^2.22.0",
+		"@typescript-eslint/parser": "^2.22.0",
+		"eslint": "^6.8.0",
+		"eslint-config-marine": "^6.0.0",
+		"eslint-config-prettier": "^6.10.0",
+		"eslint-plugin-import": "^2.20.1",
+		"eslint-plugin-prettier": "^3.1.2",
+		"husky": "^4.2.3",
+		"lerna": "^3.20.2",
+		"lint-staged": "^10.0.8",
+		"prettier": "^1.19.1",
+		"typescript": "^3.9.6"
+	},
+	"engines": {
+		"node": ">=12.0.0"
+	},
+	"eslintConfig": {
+		"extends": "marine/prettier/node",
+		"rules": {
+			"@typescript-eslint/no-extraneous-class": "off",
+			"@typescript-eslint/no-floating-promises": 1,
+			"@typescript-eslint/no-use-before-define": [
+				"error",
+				{
+					"functions": false
+				}
+			],
+			"no-useless-constructor": "off"
+		}
+	},
+	"husky": {
+		"hooks": {
+			"pre-commit": "lint-staged",
+			"commit-msg": "commitlint -E HUSKY_GIT_PARAMS"
+		}
+	},
+	"lint-staged": {
+		"*.ts": [
+			"eslint --fix",
+			"prettier --write --use-tabs --single-quote --print-width 120 --trailing-comma all --end-of-line lf"
+		],
+		"*.{json,yml,yaml}": [
+			"prettier --write --use-tabs --single-quote --print-width 120 --trailing-comma all --end-of-line lf"
+		]
+	},
+	"commitlint": {
+		"extends": [
+			"@commitlint/config-angular"
+		],
+		"rules": {
+			"type-enum": [
+				2,
+				"always",
+				[
+					"chore",
+					"build",
+					"ci",
+					"feat",
+					"fix",
+					"perf",
+					"refactor",
+					"revert",
+					"style",
+					"test",
+					"types",
+					"wip",
+					"config"
+				]
+			]
+		}
+	},
+	"dependencies": {}
+}

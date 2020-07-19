@@ -1,0 +1,1 @@
+# `@better-airhorn/entities`

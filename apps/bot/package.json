@@ -1,0 +1,81 @@
+{
+	"name": "@better-airhorn/bot",
+	"version": "0.0.1",
+	"description": "discord bot to record, upload and use as soundboard",
+	"main": "src/index.ts",
+	"bin": "dist/index.js",
+	"license": "GPL-3.0",
+	"private": true,
+	"scripts": {
+		"start": "tsc && node ./dist/index.js",
+		"start:debug": "tsc && node --inspect-brk=55555 ./dist/index.js",
+		"build": "tsc"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/Clemens-E/better-airhorn.git"
+	},
+	"keywords": [
+		"discord",
+		"better-airhorn",
+		"soundboard",
+		"web-dashboard"
+	],
+	"author": "Clemens E",
+	"bugs": {
+		"url": "https://github.com/Clemens-E/better-airhorn/issues"
+	},
+	"dependencies": {
+		"@better-airhorn/audio": "^0.0.2",
+		"@better-airhorn/entities": "^0.0.2",
+		"@better-airhorn/shori": "^0.0.1",
+		"@better-airhorn/structures": "^0.0.1",
+		"@discordjs/opus": "^0.3.2",
+		"@rocka/mp3-duration": "^2.0.0",
+		"@types/ms": "^0.7.31",
+		"await-lock": "^2.0.1",
+		"bufferutil": "^4.0.1",
+		"bull": "^3.15.0",
+		"common-tags": "^1.8.0",
+		"discord.js": "^12.2.0",
+		"dotenv": "^8.2.0",
+		"filesize-parser": "^1.5.0",
+		"ioredis": "^4.16.3",
+		"minio": "^7.0.15",
+		"ms": "^2.1.2",
+		"node-fetch": "^2.6.0",
+		"pg": "^8.0.3",
+		"reflect-metadata": "^0.1.13",
+		"rxjs": "^6.6.0",
+		"tsyringe": "^4.1.0",
+		"typeorm": "^0.2.24",
+		"utf-8-validate": "^5.0.2",
+		"winston": "^3.3.3",
+		"winston-loki": "^5.1.2",
+		"zlib-sync": "^0.1.6"
+	},
+	"homepage": "https://github.com/Clemens-E/better-airhorn#readme",
+	"devDependencies": {
+		"@types/bull": "^3.12.2",
+		"@types/common-tags": "^1.8.0",
+		"@types/filesize-parser": "^1.5.0",
+		"@types/minio": "^7.0.6",
+		"@types/mkdirp": "^1.0.0",
+		"@types/node": "^14.0.23",
+		"@types/node-fetch": "^2.5.7",
+		"@types/ws": "^7.2.4"
+	},
+	"nodemonConfig": {
+		"ignore": [
+			"**/*.test.ts",
+			"**/*.spec.ts",
+			".git",
+			"node_modules"
+		],
+		"watch": [
+			"src"
+		],
+		"exec": "npm start",
+		"ext": "ts"
+	}
+}

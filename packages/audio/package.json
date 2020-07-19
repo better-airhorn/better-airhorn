@@ -1,0 +1,39 @@
+{
+	"name": "@better-airhorn/audio",
+	"version": "0.0.2",
+	"description": "tools working with audio used by better-airhorn",
+	"author": "Clemens Ertle",
+	"homepage": "https://github.com/Clemens-E/better-airhorn-next/tree/master/packages/audio#readme",
+	"license": "GPL-3.0",
+	"main": "dist/index.js",
+	"typings": "dist/index.d.ts",
+	"directories": {
+		"lib": "lib"
+	},
+	"files": [
+		"/dist"
+	],
+	"publishConfig": {
+		"access": "public",
+		"registry": "https://npm.pkg.github.com/"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/better-airhorn/better-airhorn.git"
+	},
+	"bugs": {
+		"url": "https://github.com/better-airhorn/better-airhorn/issues"
+	},
+	"devDependencies": {
+		"@types/node": "^14.0.23",
+		"mocha": "^8.0.1",
+		"ts-node": "^8.10.2"
+	},
+	"scripts": {
+		"build": "tsc",
+		"test": "mocha -r ts-node/register test/test.ts"
+	},
+	"dependencies": {
+		"@types/mocha": "^8.0.0"
+	}
+}

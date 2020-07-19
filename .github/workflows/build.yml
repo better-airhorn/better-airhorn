@@ -1,0 +1,32 @@
+name: Node Build
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [12.x]
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: Authenticate with GitHub package registry
+        run: echo "//npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}" > ~/.npmrc
+      - run: npm ci
+      - run: npm run installAll
+      - run: npm run build:bot
+        env:
+          CI: true
+      - uses: edgarrc/action-7z@v1.0.4
+        with:
+          args: 7z a -mx=9 builds/bot.zip builds/bot/*
+      - uses: actions/upload-artifact@v2
+        with:
+          name: bot-build-${{ github.sha }}
+          path: builds/bot.zip

@@ -1,0 +1,20 @@
+{
+	"compilerOptions": {
+		"outDir": "./dist",
+		"module": "commonjs",
+		"target": "ES2019",
+		"strict": true,
+		"strictNullChecks": false,
+		"declaration": true,
+		"moduleResolution": "node",
+		"experimentalDecorators": true,
+		"emitDecoratorMetadata": true,
+		"baseUrl": ".",
+		"paths": {
+			"*": ["node_modules/*"]
+		},
+		"types": ["node"]
+	},
+	"include": ["./lib/**/*.ts"],
+	"exclude": ["**/node_modules", "**/dist", "**/coverage"]
+}
