@@ -1,9 +1,9 @@
 import { ConfigCommand } from './config/Config';
 import { PrefixCommand } from './config/Prefix';
+import { HelpCommand } from './info/Help';
 import { PingCommand } from './info/Ping';
 import { StatsCommand } from './info/Stats';
 import { StatusCommand } from './info/Status';
-import { HelpCommand } from './misc/Help';
 import { InviteCommand } from './misc/Invite';
 import { DeleteCommand } from './music/Delete';
 import { LikeCommand } from './music/Like';
