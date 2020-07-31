@@ -213,9 +213,9 @@ export class SoundCommandService implements OnReady {
 		const attachment = message.attachments.find(
 			(x: MessageAttachment) => supporterFormats.includes(x.name.split('.').pop()) && x.size < Config.files.maxFileSize,
 		);
+		if (!attachment) return;
 		const fileformat = attachment.name.split('.').pop();
 
-		if (!attachment) return;
 		const reaction = await message.react(Config.emojis.import);
 		const reacted = await message
 			.awaitReactions(
