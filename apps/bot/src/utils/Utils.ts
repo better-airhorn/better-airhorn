@@ -7,3 +7,7 @@ export function getHumanReadableError(code: PlayJobResponseCodes): string {
 	const key = Object.keys(PlayJobResponseCodes).find(s => PlayJobResponseCodes[s] === code);
 	return key.replace(/\_/g, ' ').toLowerCase();
 }
+
+export function parseEnvExample(input: string): string[] {
+	return input.match(/([A-Z_-]+)/gim);
+}
