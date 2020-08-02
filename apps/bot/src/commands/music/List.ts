@@ -5,6 +5,7 @@ import { MessageEmbed } from 'discord.js';
 import ms from 'ms';
 import { logger } from '../../utils/Logger';
 import { PageabelEmbed } from '../../utils/PagableEmbed';
+import { roundToClosestMultiplierOf10 } from '../../utils/Utils';
 
 @Command('list', {
 	channel: 'any',
@@ -23,6 +24,7 @@ export class ListCommand extends CommandBase {
 		const accessType: AccessType =
 			AccessTypeUserMapping[(args[0] ?? 'everyone').toLowerCase() as keyof typeof AccessTypeUserMapping];
 		const msg = await message.neutral('Fetching Information');
+		const count = await SoundCommand.count();
 		await new PageabelEmbed(
 			msg,
 			async page => {
@@ -42,7 +44,7 @@ export class ListCommand extends CommandBase {
 							})
 							.join('\n')}\`\`\``}`,
 					)
-					.setFooter(`Page ${page}`);
+					.setFooter(`Page ${page} | ${this.pageSize * page}/${roundToClosestMultiplierOf10(count)}`);
 			},
 			message.author.id,
 		)
@@ -61,17 +63,21 @@ export class ListCommand extends CommandBase {
 		};
 		switch (opts.type) {
 			case AccessType.EVERYONE: {
+				break;
 			}
 			case AccessType.ONLY_GUILD: {
 				whereFilter.guild = opts.guild;
+				break;
 			}
 			case AccessType.ONLY_ME: {
 				whereFilter.user = opts.user;
+				break;
 			}
 		}
 		const offset = (opts.page - 1) * this.pageSize;
 		if (offset < 0) return [];
 		return SoundCommand.createQueryBuilder('sound')
+			.where(whereFilter)
 			.leftJoin('sound.likes', 'likes')
 			.select('sound.name', 'name')
 			.addSelect('sound.id', 'id')

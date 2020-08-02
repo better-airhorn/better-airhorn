@@ -15,7 +15,7 @@ import { parseEnvExample } from './utils/Utils';
 
 const matches = parseEnvExample(readFileSync(join(__dirname, '../env.example')).toString());
 matches.forEach(key => {
-	if (!(key in process.env)) {
+	if (!(key in process.env) || process.env[key]?.length === 0) {
 		logger.warn(`missing environmental variable: ${key}`);
 	}
 });
