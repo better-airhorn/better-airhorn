@@ -13,9 +13,8 @@ export class HelpCommand extends CommandBase {
 	public async exec(message: Message, args: string[]): Promise<any> {
 		if (args.length > 0) {
 			const { class: cmd } = commandMap.get(args[0].toLowerCase());
-			if (!cmd) {
-				return message.warn(`can\'t find a command named "${args[0].toLowerCase()}"`);
-			}
+			if (!cmd) return message.warn(`Command \`${args[0].toLowerCase()}\` not found`);
+
 			return message.channel.send(
 				new MessageEmbed()
 					.setColor(Config.colors.neutral)

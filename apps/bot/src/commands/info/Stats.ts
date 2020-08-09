@@ -3,6 +3,20 @@ import { stripIndents } from 'common-tags';
 import { MessageEmbed, version as DJSVersion } from 'discord.js';
 import os from 'os';
 import { Config } from '../../config/Config';
+import moment from 'moment';
+import 'moment-duration-format';
+
+enum ShardStatus {
+	'✅',
+	'🟡',
+	'⚪',
+	'🌙',
+	'🔵',
+	'🔴',
+	'📥',
+	'🟣',
+	'🟠',
+}
 
 @Command('stats', {
 	channel: 'any',
@@ -12,48 +26,74 @@ import { Config } from '../../config/Config';
 })
 export class StatsCommand extends CommandBase {
 	public async exec(message: Message): Promise<any> {
-		const memory = process.memoryUsage();
+		const { rss } = process.memoryUsage();
+
+		const cpu = `CPU: ${os.cpus()[0].model}`;
+		const ram = `RAM: ${(rss / 1024 / 1024).toFixed(2)}MB`;
+		const arch = `Arch: ${os.platform()}`;
+		const uptime = `Uptime: ${moment.duration(this.client.uptime).format('d[d ]h[h ]m[m ]s[s]')}`;
+
+		const node = `Node: ${process.version}`;
+		const discord = `D.JS: v${DJSVersion}`;
+		const shori = `shori: v${version}`;
+
+		const guilds =
+			(await this.client.shard
+				?.fetchClientValues('guilds.cache.size')
+				.then(r => r.reduce((a: number, b: number) => a + b, 0))) ?? this.client.guilds.cache.size;
+		const channels =
+			(await this.client.shard
+				?.fetchClientValues('channels.cache.size')
+				.then(r => r.reduce((a: number, b: number) => a + b, 0))) ?? this.client.channels.cache.size;
+		const members =
+			(await this.client.shard
+				?.broadcastEval('this.guilds.cache.reduce((a, b) => a + b.memberCount, 0)')
+				.then(r => r.reduce((a: number, b: number) => a + b, 0))) ??
+			this.client.guilds.cache.reduce((a, b) => a + b.memberCount, 0);
+
+		const shardStatus = await this.client.shard
+			?.broadcastEval('this.ws.shards.map(s => s.status)')
+			.then(r => r.reduce((a: string, b: number[]) => a + b.map(c => ShardStatus[c]).join(''), ''));
+
+		const owners = (
+			await Promise.all(Config.general.ownerIds.map(id => this.client.users.fetch(id).then(r => r.tag)))
+		).join(' and ');
+
 		const embed = new MessageEmbed()
 			.setAuthor(message.author.tag, message.author.displayAvatarURL())
+			.setThumbnail(this.client.user.displayAvatarURL({ size: 1024 }))
 			.addField(
 				'System',
-				stripIndents`\`\`\`asciidoc
-                CPU: ${os.cpus()[0].model}
-                RAM: ${(memory.heapUsed / 1024 / 1024).toFixed(2)}MB / ${(memory.heapTotal / 1024 / 1024).toFixed(2)}MB
-                ARCH: ${os.release()}
-            \`\`\``,
+				stripIndents`\`\`\`
+				${cpu}
+				${ram}
+				${arch}
+				${uptime}
+			\`\`\``,
 			)
 			.addField(
 				'Bot',
-				stripIndents`\`\`\`asciidoc
-                Guilds: ${this.client.guilds.cache.size}
-                Channels: ${this.client.channels.cache.size}
-                Users: ${this.client.guilds.cache.reduce((a, b) => a + b.memberCount, 0)}
+				stripIndents`\`\`\`
+				Guilds: ${guilds}
+				Channels: ${channels}
+				Members: ${members}
             \`\`\``,
 			)
 			.addField(
 				'Versions',
-				stripIndents`\`\`\`asciidoc
-                Node: ${process.version}
-                D.JS: v${DJSVersion ?? 'unknown'}
-                @better-airhorn/shori: ${version ?? 'unknown'}
+				stripIndents`\`\`\`
+                ${node}
+                ${discord}
+				${shori}
             \`\`\``,
 			)
 			.addField(
 				'Shards',
-				stripIndents`\`\`\`asciidoc
-                ${this.client.ws.shards
-									.map(s => {
-										return `Shard ${s.id + 1}: ${s.status === 0 ? '✅' : '❌'}`;
-									})
-									.join('\n')}
+				stripIndents`\`\`\`
+                ${shardStatus}
             \`\`\``,
 			)
-			.setFooter(
-				`Made by ${(
-					await Promise.all(Config.general.ownerIds.map(id => this.client.users.fetch(id).then(user => user.tag)))
-				).join(' and ')} `,
-			);
+			.setFooter(`Made by ${owners}`);
 
 		return message.channel.send(embed);
 	}

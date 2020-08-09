@@ -1,4 +1,4 @@
-import { Guild } from '../discord/Guild';
+import { Guild } from './Guild';
 
 export class DiscordProfile {
 	public readonly id: string;

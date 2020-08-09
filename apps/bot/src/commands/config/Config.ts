@@ -38,14 +38,16 @@ export class ConfigCommand extends CommandBase {
 				),
 			);
 		}
-		const value = args[1]?.toLowerCase();
-		if (typeof value === undefined || !['true', 'false'].includes(value))
-			return message.error('Please use the keyword `true` or `false`');
 
-		const booleanValue = value === 'true';
+		const value = args[1]?.toLowerCase();
+		const yes = /(y|yes|1|true|t)/i;
+		const no = /(n|no|0|false|f)/i;
+		if (!yes.test(value) && !no.test(value)) return message.error('Please use `true` or `false`');
+
+		const booleanValue = yes.test(value);
 		const settings = await GuildSetting.findOne(message.guild.id);
 		key.applier(settings, booleanValue);
 		await settings.save();
-		return message.success('successfully updated settings');
+		return message.success('Successfully updated settings');
 	}
 }

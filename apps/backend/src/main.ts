@@ -3,10 +3,8 @@ import { NestFactory } from '@nestjs/core';
 import 'dotenv/config';
 import { AppModule } from './app.module';
 import { Config } from './Config';
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-import session = require('cookie-session');
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-import passport = require('passport');
+import session from 'cookie-session';
+import passport from 'passport';
 
 async function bootstrap() {
 	const app = await NestFactory.create(AppModule);

@@ -1,8 +1,7 @@
 import { registerDecorator } from 'class-validator';
 
 export function IsNotBlank() {
-	// eslint-disable-next-line func-names
-	return function(object: Record<string, any>, propertyName: string) {
+	return (object: Record<string, any>, propertyName: string) => {
 		registerDecorator({
 			name: 'isNotBlank',
 			target: object.constructor,
