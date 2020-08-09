@@ -13,16 +13,19 @@ export class ConfigCommand extends CommandBase {
 	private readonly configKeys: {
 		name: string;
 		applier: (setting: GuildSetting, value: boolean) => void;
+		getter: (setting: GuildSetting) => boolean;
 		description: string;
 	}[] = [
 		{
 			name: 'stay-in-voice',
 			applier: (g, v) => (g.leaveAfterPlay = !v),
+			getter: g => !g.leaveAfterPlay,
 			description: 'stay in the voice channel after playing a sound',
 		},
 		{
 			name: 'send-messages',
 			applier: (g, v) => (g.sendMessageAfterPlay = v),
+			getter: g => g.sendMessageAfterPlay,
 			description: 'send a success message after playing a sound',
 		},
 	];
@@ -40,12 +43,15 @@ export class ConfigCommand extends CommandBase {
 		}
 
 		const value = args[1]?.toLowerCase();
-		const yes = /(y|yes|1|true|t)/i;
-		const no = /(n|no|0|false|f)/i;
+		const settings = await GuildSetting.findOne(message.guild.id);
+		if (!value) {
+			return message.neutral(`${key.name} is currently ${key.getter(settings) ? 'enabled' : 'disabled'}`);
+		}
+		const yes = /^(y|yes|1|t|true)$/i;
+		const no = /^(n|no|0|f|false)$/i;
 		if (!yes.test(value) && !no.test(value)) return message.error('Please use `true` or `false`');
 
 		const booleanValue = yes.test(value);
-		const settings = await GuildSetting.findOne(message.guild.id);
 		key.applier(settings, booleanValue);
 		await settings.save();
 		return message.success('Successfully updated settings');
