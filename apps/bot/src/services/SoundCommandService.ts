@@ -276,6 +276,7 @@ export class SoundCommandService implements OnReady {
 
 					break;
 				}
+				// eslint-disable-next-line no-constant-condition
 			} while (true);
 		} catch (e) {
 			if (e) this.log.debug(e);
@@ -291,9 +292,7 @@ export class SoundCommandService implements OnReady {
 			size: 0,
 		});
 		await entity.save();
-		const msg = await message.neutral(
-			`Please wait, I\'m downloading and converting your file ${Config.emojis.loading}`,
-		);
+		const msg = await message.neutral(`Please wait, I'm downloading and converting your file ${Config.emojis.loading}`);
 		try {
 			const { ok, body, statusText } = await fetch(attachment.url);
 			if (!ok) {
@@ -323,7 +322,7 @@ export class SoundCommandService implements OnReady {
 			entity.size = (await this.filesManager.stat(entity.id)).size;
 			await entity.save();
 		} catch (err) {
-			this.log.error('failed while downloading file from discord', err);
+			this.log.error('failed while importing file', err);
 			await this.filesManager.delete(entity.id).catch(() => null);
 			await entity.remove();
 			await msg.delete();

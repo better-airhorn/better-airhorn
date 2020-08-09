@@ -53,9 +53,11 @@ export class PlayCommand extends CommandBase {
 			.finished()
 			.then(async (value: IPlayJobResponseData) => {
 				if (value.s) {
-					if ((await settings)?.sendMessageAfterPlay)
-						return message.success(stripIndent`finished playing  \`${sound.name}\`
-          If you enjoyed the sound, you can run \`${(await settings).prefix}like ${sound.id}\``);
+					if ((await settings)?.sendMessageAfterPlay) {
+						await message.success(stripIndent`finished playing  \`${sound.name}\`
+            If you enjoyed the sound, you can run \`${(await settings).prefix}like ${sound.id}\``);
+					}
+					return;
 				} else if (value.c === PlayJobResponseCodes.FAILED_TO_LOCK) {
 					return message.warn('channel is already in use');
 				}
