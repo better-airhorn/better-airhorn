@@ -1,0 +1,28 @@
+name: Deploy Discord Bot
+
+on:
+  workflow_dispatch:
+    inputs:
+      commit-sha:
+        required: true
+        description: "SHA of commit's build to deploy"
+
+jobs:
+  deploy-bot:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install SSH key
+        uses: shimataro/ssh-key-action@v2
+        with:
+          key: ${{ secrets.SSH_KEY }}
+          known_hosts: ${{ secrets.KNOWN_HOSTS }}
+          config: ${{ secrets.SSH_CONFIG }}
+      - name: Download artifact
+        uses: dawidd6/action-download-artifact@v2
+        with:
+          workflow: build.yml
+          commit: ${{ github.event.inputs.commit-sha }}
+          name: bot-build
+      - name: Deploy artifact
+        run: ./scripts/deploy.sh

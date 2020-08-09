@@ -28,5 +28,5 @@ jobs:
           args: 7z a -mx=9 builds/bot.zip builds/bot/*
       - uses: actions/upload-artifact@v2
         with:
-          name: bot-build-${{ github.sha }}
+          name: bot-build
           path: builds/bot.zip
