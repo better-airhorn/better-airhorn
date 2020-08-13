@@ -1,5 +1,17 @@
-import { spawn } from 'child_process';
+import { spawn, spawnSync } from 'child_process';
 import { pipeline, Readable } from 'stream';
+
+let thrown = false;
+try {
+	const exec = spawnSync('ffmpeg', ['-version']);
+	if (exec.status !== 0) {
+		thrown = true;
+		throw new Error('ffmpeg executable not found or not working\n');
+	}
+} catch (e) {
+	if (thrown) throw e;
+	throw new Error(`ffmpeg executable not found or not working\n${e}`);
+}
 
 /**
  * Returns OGG stream and duration in ms
@@ -9,10 +21,21 @@ import { pipeline, Readable } from 'stream';
  */
 export function convertToOGG(stream: Readable): Promise<{ stream: Readable; duration: Promise<number> }> {
 	return new Promise((res, rej) => {
-		const child = spawn(
-			'ffmpeg',
-			'-i pipe:0 -c:a libopus -compression_level 10 -map_metadata -1 -b:a 96k -f ogg pipe:1'.split(' '),
-		);
+		const child = spawn('ffmpeg', [
+			'-i',
+			'pipe:0', // take stdin as input
+			'-c:a',
+			'libopus',
+			'-compression_level',
+			'10', // use max compression for the output
+			'-map_metadata',
+			'-1', // remove metadata
+			'-b:a',
+			'96k',
+			'-f',
+			'ogg',
+			'pipe:1', // output to stdout
+		]);
 		child.once('error', rej);
 		const pipe = pipeline(stream, child.stdin, err => {
 			if (err) rej(err);
@@ -27,7 +50,15 @@ export function convertToOGG(stream: Readable): Promise<{ stream: Readable; dura
 			child.stderr.on('data', (b: Buffer) => {
 				// ffmpeg writes the usual output into stderr
 				if (b.toString().includes('pipe:0: Invalid data found when processing input')) {
-					rej(new TypeError('invalid data found in stream'));
+					rej(
+						new TypeError(
+							`invalid data found in stream\n\n${b
+								.toString()
+								.split('\n')
+								.slice(-2)
+								.join('\n')}`,
+						),
+					);
 					pipe.destroy();
 					return;
 				}
