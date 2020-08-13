@@ -77,7 +77,9 @@ export class MessageHandler extends EventEmitter {
 			return;
 		}
 
-		const allowCommand = await Promise.all(cmd.class.guards.map(instance => instance.canActivate(message, args)));
+		const allowCommand = await Promise.all(
+			cmd.class.guards.map(instance => instance.canActivate(message, cmd.class, args)),
+		);
 		if (!allowCommand.every(Boolean)) {
 			this.emit('reject', cmd.class, message);
 			return;
