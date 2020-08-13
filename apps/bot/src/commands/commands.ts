@@ -6,6 +6,7 @@ import { StatsCommand } from './info/Stats';
 import { StatusCommand } from './info/Status';
 import { InviteCommand } from './misc/Invite';
 import { DeleteCommand } from './music/Delete';
+import { ImportCommand } from './music/Import';
 import { LikeCommand } from './music/Like';
 import { ListCommand } from './music/List';
 import { PlayCommand } from './music/Play';
@@ -29,4 +30,5 @@ import { TimeCommand } from './owner/Time';
 	StatusCommand,
 	DeleteCommand,
 	ConfigCommand,
+	ImportCommand,
 ];

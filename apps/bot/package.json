@@ -26,9 +26,9 @@
 		"url": "https://github.com/Clemens-E/better-airhorn/issues"
 	},
 	"dependencies": {
-		"@better-airhorn/audio": "^0.0.2",
+		"@better-airhorn/audio": "0.0.3",
 		"@better-airhorn/entities": "^0.0.2",
-		"@better-airhorn/shori": "^0.0.1",
+		"@better-airhorn/shori": "0.0.2",
 		"@better-airhorn/structures": "^0.0.1",
 		"@discordjs/opus": "^0.3.2",
 		"@rocka/mp3-duration": "^2.0.0",
@@ -38,6 +38,7 @@
 		"bull": "^3.15.0",
 		"common-tags": "^1.8.0",
 		"discord.js": "^12.2.0",
+		"discord.js-prompts": "^2.2.0",
 		"dotenv": "^8.2.0",
 		"filesize-parser": "^1.5.0",
 		"ioredis": "^4.16.3",
@@ -53,6 +54,7 @@
 		"utf-8-validate": "^5.0.2",
 		"winston": "^3.3.3",
 		"winston-loki": "^5.1.2",
+		"ytdl-core": "^3.2.1",
 		"zlib-sync": "^0.1.6"
 	},
 	"homepage": "https://github.com/Clemens-E/better-airhorn#readme",

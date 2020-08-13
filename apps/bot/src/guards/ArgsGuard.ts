@@ -1,4 +1,4 @@
-import { BaseGuard, Message } from '@better-airhorn/shori';
+import { BaseGuard, CommandBase, Message } from '@better-airhorn/shori';
 
 export class ArgsGuard extends BaseGuard {
 	protected argsCount = 1;
@@ -7,10 +7,11 @@ export class ArgsGuard extends BaseGuard {
 		this.argsCount = minimumArgsCount;
 	}
 
-	public async canActivate(message: Message, args: string[]): Promise<boolean> {
+	public async canActivate(message: Message, cmd: CommandBase, args: string[]): Promise<boolean> {
 		if (args.length < this.argsCount) {
 			await message.error(
 				`This command requires at least ${this.argsCount} arguments, you only provided ${args.length}`,
+				cmd.example ? `example: ${cmd.example}` : undefined,
 			);
 			return false;
 		}

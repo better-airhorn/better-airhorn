@@ -1,12 +1,10 @@
 import { convertToOGG, supporterFormats } from '@better-airhorn/audio';
-import { AccessType, AccessTypeUserMapping, GuildSetting, isPlayable, SoundCommand } from '@better-airhorn/entities';
+import { GuildSetting, isPlayable, SoundCommand } from '@better-airhorn/entities';
 import { Client, Event, Message, OnReady, Service } from '@better-airhorn/shori';
 import { IPlayJobRequestData, IPlayJobResponseData, PlayJobResponseCodes } from '@better-airhorn/structures';
 import Bull, { Job } from 'bull';
-import { stripIndents } from 'common-tags';
 import {
 	MessageAttachment,
-	MessageEmbed,
 	MessageReaction,
 	StreamDispatcher,
 	User,
@@ -22,7 +20,7 @@ import { Config } from '../config/Config';
 import { ChannelError, ChannelJoinError, SoundNotFound } from '../models/CustomErrors';
 import { ChannelLockService } from '../utils/ChannelLockService';
 import { logger } from '../utils/Logger';
-import { promptMessage } from '../utils/Prompting';
+import { promptSoundCommandValues } from '../utils/prompts/SoundCommandPrompts';
 import { timeout } from '../utils/Utils';
 import { SoundFilesManager } from './SoundFilesManager';
 
@@ -229,64 +227,15 @@ export class SoundCommandService implements OnReady {
 			return;
 		}
 
-		let name: string;
-		let accessType: AccessType;
-		const soundRepo = getRepository(SoundCommand);
-		const filter = (m: Message): boolean => m.author.id === message.author.id;
-		try {
-			do {
-				if (!name) {
-					await channel.send('What should your sound be named?');
-					name = await promptMessage(channel, filter).then(value => value.trim().replace(/\s/g, '-'));
-					if (name.length > 20) {
-						await message.warn(
-							`The name you provided is ${name.length - 20} characters too long`,
-							'try something shorter',
-						);
-						name = undefined;
-						continue;
-					}
-					const exists = await soundRepo.findOne({ where: { name } });
-					if (exists) {
-						await message.warn(`\`${name}\` is already in use, try something else`);
-						name = undefined;
-						continue;
-					}
-				}
-
-				if (!accessType) {
-					await channel.send(
-						new MessageEmbed().setDescription(
-							stripIndents`Who should be able to access the sound?
-              [me]       only you can use it
-              [guild]    only members of \`${message.guild.name}\` can use it
-              [everyone] anyone can use it`,
-						),
-					);
-					const newAccessType = (await promptMessage(channel, filter)) as keyof typeof AccessTypeUserMapping;
-					if (!Object.keys(AccessTypeUserMapping).includes(newAccessType)) {
-						await message.warn(
-							`The option you provided wasn't one of those ${Object.keys(AccessTypeUserMapping).join('`')}`,
-							'try again',
-						);
-						accessType = undefined;
-						continue;
-					}
-					accessType = AccessTypeUserMapping[newAccessType];
-
-					break;
-				}
-				// eslint-disable-next-line no-constant-condition
-			} while (true);
-		} catch (e) {
-			if (e) this.log.debug(e);
-			return message.error('Something went wrong while prompting the input', 'did you forget to respond?');
+		const promptData = await promptSoundCommandValues(message);
+		if (!promptData.ok) {
+			return this.log.error(promptData.err);
 		}
 
 		const entity = new SoundCommand({
-			accessType,
+			accessType: promptData.data.accessType,
 			guild: message.guild.id,
-			name,
+			name: promptData.data.name,
 			user: message.author.id,
 			duration: 0,
 			size: 0,
