@@ -16,3 +16,10 @@ export function roundToClosestMultiplierOf10(input: number) {
 	const length = 10 ** Math.floor(Math.log10(input));
 	return Math.floor(input / length) * length;
 }
+
+export function filterInt(value: string): number {
+	if (/^[-+]?(\d+|Infinity)$/.test(value)) {
+		return Number(value);
+	}
+	return NaN;
+}

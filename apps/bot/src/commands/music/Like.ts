@@ -2,6 +2,7 @@ import { Like, SoundCommand } from '@better-airhorn/entities';
 import { Command, CommandBase, Message, UseGuard } from '@better-airhorn/shori';
 import { ArgsGuard } from '../../guards/ArgsGuard';
 import { logger } from '../../utils/Logger';
+import { filterInt } from '../../utils/Utils';
 
 @Command('like', {
 	channel: 'any',
@@ -13,7 +14,7 @@ export class LikeCommand extends CommandBase {
 
 	@UseGuard(new ArgsGuard(1))
 	public async exec(message: Message, args: string[]): Promise<any> {
-		const param = parseInt(args[0], 10) || args[0];
+		const param = filterInt(args[0]) || args[0];
 		const sound = await (typeof param === 'number'
 			? SoundCommand.findOne(param)
 			: SoundCommand.findOne({ where: { name: param } }));
