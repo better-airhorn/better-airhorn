@@ -27,7 +27,7 @@
 	},
 	"dependencies": {
 		"@better-airhorn/audio": "0.0.3",
-		"@better-airhorn/entities": "^0.0.2",
+		"@better-airhorn/entities": "0.0.3",
 		"@better-airhorn/shori": "0.0.2",
 		"@better-airhorn/structures": "^0.0.1",
 		"@discordjs/opus": "^0.3.2",

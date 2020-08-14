@@ -1,6 +1,6 @@
 {
 	"name": "@better-airhorn/entities",
-	"version": "0.0.2",
+	"version": "0.0.3",
 	"description": "shared entities used by better-airhorn",
 	"author": "Clemens Ertle",
 	"homepage": "https://github.com/Clemens-E/better-airhorn-next/tree/master/packages/entities#readme",

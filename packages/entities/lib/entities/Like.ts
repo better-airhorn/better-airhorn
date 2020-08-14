@@ -12,6 +12,7 @@ export class Like extends BaseEntity {
 	@ManyToOne(
 		() => SoundCommand,
 		command => command.likes,
+		{ onDelete: 'CASCADE' },
 	)
 	public soundCommand: SoundCommand;
 
