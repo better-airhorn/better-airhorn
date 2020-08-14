@@ -33,7 +33,7 @@ export class SoundCommand extends BaseEntity {
 	@OneToMany(
 		() => Like,
 		like => like.soundCommand,
-		{ lazy: true },
+		{ lazy: true, onDelete: 'CASCADE' },
 	)
 	public likes: Promise<Like[]>;
 
