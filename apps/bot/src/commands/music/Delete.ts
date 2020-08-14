@@ -16,7 +16,7 @@ export class DeleteCommand extends CommandBase {
 
 	public async exec(message: Message, args: string[]): Promise<any> {
 		const canForce = Config.general.ownerIds.includes(message.author.id);
-		const param = parseInt(args[0], 10) || args[0];
+		const param = Number(args[0]) || args[0];
 		const sound = await (typeof param === 'number'
 			? SoundCommand.findOne(param)
 			: SoundCommand.findOne({ where: { name: param } }));
