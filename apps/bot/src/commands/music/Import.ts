@@ -38,10 +38,11 @@ export class ImportCommand extends CommandBase {
 		}
 
 		const audioSize = await getYoutubeContentSize(format);
-		if (audioSize > Config.files.maxFileSize) {
-			if (!(Number.isNaN(audioSize) && parseInt(format.approxDurationMs, 10) <= 420_000)) {
-				return message.error(`the provided audio is too big or I wasn't able to get its size`);
-			}
+		if (
+			(audioSize > Config.files.maxFileSize && !Number.isNaN(audioSize)) ||
+			!(Number.isNaN(audioSize) && parseInt(format.approxDurationMs, 10) <= 420_000)
+		) {
+			return message.error(`the provided audio is too big or I wasn't able to get its size`);
 		}
 
 		const promptData = await promptSoundCommandValues(message);
