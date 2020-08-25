@@ -10,6 +10,7 @@ import { ImportCommand } from './music/Import';
 import { LikeCommand } from './music/Like';
 import { ListCommand } from './music/List';
 import { PlayCommand } from './music/Play';
+import { RandomCommand } from './music/Random';
 import { ECommand } from './owner/E';
 import { ExecCommand } from './owner/Exec';
 import { TimeCommand } from './owner/Time';
@@ -31,4 +32,5 @@ import { TimeCommand } from './owner/Time';
 	DeleteCommand,
 	ConfigCommand,
 	ImportCommand,
+	RandomCommand,
 ];
