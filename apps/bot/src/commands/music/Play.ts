@@ -12,6 +12,7 @@ import { getHumanReadableError, timeout } from '../../utils/Utils';
 	channel: 'guild',
 	category: 'music',
 	description: 'plays a sound',
+	example: 'play airhorn',
 })
 export class PlayCommand extends CommandBase {
 	private readonly log = logger.child({ labels: { source: PlayCommand.name } });
@@ -22,13 +23,13 @@ export class PlayCommand extends CommandBase {
 
 	@UseGuard(new ArgsGuard(1))
 	public async exec(message: Message, args: string[]): Promise<any> {
-		const sound = await this.soundService.get(args[0]);
-		if (!sound) {
-			return message.error(`could not find sound named \`${args[0]}\``);
-		}
 		const { guild, author, member } = message;
 		if (!member.voice?.channelID) {
 			return message.error('you need to be in a voice channel to run this command');
+		}
+		const sound = await this.soundService.get(args[0]);
+		if (!sound) {
+			return message.error(`could not find sound named \`${args[0]}\``);
 		}
 
 		const job = await this.soundService.addJob(guild.shardID, {
@@ -53,9 +54,14 @@ export class PlayCommand extends CommandBase {
 			.finished()
 			.then(async (value: IPlayJobResponseData) => {
 				if (value.s) {
+					if (message.deletable) await message.delete();
 					if ((await settings)?.sendMessageAfterPlay) {
-						await message.success(stripIndent`finished playing  \`${sound.name}\`
-            If you enjoyed the sound, you can run \`${(await settings).prefix}like ${sound.id}\``);
+						await message
+							.success(
+								stripIndent`finished playing  \`${sound.name}\`
+            If you enjoyed the sound, you can run \`${(await settings).prefix}like ${sound.id}\``,
+							)
+							.then(m => m.delete({ timeout: 10000 }));
 					}
 					return;
 				} else if (value.c === PlayJobResponseCodes.FAILED_TO_LOCK) {
