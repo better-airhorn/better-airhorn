@@ -11,6 +11,7 @@ import { LikeCommand } from './music/Like';
 import { ListCommand } from './music/List';
 import { PlayCommand } from './music/Play';
 import { RandomCommand } from './music/Random';
+import { SoundInfoCommand } from './music/SoundInfo';
 import { ECommand } from './owner/E';
 import { ExecCommand } from './owner/Exec';
 import { TimeCommand } from './owner/Time';
@@ -33,4 +34,5 @@ import { TimeCommand } from './owner/Time';
 	ConfigCommand,
 	ImportCommand,
 	RandomCommand,
+	SoundInfoCommand,
 ];
