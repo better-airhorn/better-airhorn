@@ -1,4 +1,4 @@
-import { convertToOGG, supporterFormats } from '@better-airhorn/audio';
+import { convertToOGG, normalizeAudio, supporterFormats } from '@better-airhorn/audio';
 import { GuildSetting, isPlayable, SoundCommand } from '@better-airhorn/entities';
 import { Client, Event, Message, OnReady, Service } from '@better-airhorn/shori';
 import { IPlayJobRequestData, IPlayJobResponseData, PlayJobResponseCodes } from '@better-airhorn/structures';
@@ -181,6 +181,8 @@ export class SoundCommandService implements OnReady {
 		} else {
 			lock.release();
 		}
+		const usesKey: keyof SoundCommand = 'uses';
+		await getRepository(SoundCommand).increment({ id: soundCommand.id }, usesKey, 1);
 		await job.progress(100);
 		return response;
 	}
@@ -262,7 +264,7 @@ export class SoundCommandService implements OnReady {
 			});
 			if (!stream && !duration) return;
 
-			await this.filesManager.set(entity.id, stream);
+			await this.filesManager.set(entity.id, await normalizeAudio(stream));
 			if ((await duration) < 0.5) {
 				await cancel();
 				return;
