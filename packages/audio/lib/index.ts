@@ -77,4 +77,42 @@ export function convertToOGG(stream: Readable): Promise<{ stream: Readable; dura
 	});
 }
 
+export function normalizeAudio(stream: Readable): Promise<Readable> {
+	return new Promise((res, rej) => {
+		const child = spawn('ffmpeg', [
+			'-i',
+			'pipe:0', // take stdin as input
+			'-c:a',
+			'libopus',
+			'-filter:a',
+			'loudnorm=I=-14:LRA=7:tp=-2',
+			'-f',
+			'ogg',
+			'pipe:1',
+		]);
+		child.once('error', rej);
+		const pipe = pipeline(stream, child.stdin, err => {
+			if (err) rej(err);
+		});
+		child.stderr.on('data', (b: Buffer) => {
+			// ffmpeg writes the usual output into stderr
+			console.log(b.toString());
+			if (b.toString().includes('pipe:0: Invalid data found when processing input')) {
+				rej(
+					new TypeError(
+						`invalid data found in stream\n\n${b
+							.toString()
+							.split('\n')
+							.slice(-2)
+							.join('\n')}`,
+					),
+				);
+				pipe.destroy();
+				return;
+			}
+			child.stdout.once('readable', () => res(child.stdout));
+		});
+	});
+}
+
 export const supporterFormats: string[] = ['aac', 'ac3', 'flac', 'mp3', 'ogg', 'opus', 'wav', 'wma'];
