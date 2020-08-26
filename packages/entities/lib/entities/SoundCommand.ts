@@ -30,6 +30,12 @@ export class SoundCommand extends BaseEntity {
 	@Column('bigint')
 	public size: number;
 
+	/**
+	 * how often the sound has been played
+	 */
+	@Column('integer', { default: 0 })
+	public uses: number;
+
 	@OneToMany(
 		() => Like,
 		like => like.soundCommand,
