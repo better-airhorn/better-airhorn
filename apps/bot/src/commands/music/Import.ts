@@ -1,4 +1,4 @@
-import { convertToOGG } from '@better-airhorn/audio';
+import { convertToOGG, normalizeAudio } from '@better-airhorn/audio';
 import { SoundCommand } from '@better-airhorn/entities';
 import { Command, CommandBase, Message, UseGuard } from '@better-airhorn/shori';
 import ytdl, { getInfo, videoFormat } from 'ytdl-core';
@@ -67,7 +67,7 @@ export class ImportCommand extends CommandBase {
 		});
 		await entity.save();
 		const { stream: oggStream, duration } = await convertToOGG(ytdl(videoUrl, { format }));
-		await this.filesManager.set(entity.id, oggStream);
+		await this.filesManager.set(entity.id, await normalizeAudio(oggStream));
 		entity.duration = await duration;
 		entity.size = (await this.filesManager.stat(entity.id)).size;
 		await entity.save();

@@ -1,7 +1,8 @@
-import { GuildSetting } from '@better-airhorn/entities';
+import { GuildSetting, Like } from '@better-airhorn/entities';
 import { Command, CommandBase, Message, UseGuard } from '@better-airhorn/shori';
 import { IPlayJobResponseData, PlayJobResponseCodes } from '@better-airhorn/structures';
 import { stripIndent } from 'common-tags';
+import { MessageReaction, User } from 'discord.js';
 import { ArgsGuard } from '../../guards/ArgsGuard';
 import { SoundCommandService } from '../../services/SoundCommandService';
 import { logger } from '../../utils/Logger';
@@ -59,9 +60,29 @@ export class PlayCommand extends CommandBase {
 						await message
 							.success(
 								stripIndent`finished playing  \`${sound.name}\`
-            If you enjoyed the sound, you can run \`${(await settings).prefix}like ${sound.id}\``,
+            If you enjoyed the sound, you can run \`${(await settings).prefix}like ${sound.id}\` or react with ❤`,
 							)
-							.then(m => m.delete({ timeout: 10000 }));
+							.then(m => {
+								m.react('❤').catch(() => null);
+								m.createReactionCollector((r: MessageReaction, u: User): boolean => !u.bot && r.emoji.name === '❤', {
+									time: 10 * 1000,
+								})
+									.on(
+										'collect',
+										async (r: MessageReaction): Promise<void> => {
+											const existingLike = await Like.findOne({
+												where: { soundCommand: sound, user: r.users.cache.last().id },
+											});
+											if (existingLike) {
+												await r.users.remove(r.users.cache.last()).catch(() => null);
+												return;
+											}
+
+											await new Like({ soundCommand: sound, user: r.users.cache.last().id }).save();
+										},
+									)
+									.on('end', () => m.delete());
+							});
 					}
 					return;
 				} else if (value.c === PlayJobResponseCodes.FAILED_TO_LOCK) {
