@@ -4,7 +4,6 @@ import { Command, CommandBase, Message, UseGuard } from '@better-airhorn/shori';
 import ytdl, { getInfo, videoFormat } from 'ytdl-core';
 import { Config } from '../../config/Config';
 import { ArgsGuard } from '../../guards/ArgsGuard';
-import { SoundCommandService } from '../../services/SoundCommandService';
 import { SoundFilesManager } from '../../services/SoundFilesManager';
 import { logger } from '../../utils/Logger';
 import { promptSoundCommandValues } from '../../utils/prompts/SoundCommandPrompts';
@@ -19,10 +18,7 @@ import { getYoutubeContentSize } from '../../utils/YoutubeUtils';
 export class ImportCommand extends CommandBase {
 	private readonly log = logger.child({ labels: { source: ImportCommand.name } });
 
-	public constructor(
-		private readonly scService: SoundCommandService,
-		private readonly filesManager: SoundFilesManager,
-	) {
+	public constructor(private readonly filesManager: SoundFilesManager) {
 		super();
 	}
 

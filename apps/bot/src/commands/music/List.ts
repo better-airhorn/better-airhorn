@@ -5,7 +5,6 @@ import { MessageEmbed } from 'discord.js';
 import ms from 'ms';
 import { logger } from '../../utils/Logger';
 import { PageabelEmbed } from '../../utils/PagableEmbed';
-import { roundToClosestMultiplierOf10 } from '../../utils/Utils';
 
 @Command('list', {
 	channel: 'any',
@@ -15,24 +14,25 @@ import { roundToClosestMultiplierOf10 } from '../../utils/Utils';
 export class ListCommand extends CommandBase {
 	private readonly log = logger.child({ labels: { source: ListCommand.name } });
 
-	private readonly pageSize = 10;
-	public constructor() {
-		super();
-	}
+	private readonly pageSize = 15;
 
 	public async exec(message: Message, args: string[]): Promise<any> {
 		const accessType: AccessType =
 			AccessTypeUserMapping[(args[0] ?? 'everyone').toLowerCase() as keyof typeof AccessTypeUserMapping];
 		const msg = await message.neutral('Fetching Information');
-		const count = await SoundCommand.count();
+		const whereFilter = getWhereFilter(accessType, message.guild.id, message.author.id);
+		const count = await SoundCommand.count({ where: whereFilter });
+
 		await new PageabelEmbed(
 			msg,
 			async page => {
-				const data = await this.next({ page, type: accessType, user: message.author.id, guild: msg.guild.id });
+				const data = await this.next({ page, filter: whereFilter });
 				if (!data || data.length < 1) {
 					return undefined;
 				}
 				const longestKey = Math.max(...data.map(d => d.likes.toLocaleString().length + d.name.length + 3));
+				const alreadyShowedCount = this.pageSize * page - this.pageSize + data.length;
+
 				return new MessageEmbed()
 					.setDescription(
 						`\`\`\`css\n${stripIndent`
@@ -44,40 +44,23 @@ export class ListCommand extends CommandBase {
 							})
 							.join('\n')}\`\`\``}`,
 					)
-					.setFooter(`Page ${page} | ${this.pageSize * page}/${roundToClosestMultiplierOf10(count)}`);
+					.setFooter(`Page ${page}/${Math.ceil(count / this.pageSize)} | ${alreadyShowedCount}/${count} Entries`);
 			},
 			message.author.id,
 		)
 			.start()
-			.then(instance => instance.on('error', this.log.error));
+			.then(instance => instance.on('error', e => this.log.error(e)));
 	}
 
 	private async next(opts: {
 		page: number;
-		type: AccessType;
-		guild: string;
-		user: string;
+		filter: WhereFilter;
 	}): Promise<{ id: number; name: string; likes: number; duration: number }[]> {
-		const whereFilter: { accessType: AccessType; guild?: string; user?: string } = {
-			accessType: opts.type,
-		};
-		switch (opts.type) {
-			case AccessType.EVERYONE: {
-				break;
-			}
-			case AccessType.ONLY_GUILD: {
-				whereFilter.guild = opts.guild;
-				break;
-			}
-			case AccessType.ONLY_ME: {
-				whereFilter.user = opts.user;
-				break;
-			}
-		}
 		const offset = (opts.page - 1) * this.pageSize;
 		if (offset < 0) return [];
+
 		return SoundCommand.createQueryBuilder('sound')
-			.where(whereFilter)
+			.where(opts.filter)
 			.leftJoin('sound.likes', 'likes')
 			.select('sound.name', 'name')
 			.addSelect('sound.id', 'id')
@@ -93,4 +76,30 @@ export class ListCommand extends CommandBase {
 				return r;
 			});
 	}
+}
+
+interface WhereFilter {
+	accessType: AccessType;
+	guild?: string;
+	user?: string;
+}
+
+function getWhereFilter(type: AccessType, guild: string, user: string): WhereFilter {
+	const whereFilter: WhereFilter = {
+		accessType: type,
+	};
+	switch (type) {
+		case AccessType.EVERYONE: {
+			break;
+		}
+		case AccessType.ONLY_GUILD: {
+			whereFilter.guild = guild;
+			break;
+		}
+		case AccessType.ONLY_ME: {
+			whereFilter.user = user;
+			break;
+		}
+	}
+	return whereFilter;
 }

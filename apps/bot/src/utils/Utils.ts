@@ -12,7 +12,7 @@ export function parseEnvExample(input: string): string[] {
 	return input.match(/([A-Z_-]+)/gim);
 }
 
-export function roundToClosestMultiplierOf10(input: number) {
+export function roundDownToClosestMultiplierOf10(input: number) {
 	const length = 10 ** Math.floor(Math.log10(input));
 	return Math.floor(input / length) * length;
 }
