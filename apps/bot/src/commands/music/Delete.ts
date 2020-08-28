@@ -2,6 +2,7 @@ import { SoundCommand } from '@better-airhorn/entities';
 import { Command, CommandBase, Message } from '@better-airhorn/shori';
 import { Config } from '../../config/Config';
 import { SoundCommandService } from '../../services/SoundCommandService';
+import { filterInt } from '../../utils/Utils';
 
 @Command('delete', {
 	channel: 'any',
@@ -16,7 +17,7 @@ export class DeleteCommand extends CommandBase {
 
 	public async exec(message: Message, args: string[]): Promise<any> {
 		const canForce = Config.general.ownerIds.includes(message.author.id);
-		const param = Number(args[0]) || args[0];
+		const param = filterInt(args[0]) || args[0];
 		const sound = await (typeof param === 'number'
 			? SoundCommand.findOne(param)
 			: SoundCommand.findOne({ where: { name: param } }));
