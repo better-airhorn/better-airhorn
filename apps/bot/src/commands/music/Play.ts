@@ -60,7 +60,7 @@ export class PlayCommand extends CommandBase {
 						await message
 							.success(
 								stripIndent`finished playing  \`${sound.name}\`
-            If you enjoyed the sound, you can run \`${(await settings).prefix}like ${sound.id}\` or react with ❤`,
+            If you enjoyed the sound, you can react with ❤ to like it`,
 							)
 							.then(m => {
 								m.react('❤').catch(() => null);
