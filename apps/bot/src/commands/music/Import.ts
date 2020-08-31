@@ -1,7 +1,7 @@
 import { convertToOGG, normalizeAudio } from '@better-airhorn/audio';
 import { SoundCommand } from '@better-airhorn/entities';
 import { Command, CommandBase, Message, UseGuard } from '@better-airhorn/shori';
-import ytdl, { getInfo, videoFormat } from 'ytdl-core';
+import ytdl, { getInfo, videoFormat, videoInfo } from 'ytdl-core';
 import { Config } from '../../config/Config';
 import { ArgsGuard } from '../../guards/ArgsGuard';
 import { SoundFilesManager } from '../../services/SoundFilesManager';
@@ -26,21 +26,26 @@ export class ImportCommand extends CommandBase {
 	public async exec(message: Message, args: string[]): Promise<any> {
 		const videoUrl = args.shift();
 		let format: videoFormat;
+		let info: videoInfo;
 		try {
-			const info = await getInfo(videoUrl);
+			info = await getInfo(videoUrl);
 			format = ytdl.chooseFormat(info.formats, { quality: 'highestaudio', filter: 'audioonly' });
 		} catch {
 			return message.error('failed to locate or download audio');
 		}
 
-		const audioSize = await getYoutubeContentSize(format);
+		const audioSize = parseInt(format.contentLength, 10) || (await getYoutubeContentSize(format));
+		const audioLength = parseInt(
+			format.approxDurationMs || info.formats.find(f => f.approxDurationMs)?.approxDurationMs,
+			10,
+		);
 		if (
 			(audioSize > Config.files.maxFileSize && !Number.isNaN(audioSize)) ||
-			(Number.isNaN(audioSize) && parseInt(format.approxDurationMs, 10) <= 420_000)
+			(Number.isNaN(audioSize) && audioLength >= 600_000)
 		) {
 			return message.error(`the provided audio is too big/long`);
 		}
-		if (Number.isNaN(audioSize) && !format.approxDurationMs) {
+		if (!audioSize && !audioLength) {
 			return message.error(`I wasn\'t able to get the audios size or length, blame youtube!`);
 		}
 
