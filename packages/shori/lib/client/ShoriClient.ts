@@ -6,6 +6,7 @@ import { ReflectKeys } from '../enums/ReflectKeys';
 import { clientInjectedSubject } from '../Lists/ClientList';
 import '../struct/DiscordExtends/Message';
 import '../struct/DiscordExtends/TextChannel';
+import { OnInit } from '../struct/LifeCycleHooks/LifeCycleHooks';
 import { MessageHandler } from '../struct/MessageHandler';
 import { resolveSingleton } from '../struct/util/Util';
 
@@ -29,10 +30,10 @@ export abstract class ShoriClient extends Client {
 			this.allServicesInitiated = () => {
 				return Promise.all(
 					shoriOptions.services.map(async service => {
-						const instance: { init?: () => Promise<any>; name: string } = resolveSingleton(service);
-						if (typeof instance.init === 'function') {
+						const instance: OnInit = resolveSingleton(service);
+						if (typeof instance.shOnInit === 'function') {
 							this.emit('debug', `[ShoriClient] running ${service.name}'s init`);
-							await instance.init();
+							await instance.shOnInit();
 							this.emit('debug', `[ShoriClient] ${service.name} finished initializing`);
 						}
 						const events: EventOptions[] = Reflect.getMetadata(ReflectKeys.EVENT, service) || [];
