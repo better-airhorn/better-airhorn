@@ -7,7 +7,7 @@ import { ArgsGuard } from '../../guards/ArgsGuard';
 import { SoundCommandService } from '../../services/SoundCommandService';
 import { logger } from '../../utils/Logger';
 import { QueueUtils } from '../../utils/QueueUtils';
-import { getHumanReadableError, timeout } from '../../utils/Utils';
+import { getHumanReadableError, getSimiliarCommandMessageIfInputIsString, timeout } from '../../utils/Utils';
 
 @Command('play', {
 	channel: 'guild',
@@ -30,7 +30,10 @@ export class PlayCommand extends CommandBase {
 		}
 		const sound = await this.soundService.get(args[0]);
 		if (!sound) {
-			return message.error(`could not find sound named \`${args[0]}\``);
+			return message.error(
+				`could not find sound named \`${args[0]}\``,
+				await getSimiliarCommandMessageIfInputIsString(args[0]),
+			);
 		}
 
 		const job = await this.soundService.addJob(guild.shardID, {

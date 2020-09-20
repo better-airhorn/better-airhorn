@@ -4,7 +4,7 @@ import { stripIndent } from 'common-tags';
 import { MessageEmbed } from 'discord.js';
 import ms from 'ms';
 import { ArgsGuard } from '../../guards/ArgsGuard';
-import { filterInt, humanFileSize } from '../../utils/Utils';
+import { filterInt, getSimiliarCommandMessageIfInputIsString, humanFileSize } from '../../utils/Utils';
 
 @Command('soundinfo', {
 	channel: 'any',
@@ -20,7 +20,10 @@ export class SoundInfoCommand extends CommandBase {
 			: SoundCommand.findOne({ where: { name: param } }));
 
 		if (!sound) {
-			return message.error(`No sound found with the id or name \`${args[0]}\``);
+			return message.error(
+				`No sound found with the id or name \`${args[0]}\``,
+				await getSimiliarCommandMessageIfInputIsString(args[0]),
+			);
 		}
 		const user = await this.client.users
 			.fetch(sound.user)
