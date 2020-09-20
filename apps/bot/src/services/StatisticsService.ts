@@ -1,13 +1,13 @@
 import { Statistic, Usage } from '@better-airhorn/entities';
-import { Service } from '@better-airhorn/shori';
+import { OnInit, Service } from '@better-airhorn/shori';
 import { getRepository, InsertResult, Repository } from 'typeorm';
 
 @Service()
-export class StatisticsService {
+export class StatisticsService implements OnInit {
 	private statistics: Repository<Statistic>;
 	private usage: Repository<Usage>;
 
-	public init(): void {
+	public shOnInit(): void {
 		this.statistics = getRepository(Statistic);
 		this.usage = getRepository(Usage);
 	}

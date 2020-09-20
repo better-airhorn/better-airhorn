@@ -11,7 +11,7 @@ import './services/events/LoggingEvents';
 import { services } from './services/services';
 import { isDev } from './utils/isEnvironment';
 import { logger, TypeORMLogger } from './utils/Logger';
-import { parseEnvExample } from './utils/Utils';
+import { ensureDatabaseExtensions, parseEnvExample } from './utils/Utils';
 
 const matches = parseEnvExample(readFileSync(join(__dirname, '../env.example')).toString());
 matches.forEach(key => {
@@ -35,6 +35,7 @@ matches.forEach(key => {
 			options: Config.credentials.redis.url,
 		},
 	});
+	await ensureDatabaseExtensions(['pg_trgm']);
 
 	const client = new BAClient(
 		{

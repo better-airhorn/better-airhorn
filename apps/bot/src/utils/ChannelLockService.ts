@@ -17,4 +17,8 @@ export class ChannelLockService {
 	public release(resource: string) {
 		this.lockMap.get(resource)?.release();
 	}
+
+	public get getMap(): Map<string, AwaitLock> {
+		return this.lockMap;
+	}
 }

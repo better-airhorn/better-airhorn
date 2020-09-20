@@ -1,18 +1,9 @@
-import { convertToOGG, normalizeAudio, supporterFormats } from '@better-airhorn/audio';
+import { supportedFormats } from '@better-airhorn/audio';
 import { GuildSetting, isPlayable, SoundCommand } from '@better-airhorn/entities';
 import { Client, Event, Message, OnReady, Service } from '@better-airhorn/shori';
 import { IPlayJobRequestData, IPlayJobResponseData, PlayJobResponseCodes } from '@better-airhorn/structures';
 import Bull, { Job } from 'bull';
-import {
-	MessageAttachment,
-	MessageReaction,
-	StreamDispatcher,
-	User,
-	VoiceChannel,
-	VoiceConnection,
-	VoiceState,
-} from 'discord.js';
-import fetch from 'node-fetch';
+import { MessageAttachment, StreamDispatcher, VoiceChannel, VoiceConnection, VoiceState } from 'discord.js';
 import { Readable, Stream } from 'stream';
 import { getRepository } from 'typeorm';
 import { BAClient } from '../client/BAClient';
@@ -20,8 +11,7 @@ import { Config } from '../config/Config';
 import { ChannelError, ChannelJoinError, SoundNotFound } from '../models/CustomErrors';
 import { ChannelLockService } from '../utils/ChannelLockService';
 import { logger } from '../utils/Logger';
-import { promptSoundCommandValues } from '../utils/prompts/SoundCommandPrompts';
-import { timeout } from '../utils/Utils';
+import { handleUploadAudioFile, onceEmitted, timeout } from '../utils/Utils';
 import { SoundFilesManager } from './SoundFilesManager';
 
 /**
@@ -100,7 +90,7 @@ export class SoundCommandService implements OnReady {
 		let interval: NodeJS.Timeout;
 		let response: IPlayJobResponseData;
 		let channel: VoiceChannel;
-		const lock = this.lockService.getLock(Config.queue.playQueue.lockKeyGenerator(data.channel, data.guild));
+		const lock = this.lockService.getLock(data.guild);
 		const soundCommand = await SoundCommand.findOne(data.sound);
 
 		try {
@@ -133,8 +123,8 @@ export class SoundCommandService implements OnReady {
 			});
 			const dispatcher = await this.play(stream, connection);
 			const finishedPlaying = Promise.race([
-				new Promise(res => dispatcher.once('finish', res)),
-				new Promise(res => dispatcher.once('close', res)),
+				onceEmitted(dispatcher, 'finish'),
+				onceEmitted(dispatcher, 'close'),
 				new Promise((_, rej) => dispatcher.once('error', rej)),
 			]);
 
@@ -211,76 +201,11 @@ export class SoundCommandService implements OnReady {
 
 		// find suitable attachment
 		const attachment = message.attachments.find(
-			(x: MessageAttachment) => supporterFormats.includes(x.name.split('.').pop()) && x.size < Config.files.maxFileSize,
+			(x: MessageAttachment) => supportedFormats.includes(x.name.split('.').pop()) && x.size < Config.files.maxFileSize,
 		);
 		if (!attachment) return;
-		const fileformat = attachment.name.split('.').pop();
 
-		const reaction = await message.react(Config.emojis.import);
-		const reacted = await message
-			.awaitReactions(
-				(r: MessageReaction, u: User) => r.emoji?.id === Config.emojis.import && u.id === message.author.id,
-				{ time: 50000, max: 1, errors: ['time'] },
-			)
-			.then(() => true)
-			.catch(() => false);
-		await reaction.remove().catch(() => null);
-		if (!reacted) {
-			return;
-		}
-
-		const promptData = await promptSoundCommandValues(message);
-		if (!promptData.ok) {
-			return this.log.error(promptData.err);
-		}
-
-		const entity = new SoundCommand({
-			accessType: promptData.data.accessType,
-			guild: message.guild.id,
-			name: promptData.data.name,
-			user: message.author.id,
-			duration: 0,
-			size: 0,
-		});
-		await entity.save();
-		const msg = await message.neutral(`Please wait, I'm downloading and converting your file ${Config.emojis.loading}`);
-		try {
-			const { ok, body, statusText } = await fetch(attachment.url);
-			if (!ok) {
-				throw new Error(`unexpected response ${statusText}`);
-			}
-
-			const cancel = async () => {
-				await this.filesManager.delete(entity.id).catch(() => null);
-				await entity.remove();
-				await msg.delete();
-				await message.error('Your file is either not valid or empty');
-			};
-
-			const { stream, duration } = await convertToOGG(body as Readable).catch(async () => {
-				this.log.debug(`failed to convert downloaded file with format ${fileformat}`);
-				await cancel();
-				return { stream: undefined, duration: undefined };
-			});
-			if (!stream && !duration) return;
-
-			await this.filesManager.set(entity.id, await normalizeAudio(stream));
-			if ((await duration) < 0.5) {
-				await cancel();
-				return;
-			}
-			entity.duration = await duration;
-			entity.size = (await this.filesManager.stat(entity.id)).size;
-			await entity.save();
-		} catch (err) {
-			this.log.error('failed while importing file', err);
-			await this.filesManager.delete(entity.id).catch(() => null);
-			await entity.remove();
-			await msg.delete();
-			return message.error('Something went wrong while importing the file');
-		}
-		await msg.delete();
-		await message.success(`I saved your sound as \`${entity.name}\``);
+		handleUploadAudioFile({ attachment, filesManager: this.filesManager, message }).catch(e => this.log.error(e));
 	}
 
 	@Event('voiceStateUpdate')
