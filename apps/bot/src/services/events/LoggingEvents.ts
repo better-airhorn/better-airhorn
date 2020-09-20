@@ -6,8 +6,6 @@ import { logger } from '../../utils/Logger';
 export class LoggingEvents {
 	private readonly log = logger.child({ labels: { source: LoggingEvents.name } });
 
-	private constructor(private readonly msgHandler: MessageHandler) {}
-
 	@Client()
 	private readonly client: BAClient;
 
@@ -23,13 +21,14 @@ export class LoggingEvents {
 		source: resolveSingleton(MessageHandler),
 		once: false,
 	})
-	public onCommandError(e: Error, command: CommandBase, msg: Message): void {
-		this.log.error(`error executing command ${command.name}`, e, {
+	public async onCommandError(e: Error, command: CommandBase, msg: Message): Promise<void> {
+		this.log.error(`error executing command ${command.name}\n${e.message}\n${e.stack}`, {
 			content: msg.content,
 			author: msg.author.id,
 			guild: msg.guild.id,
 			channel: msg.channel.id,
 		});
+		await msg.error(`There was an error while executing the ${command.name} command`).catch(() => null);
 	}
 
 	@Event('reject', {

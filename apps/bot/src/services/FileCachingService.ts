@@ -1,9 +1,10 @@
-import { Service } from '@better-airhorn/shori';
+import { OnInit, Service } from '@better-airhorn/shori';
 import { constants, createReadStream, createWriteStream, promises } from 'fs';
 import { join } from 'path';
 import { Readable } from 'stream';
 import { Config } from '../config/Config';
 import { isProd } from '../utils/isEnvironment';
+import { onceEmitted } from '../utils/Utils';
 
 /**
  * This Service provides methods to access the local file cache
@@ -11,8 +12,8 @@ import { isProd } from '../utils/isEnvironment';
  * @class FileCachingService
  */
 @Service()
-export class FileCachingService {
-	public async init(): Promise<void> {
+export class FileCachingService implements OnInit {
+	public async shOnInit() {
 		if (isProd()) {
 			await promises.rmdir(Config.files.cacheDirectory, { recursive: true });
 		}
@@ -30,9 +31,7 @@ export class FileCachingService {
 	}
 
 	public set(id: string, stream: Readable): Promise<void> {
-		return new Promise(res => {
-			stream.pipe(createWriteStream(this.getFullPath(id.toString()))).on('close', res);
-		});
+		return onceEmitted(stream.pipe(createWriteStream(this.getFullPath(id.toString()))), 'close');
 	}
 
 	public async delete(id: string): Promise<void> {

@@ -1,4 +1,4 @@
-import { Service } from '@better-airhorn/shori';
+import { OnInit, Service } from '@better-airhorn/shori';
 import { BucketItemStat, Client } from 'minio';
 import { Readable } from 'stream';
 import { Config } from '../config/Config';
@@ -10,7 +10,7 @@ import { isProd } from '../utils/isEnvironment';
  * @class MinIOService
  */
 @Service()
-export class MinIOService {
+export class MinIOService implements OnInit {
 	private readonly client: Client;
 	private readonly bucketName: string;
 	public constructor() {
@@ -24,7 +24,7 @@ export class MinIOService {
 		this.bucketName = Config.files.minIOBucketName;
 	}
 
-	public async init(): Promise<void> {
+	public async shOnInit() {
 		await this.client.bucketExists(this.bucketName).then(exists => {
 			if (!exists) {
 				return this.client.makeBucket(this.bucketName, 'us-east-1');

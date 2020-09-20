@@ -48,11 +48,7 @@ export class ECommand extends CommandBase {
 	}
 
 	public async clean(text: any): Promise<string> {
-		if (
-			Boolean(text) &&
-			Boolean(text.constructor) &&
-			(text.constructor.name === 'Promise' || text.constructor.name === 'WrappedPromise')
-		) {
+		if (Boolean(text) && Boolean(text.constructor) && text.constructor.name === Promise.constructor.name) {
 			text = await text;
 		}
 
