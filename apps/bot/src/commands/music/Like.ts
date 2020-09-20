@@ -2,7 +2,7 @@ import { Like, SoundCommand } from '@better-airhorn/entities';
 import { Command, CommandBase, Message, UseGuard } from '@better-airhorn/shori';
 import { ArgsGuard } from '../../guards/ArgsGuard';
 import { logger } from '../../utils/Logger';
-import { filterInt } from '../../utils/Utils';
+import { filterInt, getSimiliarCommandMessageIfInputIsString } from '../../utils/Utils';
 
 @Command('like', {
 	channel: 'any',
@@ -20,7 +20,10 @@ export class LikeCommand extends CommandBase {
 			: SoundCommand.findOne({ where: { name: param } }));
 
 		if (!sound) {
-			return message.error(`No sound found with the id or name \`${args[0]}\``);
+			return message.error(
+				`No sound found with the id or name \`${args[0]}\``,
+				await getSimiliarCommandMessageIfInputIsString(args[0]),
+			);
 		}
 		const existingLike = await Like.findOne({ where: { soundCommand: sound, user: message.author.id } });
 		if (existingLike) {
