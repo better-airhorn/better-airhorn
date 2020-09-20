@@ -1,5 +1,5 @@
-import { ReflectKeys } from '../../enums/ReflectKeys';
-import { BaseGuard } from '../Guards/BaseGuard';
+import { ReflectKeys } from '../enums/ReflectKeys';
+import { BaseGuard } from '../struct/Guards/BaseGuard';
 export interface InstantiableGuard {
 	new (): BaseGuard;
 }

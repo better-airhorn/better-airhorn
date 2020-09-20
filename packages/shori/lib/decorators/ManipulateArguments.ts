@@ -1,7 +1,7 @@
 import { isObservable } from 'rxjs';
-import { BaseArgumentManipulator } from '../ArgumentManipulator/BaseArgumentManipulator';
-import { CommandBase } from '../CommandBase';
-import { Message } from '../DiscordExtends/Message';
+import { BaseArgumentManipulator } from '../struct/ArgumentManipulator/BaseArgumentManipulator';
+import { CommandBase } from '../struct/CommandBase';
+import { Message } from '../struct/DiscordExtends/Message';
 
 export interface InstantiableArgumentManipulator {
 	new (): BaseArgumentManipulator;

@@ -1,7 +1,7 @@
-import { ReflectKeys } from '../../enums/ReflectKeys';
-import { addCommand } from '../../Lists/CommandsList';
-import { CommandBase, CommandOptions } from '../CommandBase';
-import { resolveSingleton } from '../util/Util';
+import { ReflectKeys } from '../enums/ReflectKeys';
+import { addCommand } from '../Lists/CommandsList';
+import { CommandBase, CommandOptions } from '../struct/CommandBase';
+import { resolveSingleton } from '../struct/util/Util';
 
 export function Command(name: string, options?: CommandOptions) {
 	return function decorator(constructor_: any): void {

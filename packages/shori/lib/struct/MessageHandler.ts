@@ -2,8 +2,8 @@ import { EventEmitter } from 'events';
 import parseArgs from 'minimist';
 import { CommandBase } from '..';
 import { ShoriClient } from '../client/ShoriClient';
+import { Event } from '../decorators/Events';
 import { commandMap } from '../Lists/CommandsList';
-import { Event } from '../struct/decorators/Events';
 import { Message } from './DiscordExtends/Message';
 const escapeRegex = (str: string): string => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
