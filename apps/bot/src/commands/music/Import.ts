@@ -12,8 +12,9 @@ import { getYoutubeContentSize } from '../../utils/YoutubeUtils';
 @Command('import', {
 	channel: 'any',
 	category: 'music',
-	description: 'imports a sound from youtube',
+	description: 'imports a sound from youtube.\nuse the `-n` parameter to normalize audio level before importing',
 	example: 'import https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+	parseArguments: true,
 })
 export class ImportCommand extends CommandBase {
 	private readonly log = logger.child({ labels: { source: ImportCommand.name } });
@@ -67,8 +68,9 @@ export class ImportCommand extends CommandBase {
 			size: 0,
 		});
 		await entity.save();
+		const normalize = 'n' in message.arguments || 'normalize-audio' in message.arguments;
 		const { stream: oggStream, duration } = await convertToOGG(ytdl(videoUrl, { format }));
-		await this.filesManager.set(entity.id, await normalizeAudio(oggStream));
+		await this.filesManager.set(entity.id, normalize ? await normalizeAudio(oggStream) : oggStream);
 		entity.duration = await duration;
 		entity.size = (await this.filesManager.stat(entity.id)).size;
 		await entity.save();
