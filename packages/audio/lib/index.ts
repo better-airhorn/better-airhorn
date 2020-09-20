@@ -96,7 +96,6 @@ export function normalizeAudio(stream: Readable): Promise<Readable> {
 		});
 		child.stderr.on('data', (b: Buffer) => {
 			// ffmpeg writes the usual output into stderr
-			console.log(b.toString());
 			if (b.toString().includes('pipe:0: Invalid data found when processing input')) {
 				rej(
 					new TypeError(
@@ -108,11 +107,10 @@ export function normalizeAudio(stream: Readable): Promise<Readable> {
 					),
 				);
 				pipe.destroy();
-				return;
 			}
-			child.stdout.once('readable', () => res(child.stdout));
 		});
+		child.stdout.once('readable', () => res(child.stdout));
 	});
 }
 
-export const supporterFormats: string[] = ['aac', 'ac3', 'flac', 'mp3', 'ogg', 'opus', 'wav', 'wma'];
+export const supportedFormats: string[] = ['aac', 'ac3', 'flac', 'mp3', 'ogg', 'opus', 'wav', 'wma'];
