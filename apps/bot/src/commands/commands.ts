@@ -14,6 +14,7 @@ import { RandomCommand } from './music/Random';
 import { SoundInfoCommand } from './music/SoundInfo';
 import { ECommand } from './owner/E';
 import { ExecCommand } from './owner/Exec';
+import { LockDisplayCommand } from './owner/LockDisplay';
 import { TimeCommand } from './owner/Time';
 
 [
@@ -35,4 +36,5 @@ import { TimeCommand } from './owner/Time';
 	ImportCommand,
 	RandomCommand,
 	SoundInfoCommand,
+	LockDisplayCommand,
 ];
