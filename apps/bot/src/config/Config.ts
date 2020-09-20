@@ -17,7 +17,6 @@ export const Config = {
 		playQueue: {
 			name: 'play',
 			simulationsProcessors: 25,
-			lockKeyGenerator: (channelId: string, guildId: string): string => `ba-guild-lock-${guildId}`,
 		},
 		channelRequestQueue: {
 			name: 'channel-request',
