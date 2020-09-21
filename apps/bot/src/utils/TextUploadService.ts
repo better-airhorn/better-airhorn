@@ -3,15 +3,13 @@ import fetch from 'node-fetch';
 
 @Service()
 export class TextUploadService {
-	public readonly base = 'https://your.code.is.being-a.fail/';
+	public readonly base = 'https://code.chilo.space/';
 
 	public async upload(text: string): Promise<string | null> {
 		const res = await fetch(`${this.base}/api/upload`, {
 			method: 'POST',
 			body: text,
-		})
-			.then(r => r.json())
-			.catch(Promise.reject);
+		}).then(r => r.json());
 		return `${res.hash}#${res.key}` ?? null;
 	}
 }
