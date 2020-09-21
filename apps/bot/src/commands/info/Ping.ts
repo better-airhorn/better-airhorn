@@ -8,7 +8,7 @@ import { MinIOService } from '../../services/MinIOService';
 @Command('ping', {
 	channel: 'any',
 	category: 'info',
-	description: 'gets latency to discord api',
+	description: 'gets latency to discord api and other various services',
 	showInHelp: false,
 })
 export class PingCommand extends CommandBase {
@@ -25,7 +25,7 @@ export class PingCommand extends CommandBase {
 
 		return message.channel.send(stripIndents`
 			⚙️  ${processTime}ms - Time to command execution
-			🏓  ${this.client.ws.ping}ms - API Latency
+			🏓  ${this.client.ws.ping}ms - Discord Gateway
 			${Config.emojis.postgres} ${Date.now() - startTime}ms - PostgreSQL
 			${Config.emojis.minIO} ${await this.minIOService.pseudoPing()}ms - MinIO
 		`);
