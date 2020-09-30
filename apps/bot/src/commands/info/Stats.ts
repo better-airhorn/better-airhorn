@@ -1,10 +1,10 @@
 import { Command, CommandBase, Message, version } from '@better-airhorn/shori';
 import { stripIndents } from 'common-tags';
 import { MessageEmbed, version as DJSVersion } from 'discord.js';
-import os from 'os';
-import { Config } from '../../config/Config';
 import moment from 'moment';
 import 'moment-duration-format';
+import os from 'os';
+import { Config } from '../../config/Config';
 
 enum ShardStatus {
 	'✅',
@@ -51,9 +51,12 @@ export class StatsCommand extends CommandBase {
 				.then(r => r.reduce((a: number, b: number) => a + b, 0))) ??
 			this.client.guilds.cache.reduce((a, b) => a + b.memberCount, 0);
 
-		const shardStatus = await this.client.shard
-			?.broadcastEval('this.ws.shards.map(s => s.status)')
-			.then(r => r.reduce((a: string, b: number[]) => a + b.map(c => ShardStatus[c]).join(''), ''));
+		const shardStatusArray: number[] =
+			(await this.client.shard?.broadcastEval('this.ws.shards.map(s => s.status)')) ??
+			this.client.ws.shards.map(s => s.status);
+		const shardStatus = shardStatusArray
+			.map((status, shard) => `Shard ${shard + 1}: ${ShardStatus[status]}`)
+			.join('\n');
 
 		const owners = (
 			await Promise.all(Config.general.ownerIds.map(id => this.client.users.fetch(id).then(r => r.tag)))
