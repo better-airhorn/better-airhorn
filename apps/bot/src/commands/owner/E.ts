@@ -2,7 +2,7 @@
 import { Guild as GuildEntity, GuildSetting, SoundCommand, Statistic, Usage } from '@better-airhorn/entities';
 import { Command, CommandBase, Message, UseGuard } from '@better-airhorn/shori';
 import { getRepository, Like } from 'typeorm';
-import util from 'util';
+import { inspect } from 'util';
 import { ArgsGuard } from '../../guards/ArgsGuard';
 import { logger } from '../../utils/Logger';
 import { TextUploadService } from '../../utils/TextUploadService';
@@ -10,7 +10,7 @@ import { TextUploadService } from '../../utils/TextUploadService';
 @Command('e', {
 	channel: 'any',
 	category: 'owner',
-	example: 'e client.uptime',
+	example: 'e this.client.uptime',
 	description: 'executes javascript',
 	onlyOwner: true,
 	showInHelp: false,
@@ -53,7 +53,7 @@ export class ECommand extends CommandBase {
 		}
 
 		if (typeof text !== 'string') {
-			text = util.inspect(text, {
+			text = inspect(text, {
 				depth: 2,
 			});
 		}
