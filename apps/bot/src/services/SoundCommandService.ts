@@ -11,7 +11,8 @@ import { Config } from '../config/Config';
 import { ChannelError, ChannelJoinError, SoundNotFound } from '../models/CustomErrors';
 import { ChannelLockService } from '../utils/ChannelLockService';
 import { getSubLogger } from '../utils/Logger';
-import { handleUploadAudioFile, onceEmitted, timeout } from '../utils/Utils';
+import { handleUploadAudioFile } from '../utils/prompts/SoundCommandPrompts';
+import { onceEmitted, timeout } from '../utils/Utils';
 import { SoundFilesManager } from './SoundFilesManager';
 
 /**
