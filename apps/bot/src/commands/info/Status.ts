@@ -2,6 +2,7 @@ import { Command, CommandBase, Message } from '@better-airhorn/shori';
 import { MessageEmbed } from 'discord.js';
 import fetch from 'node-fetch';
 import { Config } from '../../config/Config';
+import { wrapInCodeBlock } from '../../utils/Utils';
 
 @Command('status', {
 	channel: 'any',
@@ -14,7 +15,7 @@ export class StatusCommand extends CommandBase {
 		const result = await fetch(Config.credentials.statping.url).then(r => r.json());
 		return message.channel.send(
 			new MessageEmbed().setDescription(
-				`\`\`\`${result.map((v: any) => `${v.online ? '✅' : '❌'} ${v.name}`).join('\n')}\`\`\``,
+				wrapInCodeBlock(`${result.map((v: any) => `${v.online ? '✅' : '❌'} ${v.name}`).join('\n')}`),
 			),
 		);
 	}

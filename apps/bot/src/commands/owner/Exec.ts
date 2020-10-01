@@ -2,6 +2,7 @@ import { Command, CommandBase, Message, UseGuard } from '@better-airhorn/shori';
 import { exec } from 'child_process';
 import { ArgsGuard } from '../../guards/ArgsGuard';
 import { TextUploadService } from '../../utils/TextUploadService';
+import { wrapInCodeBlock } from '../../utils/Utils';
 
 @Command('exec', {
 	channel: 'any',
@@ -30,7 +31,7 @@ export class ExecCommand extends CommandBase {
 					return m.edit(hastebin);
 				}
 
-				return m.edit(`\`\`\`asciidoc\n${output}\`\`\``);
+				return m.edit(wrapInCodeBlock(output, 'asciidoc'));
 			},
 		);
 	}

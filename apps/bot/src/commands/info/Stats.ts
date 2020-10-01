@@ -5,6 +5,7 @@ import moment from 'moment';
 import 'moment-duration-format';
 import os from 'os';
 import { Config } from '../../config/Config';
+import { wrapInCodeBlock } from '../../utils/Utils';
 
 enum ShardStatus {
 	'✅',
@@ -67,35 +68,30 @@ export class StatsCommand extends CommandBase {
 			.setThumbnail(this.client.user.displayAvatarURL({ size: 1024 }))
 			.addField(
 				'System',
-				stripIndents`\`\`\`
+				wrapInCodeBlock(stripIndents`
 				${cpu}
 				${ram}
 				${arch}
 				${uptime}
-			\`\`\``,
+			`),
 			)
 			.addField(
 				'Bot',
-				stripIndents`\`\`\`
-				Guilds: ${guilds}
+				wrapInCodeBlock(stripIndents`
+        Guilds: ${guilds}
 				Channels: ${channels}
 				Members: ${members}
-            \`\`\``,
+        `),
 			)
 			.addField(
 				'Versions',
-				stripIndents`\`\`\`
-                ${node}
-                ${discord}
+				wrapInCodeBlock(stripIndents`
+        ${node}
+        ${discord}
 				${shori}
-            \`\`\``,
+        `),
 			)
-			.addField(
-				'Shards',
-				stripIndents`\`\`\`
-                ${shardStatus}
-            \`\`\``,
-			)
+			.addField('Shards', wrapInCodeBlock(shardStatus))
 			.setFooter(`Made by ${owners}`);
 
 		return message.channel.send(embed);

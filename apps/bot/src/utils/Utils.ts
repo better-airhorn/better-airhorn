@@ -70,6 +70,13 @@ export async function getSimiliarCommandMessageIfInputIsString(input: string | n
 	}
 }
 
+export function wrapInCodeBlock(text: string, opts?: { code: string; inline: boolean } | string): string {
+	const code = typeof opts === 'object' ? opts.code : opts;
+	const inline = typeof opts === 'object' ? opts.inline : true;
+	let output = inline ? '`' : '```';
+	if (code) output += `${code}\n`;
+	return `${output}${text}${inline ? '`' : '```'}`;
+}
 export async function handleUploadAudioFile(opts: {
 	message: Message;
 	attachment: MessageAttachment;
