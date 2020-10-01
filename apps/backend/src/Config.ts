@@ -35,5 +35,10 @@ export const Config = {
 		pg: {
 			url: process.env.PG_URL,
 		},
+		oauth: {
+			id: process.env.OAUTH_CLIENTID,
+			secret: process.env.OAUTH_CLIENTSECRET,
+			callbackUrl: '',
+		},
 	},
 };
