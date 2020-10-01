@@ -3,7 +3,7 @@ import { Command, CommandBase, Message } from '@better-airhorn/shori';
 import { stripIndent } from 'common-tags';
 import { MessageEmbed } from 'discord.js';
 import ms from 'ms';
-import { logger } from '../../utils/Logger';
+import { getSubLogger } from '../../utils/Logger';
 import { PageabelEmbed } from '../../utils/PagableEmbed';
 
 @Command('list', {
@@ -12,7 +12,7 @@ import { PageabelEmbed } from '../../utils/PagableEmbed';
 	description: 'lists all sounds',
 })
 export class ListCommand extends CommandBase {
-	private readonly log = logger.child({ labels: { source: ListCommand.name } });
+	private readonly log = getSubLogger(ListCommand.name);
 
 	private readonly pageSize = 15;
 

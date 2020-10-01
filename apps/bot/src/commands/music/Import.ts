@@ -5,7 +5,7 @@ import ytdl, { getInfo, videoFormat, videoInfo } from 'ytdl-core';
 import { Config } from '../../config/Config';
 import { ArgsGuard } from '../../guards/ArgsGuard';
 import { SoundFilesManager } from '../../services/SoundFilesManager';
-import { logger } from '../../utils/Logger';
+import { getSubLogger } from '../../utils/Logger';
 import { promptSoundCommandValues } from '../../utils/prompts/SoundCommandPrompts';
 import { getYoutubeContentSize } from '../../utils/YoutubeUtils';
 
@@ -17,7 +17,7 @@ import { getYoutubeContentSize } from '../../utils/YoutubeUtils';
 	parseArguments: true,
 })
 export class ImportCommand extends CommandBase {
-	private readonly log = logger.child({ labels: { source: ImportCommand.name } });
+	private readonly log = getSubLogger(ImportCommand.name);
 
 	public constructor(private readonly filesManager: SoundFilesManager) {
 		super();

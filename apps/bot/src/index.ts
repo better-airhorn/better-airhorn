@@ -56,5 +56,10 @@ matches.forEach(key => {
 
 	await client.start(Config.credentials.discord.token);
 })().catch(e => {
-	throw e;
+	if (e instanceof Error) {
+		logger.error(`${e.message}\n${e.stack}`);
+	} else {
+		logger.error(e);
+	}
+	process.exit(1);
 });

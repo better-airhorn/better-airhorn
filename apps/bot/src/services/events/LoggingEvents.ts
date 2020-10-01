@@ -1,10 +1,10 @@
 import { Client, CommandBase, Event, Message, MessageHandler, resolveSingleton, Service } from '@better-airhorn/shori';
 import { BAClient } from '../../client/BAClient';
-import { logger } from '../../utils/Logger';
+import { getSubLogger, logger } from '../../utils/Logger';
 
 @Service()
 export class LoggingEvents {
-	private readonly log = logger.child({ labels: { source: LoggingEvents.name } });
+	private readonly log = getSubLogger(LoggingEvents.name);
 
 	@Client()
 	private readonly client: BAClient;
@@ -52,5 +52,17 @@ export class LoggingEvents {
 	@Event('disconnect')
 	public onDisconnect(_: any, id: number): void {
 		this.log.error(`shard ${id} disconnected`);
+	}
+
+	@Event('unhandledRejection', {
+		source: process,
+		once: false,
+	})
+	public onUnhandledRejection(reason: Error | any) {
+		if (reason instanceof Error) {
+			logger.error(`${reason.message}\n${reason.stack}`);
+			return;
+		}
+		logger.error(reason);
 	}
 }

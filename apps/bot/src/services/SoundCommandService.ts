@@ -10,7 +10,7 @@ import { BAClient } from '../client/BAClient';
 import { Config } from '../config/Config';
 import { ChannelError, ChannelJoinError, SoundNotFound } from '../models/CustomErrors';
 import { ChannelLockService } from '../utils/ChannelLockService';
-import { logger } from '../utils/Logger';
+import { getSubLogger } from '../utils/Logger';
 import { handleUploadAudioFile, onceEmitted, timeout } from '../utils/Utils';
 import { SoundFilesManager } from './SoundFilesManager';
 
@@ -25,7 +25,7 @@ export class SoundCommandService implements OnReady {
 	@Client()
 	private readonly client: BAClient;
 
-	private readonly log = logger.child({ labels: { source: SoundCommandService.name } });
+	private readonly log = getSubLogger(SoundCommandService.name);
 
 	public queue = new Bull(Config.queue.playQueue.name, Config.credentials.redis.url, {
 		settings: {
