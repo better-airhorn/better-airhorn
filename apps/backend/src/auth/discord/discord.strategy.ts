@@ -7,6 +7,7 @@ import { Repository } from 'typeorm';
 import { DiscordService } from '../../services/discord.service';
 import { DiscordProfile } from '../../structures/discord/DiscordProfile';
 import { AuthService } from '../auth.service';
+import { Config } from '../../Config';
 
 @Injectable()
 export class DiscordStrategy extends PassportStrategy(Strategy) {
@@ -17,9 +18,9 @@ export class DiscordStrategy extends PassportStrategy(Strategy) {
 		private readonly guildRepository: Repository<Guild>,
 	) {
 		super({
-			clientID: '462609660487139338',
-			clientSecret: 'IC8jmmEW6p25OCPx27gfCMDfs-kSyulk',
-			callbackURL: 'http://localhost:5000/auth/callback',
+			clientID: Config.credentials.oauth.id,
+			clientSecret: Config.credentials.oauth.secret,
+			callbackURL: Config.credentials.oauth.callbackUrl,
 			scope: [Scope.IDENTIFY, Scope.GUILDS],
 		});
 	}
