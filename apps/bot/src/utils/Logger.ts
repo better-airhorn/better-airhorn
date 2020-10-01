@@ -35,6 +35,10 @@ if (isProd()) {
 }
 export const logger = winston;
 
+export function getSubLogger(source: string) {
+	return logger.child({ labels: { source } });
+}
+
 export class TypeORMLogger implements Logger {
 	private readonly childLogger = logger.child({ labels: { source: 'typeorm' } });
 

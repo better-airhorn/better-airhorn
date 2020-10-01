@@ -1,7 +1,7 @@
 import { Like, SoundCommand } from '@better-airhorn/entities';
 import { Command, CommandBase, Message, UseGuard } from '@better-airhorn/shori';
 import { ArgsGuard } from '../../guards/ArgsGuard';
-import { logger } from '../../utils/Logger';
+import { getSubLogger } from '../../utils/Logger';
 import { filterInt, getSimiliarCommandMessageIfInputIsString } from '../../utils/Utils';
 
 @Command('like', {
@@ -10,7 +10,7 @@ import { filterInt, getSimiliarCommandMessageIfInputIsString } from '../../utils
 	description: 'likes a song, which boosts its rank',
 })
 export class LikeCommand extends CommandBase {
-	private readonly log = logger.child({ labels: { source: LikeCommand.name } });
+	private readonly log = getSubLogger(LikeCommand.name);
 
 	@UseGuard(new ArgsGuard(1))
 	public async exec(message: Message, args: string[]): Promise<any> {

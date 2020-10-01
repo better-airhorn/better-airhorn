@@ -3,7 +3,7 @@ import { Command, CommandBase, Message } from '@better-airhorn/shori';
 import { IPlayJobResponseData, PlayJobResponseCodes } from '@better-airhorn/structures';
 import { stripIndent } from 'common-tags';
 import { SoundCommandService } from '../../services/SoundCommandService';
-import { logger } from '../../utils/Logger';
+import { getSubLogger } from '../../utils/Logger';
 import { QueueUtils } from '../../utils/QueueUtils';
 import { getHumanReadableError, timeout } from '../../utils/Utils';
 
@@ -13,7 +13,7 @@ import { getHumanReadableError, timeout } from '../../utils/Utils';
 	description: 'plays a random sound',
 })
 export class RandomCommand extends CommandBase {
-	private readonly log = logger.child({ labels: { source: RandomCommand.name } });
+	private readonly log = getSubLogger(RandomCommand.name);
 
 	public constructor(private readonly soundService: SoundCommandService, private readonly queueUtils: QueueUtils) {
 		super();

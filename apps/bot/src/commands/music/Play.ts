@@ -5,7 +5,7 @@ import { stripIndent } from 'common-tags';
 import { MessageReaction, User } from 'discord.js';
 import { ArgsGuard } from '../../guards/ArgsGuard';
 import { SoundCommandService } from '../../services/SoundCommandService';
-import { logger } from '../../utils/Logger';
+import { getSubLogger } from '../../utils/Logger';
 import { QueueUtils } from '../../utils/QueueUtils';
 import { getHumanReadableError, getSimiliarCommandMessageIfInputIsString, timeout } from '../../utils/Utils';
 
@@ -16,7 +16,7 @@ import { getHumanReadableError, getSimiliarCommandMessageIfInputIsString, timeou
 	example: 'play airhorn',
 })
 export class PlayCommand extends CommandBase {
-	private readonly log = logger.child({ labels: { source: PlayCommand.name } });
+	private readonly log = getSubLogger(PlayCommand.name);
 
 	public constructor(private readonly soundService: SoundCommandService, private readonly queueUtils: QueueUtils) {
 		super();

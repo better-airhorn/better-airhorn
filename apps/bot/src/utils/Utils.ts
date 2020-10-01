@@ -10,7 +10,7 @@ import { EventEmitter } from 'typeorm/platform/PlatformTools';
 import { promisify } from 'util';
 import { Config } from '../config/Config';
 import { SoundFilesManager } from '../services/SoundFilesManager';
-import { logger } from './Logger';
+import { getSubLogger } from './Logger';
 import { promptSoundCommandValues } from './prompts/SoundCommandPrompts';
 
 export const timeout = promisify(setTimeout);
@@ -76,7 +76,7 @@ export async function handleUploadAudioFile(opts: {
 	filesManager: SoundFilesManager;
 }) {
 	const { message, attachment, filesManager } = opts;
-	const log = logger.child({ labels: { source: 'AudioUpload' } });
+	const log = getSubLogger('AudioUpload');
 	const fileformat = attachment.name.split('.').pop();
 
 	const reaction = await message.react(Config.emojis.import);
