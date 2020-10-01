@@ -1,7 +1,8 @@
+import { convertToOGG } from '@better-airhorn/audio';
 import { AccessType, AccessTypeUserMapping, SoundCommand } from '@better-airhorn/entities';
 import { Message as SMessage } from '@better-airhorn/shori';
 import { stripIndents } from 'common-tags';
-import { Message } from 'discord.js';
+import { Message, MessageAttachment, MessageReaction, User } from 'discord.js';
 import {
 	DiscordPrompt,
 	DiscordPromptFunction,
@@ -11,6 +12,11 @@ import {
 	PromptNode,
 	Rejection,
 } from 'discord.js-prompts';
+import fetch from 'node-fetch';
+import { Readable } from 'typeorm/platform/PlatformTools';
+import { Config } from '../../config/Config';
+import { SoundFilesManager } from '../../services/SoundFilesManager';
+import { getSubLogger } from '../Logger';
 import { wrapInCodeBlock } from '../Utils';
 export interface SoundCommandPromptType {
 	name?: string;
@@ -82,4 +88,80 @@ export async function promptSoundCommandValues(
 		await message.error('an unexpected error appeared');
 		return { ok: false, err };
 	}
+}
+
+export async function handleUploadAudioFile(opts: {
+	message: SMessage;
+	attachment: MessageAttachment;
+	filesManager: SoundFilesManager;
+}) {
+	const { message, attachment, filesManager } = opts;
+	const log = getSubLogger('AudioUpload');
+	const fileformat = attachment.name.split('.').pop();
+
+	const reaction = await message.react(Config.emojis.import);
+	const reacted = await message
+		.awaitReactions(
+			(r: MessageReaction, u: User) => r.emoji?.id === Config.emojis.import && u.id === message.author.id,
+			{ time: 50000, max: 1, errors: ['time'] },
+		)
+		.then(() => true)
+		.catch(() => false);
+	await reaction.remove().catch(() => null);
+	if (!reacted) {
+		return;
+	}
+
+	const promptData = await promptSoundCommandValues(message);
+	if (!promptData.ok) {
+		return log.error(promptData.err);
+	}
+
+	const entity = new SoundCommand({
+		accessType: promptData.data.accessType,
+		guild: message.guild.id,
+		name: promptData.data.name,
+		user: message.author.id,
+		duration: 0,
+		size: 0,
+	});
+	await entity.save();
+	const msg = await message.neutral(`Please wait, I'm downloading and converting your file ${Config.emojis.loading}`);
+	try {
+		const { ok, body, statusText } = await fetch(attachment.url);
+		if (!ok) {
+			throw new Error(`unexpected response ${statusText}`);
+		}
+
+		const cancel = async () => {
+			await filesManager.delete(entity.id).catch(() => null);
+			await entity.remove();
+			await msg.delete();
+			await message.error('Your file is either not valid or empty');
+		};
+
+		const { stream, duration } = await convertToOGG(body as Readable).catch(async () => {
+			log.debug(`failed to convert downloaded file with format ${fileformat}`);
+			await cancel();
+			return { stream: undefined, duration: undefined };
+		});
+		if (!stream && !duration) return;
+
+		await filesManager.set(entity.id, stream);
+		if ((await duration) < 0.5) {
+			await cancel();
+			return;
+		}
+		entity.duration = await duration;
+		entity.size = (await filesManager.stat(entity.id)).size;
+		await entity.save();
+	} catch (err) {
+		log.error('failed while importing file', err);
+		await filesManager.delete(entity.id).catch(() => null);
+		await entity.remove();
+		await msg.delete();
+		return message.error('Something went wrong while importing the file');
+	}
+	await msg.delete();
+	await message.success(`I saved your sound as \`${entity.name}\``);
 }
