@@ -1,7 +1,8 @@
 import { AccessType, GuildSetting, SoundCommand } from '@better-airhorn/entities';
-import { Command, CommandBase, Message } from '@better-airhorn/shori';
+import { Command, CommandBase, Message, UseGuard } from '@better-airhorn/shori';
 import { IPlayJobResponseData, PlayJobResponseCodes } from '@better-airhorn/structures';
 import { stripIndent } from 'common-tags';
+import { HealthCheckGuard } from '../../guards/HealthCheckGuard';
 import { SoundCommandService } from '../../services/SoundCommandService';
 import { getSubLogger } from '../../utils/Logger';
 import { QueueUtils } from '../../utils/QueueUtils';
@@ -19,6 +20,7 @@ export class RandomCommand extends CommandBase {
 		super();
 	}
 
+	@UseGuard(HealthCheckGuard)
 	public async exec(message: Message): Promise<any> {
 		const { guild, author, member } = message;
 		if (!member.voice?.channelID) {

@@ -4,6 +4,7 @@ import { IPlayJobResponseData, PlayJobResponseCodes } from '@better-airhorn/stru
 import { stripIndent } from 'common-tags';
 import { MessageReaction, User } from 'discord.js';
 import { ArgsGuard } from '../../guards/ArgsGuard';
+import { HealthCheckGuard } from '../../guards/HealthCheckGuard';
 import { SoundCommandService } from '../../services/SoundCommandService';
 import { getSubLogger } from '../../utils/Logger';
 import { QueueUtils } from '../../utils/QueueUtils';
@@ -23,6 +24,7 @@ export class PlayCommand extends CommandBase {
 	}
 
 	@UseGuard(new ArgsGuard(1))
+	@UseGuard(HealthCheckGuard)
 	public async exec(message: Message, args: string[]): Promise<any> {
 		const { guild, author, member } = message;
 		if (!member.voice?.channelID) {
