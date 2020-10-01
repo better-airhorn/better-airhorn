@@ -4,6 +4,7 @@ import { Command, CommandBase, Message, UseGuard } from '@better-airhorn/shori';
 import ytdl, { getInfo, videoFormat, videoInfo } from 'ytdl-core';
 import { Config } from '../../config/Config';
 import { ArgsGuard } from '../../guards/ArgsGuard';
+import { HealthCheckGuard } from '../../guards/HealthCheckGuard';
 import { SoundFilesManager } from '../../services/SoundFilesManager';
 import { getSubLogger } from '../../utils/Logger';
 import { promptSoundCommandValues } from '../../utils/prompts/SoundCommandPrompts';
@@ -24,6 +25,7 @@ export class ImportCommand extends CommandBase {
 	}
 
 	@UseGuard(new ArgsGuard(1))
+	@UseGuard(HealthCheckGuard)
 	public async exec(message: Message, args: string[]): Promise<any> {
 		const videoUrl = args.shift();
 		let format: videoFormat;

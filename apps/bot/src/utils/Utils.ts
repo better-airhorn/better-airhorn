@@ -77,6 +77,11 @@ export function wrapInCodeBlock(text: string, opts?: { code: string; inline: boo
 	if (code) output += `${code}\n`;
 	return `${output}${text}${inline ? '`' : '```'}`;
 }
+
+export function isTimeOver(oldTime: number, timeout: number): boolean {
+	return Date.now() - timeout > oldTime;
+}
+
 export async function handleUploadAudioFile(opts: {
 	message: Message;
 	attachment: MessageAttachment;

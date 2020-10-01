@@ -50,7 +50,16 @@ export class MinIOService implements OnInit {
 
 	public async pseudoPing(): Promise<number> {
 		const start = Date.now();
-		await this.client.statObject(this.bucketName, Math.random().toString()).catch(() => null);
+		await this.client.bucketExists(this.bucketName).then(exists => {
+			if (!exists) throw Error(`MinIO Bucket not available`);
+		});
 		return Date.now() - start;
+	}
+
+	public async healthy(): Promise<boolean> {
+		const value = await this.pseudoPing()
+			.then(() => true)
+			.catch(() => false);
+		return value;
 	}
 }

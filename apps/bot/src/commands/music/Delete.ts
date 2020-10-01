@@ -1,6 +1,7 @@
 import { SoundCommand } from '@better-airhorn/entities';
-import { Command, CommandBase, Message } from '@better-airhorn/shori';
+import { Command, CommandBase, Message, UseGuard } from '@better-airhorn/shori';
 import { Config } from '../../config/Config';
+import { HealthCheckGuard } from '../../guards/HealthCheckGuard';
 import { SoundCommandService } from '../../services/SoundCommandService';
 import { filterInt, getSimiliarCommandMessageIfInputIsString } from '../../utils/Utils';
 
@@ -15,6 +16,7 @@ export class DeleteCommand extends CommandBase {
 		super();
 	}
 
+	@UseGuard(HealthCheckGuard)
 	public async exec(message: Message, args: string[]): Promise<any> {
 		const canForce = Config.general.ownerIds.includes(message.author.id);
 		const param = filterInt(args[0]) || args[0];
