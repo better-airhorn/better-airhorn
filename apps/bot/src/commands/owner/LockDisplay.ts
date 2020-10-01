@@ -1,7 +1,7 @@
 import { Command, CommandBase, Message } from '@better-airhorn/shori';
-import { stripIndent } from 'common-tags';
 import { MessageEmbed } from 'discord.js';
 import { ChannelLockService } from '../../utils/ChannelLockService';
+import { wrapInCodeBlock } from '../../utils/Utils';
 
 @Command('locks', {
 	channel: 'any',
@@ -22,14 +22,12 @@ export class LockDisplayCommand extends CommandBase {
 		if (locks.length === 0) return message.channel.send(`there are no locks`);
 		await message.channel.send(
 			new MessageEmbed().setFooter(`total of ${this.locks.getMap.size} lock(s)`).setDescription(
-				stripIndent`
-      \`\`\`
-      ${locks
-				.map(info => `${info.guildName}: ${info.lock.acquired ? 'acquired' : 'free'}`)
-				.slice(0, 30)
-				.join('\n')}
-      \`\`\`
-      `,
+				wrapInCodeBlock(
+					locks
+						.map(info => `${info.guildName}: ${info.lock.acquired ? 'acquired' : 'free'}`)
+						.slice(0, 30)
+						.join('\n'),
+				),
 			),
 		);
 	}

@@ -11,6 +11,7 @@ import {
 	PromptNode,
 	Rejection,
 } from 'discord.js-prompts';
+import { wrapInCodeBlock } from '../Utils';
 export interface SoundCommandPromptType {
 	name?: string;
 	accessType?: AccessType;
@@ -35,11 +36,10 @@ const askNameFn: DiscordPromptFunction<SoundCommandPromptType> = async (m: Messa
 };
 
 const askAccessTypeVisual = new MessageVisual(
-	stripIndents`\`\`\`
+	wrapInCodeBlock(stripIndents`
   Who should be able to use the sound?
   [guild]    only members of this guild can use it
-  [everyone] anyone can use it
-  \`\`\``,
+  [everyone] anyone can use it`),
 );
 
 const askAccessTypeFn: DiscordPromptFunction<SoundCommandPromptType> = async (
