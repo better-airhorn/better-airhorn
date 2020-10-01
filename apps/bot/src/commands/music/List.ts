@@ -1,10 +1,11 @@
-import { AccessType, AccessTypeUserMapping, SoundCommand } from '@better-airhorn/entities';
-import { Command, CommandBase, Message } from '@better-airhorn/shori';
-import { stripIndent } from 'common-tags';
-import { MessageEmbed } from 'discord.js';
+import { AccessType, SoundCommand } from '@better-airhorn/entities';
+import { Command, CommandBase, Message, UseGuard } from '@better-airhorn/shori';
+import { Guild, MessageEmbed, User } from 'discord.js';
 import ms from 'ms';
+import { HealthCheckGuard } from '../../guards/HealthCheckGuard';
 import { getSubLogger } from '../../utils/Logger';
 import { PageabelEmbed } from '../../utils/PagableEmbed';
+import { wrapInCodeBlock } from '../../utils/Utils';
 
 @Command('list', {
 	channel: 'any',
@@ -16,11 +17,10 @@ export class ListCommand extends CommandBase {
 
 	private readonly pageSize = 15;
 
+	@UseGuard(HealthCheckGuard)
 	public async exec(message: Message, args: string[]): Promise<any> {
-		const accessType: AccessType =
-			AccessTypeUserMapping[(args[0] ?? 'everyone').toLowerCase() as keyof typeof AccessTypeUserMapping];
+		const whereFilter = this.buildWhereFilter(args, { user: message.author, guild: message.guild });
 		const msg = await message.neutral('Fetching Information');
-		const whereFilter = getWhereFilter(accessType, message.guild.id, message.author.id);
 		const count = await SoundCommand.count({ where: whereFilter });
 
 		await new PageabelEmbed(
@@ -28,6 +28,9 @@ export class ListCommand extends CommandBase {
 			async page => {
 				const data = await this.next({ page, filter: whereFilter });
 				if (!data || data.length < 1) {
+					if (page === 1) {
+						return new MessageEmbed().setDescription('no data');
+					}
 					return undefined;
 				}
 				const longestKey = Math.max(...data.map(d => d.likes.toLocaleString().length + d.name.length + 3));
@@ -35,14 +38,16 @@ export class ListCommand extends CommandBase {
 
 				return new MessageEmbed()
 					.setDescription(
-						`\`\`\`css\n${stripIndent`
-            ${data
-							.map(d => {
-								const string = `[${d.likes}] ${d.name}`;
-								const repeatFor = longestKey - string.length > 0 ? longestKey - string.length : 0;
-								return `${string}${' '.repeat(repeatFor)} (${ms(d.duration)})`;
-							})
-							.join('\n')}\`\`\``}`,
+						wrapInCodeBlock(
+							data
+								.map(d => {
+									const string = `[${d.likes}] ${d.name}`;
+									const repeatFor = longestKey - string.length > 0 ? longestKey - string.length : 0;
+									return `${string}${' '.repeat(repeatFor)} (${ms(d.duration)})`;
+								})
+								.join('\n'),
+							'css',
+						),
 					)
 					.setFooter(`Page ${page}/${Math.ceil(count / this.pageSize)} | ${alreadyShowedCount}/${count} Entries`);
 			},
@@ -76,30 +81,26 @@ export class ListCommand extends CommandBase {
 				return r;
 			});
 	}
+
+	private buildWhereFilter(args: string[], context: { user: User; guild: Guild }): WhereFilter {
+		switch (args[0]) {
+			case 'mine':
+				return { user: context.user.id };
+			case 'user':
+				if (args[1]) {
+					return { user: args[1] };
+				}
+				return { user: context.user.id };
+			case 'guild':
+				return { guild: context.guild.id, accessType: AccessType.ONLY_GUILD };
+			default:
+				return { accessType: AccessType.EVERYONE };
+		}
+	}
 }
 
 interface WhereFilter {
-	accessType: AccessType;
+	accessType?: AccessType;
 	guild?: string;
 	user?: string;
-}
-
-function getWhereFilter(type: AccessType, guild: string, user: string): WhereFilter {
-	const whereFilter: WhereFilter = {
-		accessType: type,
-	};
-	switch (type) {
-		case AccessType.EVERYONE: {
-			break;
-		}
-		case AccessType.ONLY_GUILD: {
-			whereFilter.guild = guild;
-			break;
-		}
-		case AccessType.ONLY_ME: {
-			whereFilter.user = user;
-			break;
-		}
-	}
-	return whereFilter;
 }
