@@ -36,8 +36,8 @@
 		"web-dashboard"
 	],
 	"devDependencies": {
-		"@commitlint/cli": "^9.1.2",
-		"@commitlint/config-angular": "^8.3.4",
+		"@commitlint/cli": "^11.0.0",
+		"@commitlint/config-angular": "^11.0.0",
 		"@typescript-eslint/eslint-plugin": "^2.22.0",
 		"@typescript-eslint/parser": "^2.22.0",
 		"eslint": "^6.8.0",
@@ -45,11 +45,11 @@
 		"eslint-config-prettier": "^6.10.0",
 		"eslint-plugin-import": "^2.20.1",
 		"eslint-plugin-prettier": "^3.1.2",
-		"husky": "^4.2.3",
-		"lerna": "^3.20.2",
-		"lint-staged": "^10.0.8",
-		"prettier": "^1.19.1",
-		"typescript": "^3.9.6"
+		"husky": "^4.3.0",
+		"lerna": "^3.22.1",
+		"lint-staged": "^10.4.0",
+		"prettier": "^2.1.2",
+		"typescript": "^4.0.3"
 	},
 	"engines": {
 		"node": ">=12.0.0"
