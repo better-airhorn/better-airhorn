@@ -20,7 +20,7 @@ jobs:
         run: sudo apt-get update ; sudo apt-get install ffmpeg
 
       - name: Install dependencies
-        run: yarn
+        run: yarn && yarn run build
 
       - name: Run Tests
         run: yarn run test

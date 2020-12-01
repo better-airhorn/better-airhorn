@@ -1,116 +1,116 @@
 {
-    "$schema": "http://json.schemastore.org/package",
-    "name": "better-airhorn-next",
-    "description": "A feature-rich discord bot to use as soundboard, including a web dashboard",
-    "version": "3.0.0-dev",
-    "bugs": "https://github.com/Clemens-E/better-airhorn-next/issues",
-    "commitlint": {
-        "extends": [
-            "@commitlint/config-angular"
-        ],
-        "rules": {
-            "type-enum": [
-                2,
-                "always",
-                [
-                    "chore",
-                    "build",
-                    "ci",
-                    "feat",
-                    "fix",
-                    "perf",
-                    "refactor",
-                    "revert",
-                    "style",
-                    "test",
-                    "types",
-                    "wip",
-                    "config"
-                ]
-            ]
-        }
-    },
-    "contributors": [
-        "Clemens E (https://github.com/Clemens-E)",
-        "Quentin W (https://github.com/qwright10)"
-    ],
-    "dependencies": {},
-    "devDependencies": {
-        "@commitlint/cli": "^11.0.0",
-        "@commitlint/config-angular": "^11.0.0",
-        "@typescript-eslint/eslint-plugin": "^2.22.0",
-        "@typescript-eslint/parser": "^2.22.0",
-        "eslint": "^6.8.0",
-        "eslint-config-marine": "^6.0.0",
-        "eslint-config-prettier": "^6.10.0",
-        "eslint-plugin-import": "^2.20.1",
-        "eslint-plugin-prettier": "^3.1.2",
-        "husky": "^4.2.3",
-        "lerna": "^3.22.1",
-        "lint-staged": "^10.0.8",
-        "prettier": "^1.19.1",
-        "typescript": "^3.9.6"
-    },
-    "engines": {
-        "node": ">=12.0.0"
-    },
-    "eslintConfig": {
-        "extends": "marine/prettier/node",
-        "rules": {
-            "@typescript-eslint/no-extraneous-class": "off",
-            "@typescript-eslint/no-floating-promises": 1,
-            "@typescript-eslint/no-use-before-define": [
-                "error",
-                {
-                    "functions": false
-                }
-            ],
-            "no-useless-constructor": "off"
-        }
-    },
-    "homepage": "https://github.com/Clemens-E/better-airhorn-next#readme",
-    "husky": {
-        "hooks": {
-            "pre-commit": "lint-staged",
-            "commit-msg": "commitlint -E HUSKY_GIT_PARAMS"
-        }
-    },
-    "keywords": [
-        "better-airhorn",
-        "discord",
-        "soundboard",
-        "web-dashboard"
-    ],
-    "license": "GPL-3.0",
-    "lint-staged": {
-        "*.ts": [
-            "eslint --fix",
-            "prettier --write --use-tabs --single-quote --print-width 120 --trailing-comma all --end-of-line lf"
-        ],
-        "*.{json,yml,yaml}": [
-            "prettier --write --use-tabs --single-quote --print-width 120 --trailing-comma all --end-of-line lf"
-        ]
-    },
-    "private": true,
-    "publishConfig": {
-        "registry": "https://npm.pkg.github.com/"
-    },
-    "repository": "Clemens-E/better-airhorn-next.git",
-    "scripts": {
-        "bootstrap": "lerna bootstrap",
-        "build": "yarn workspaces run build",
-        "build:bot": "sh ./scripts/buildprod.sh",
-        "installAll": "lerna exec \"yarn install\" --parallel",
-        "lint": "eslint . --ext .ts",
-        "lint:fix": "eslint . --ext .ts --fix",
-        "prettier": "prettier --write --use-tabs --single-quote --print-width 120 --trailing-comma all --end-of-line lf",
-        "test": "yarn workspaces run test"
-    },
-    "workspaces": [
-        "apps/bot",
-        "packages/audio",
-        "packages/entities",
-        "packages/shori",
-        "packages/structures"
-    ]
+	"$schema": "http://json.schemastore.org/package",
+	"name": "better-airhorn-next",
+	"description": "A feature-rich discord bot to use as soundboard, including a web dashboard",
+	"version": "3.0.0-dev",
+	"bugs": "https://github.com/Clemens-E/better-airhorn-next/issues",
+	"commitlint": {
+		"extends": [
+			"@commitlint/config-angular"
+		],
+		"rules": {
+			"type-enum": [
+				2,
+				"always",
+				[
+					"chore",
+					"build",
+					"ci",
+					"feat",
+					"fix",
+					"perf",
+					"refactor",
+					"revert",
+					"style",
+					"test",
+					"types",
+					"wip",
+					"config"
+				]
+			]
+		}
+	},
+	"contributors": [
+		"Clemens E (https://github.com/Clemens-E)",
+		"Quentin W (https://github.com/qwright10)"
+	],
+	"dependencies": {},
+	"devDependencies": {
+		"@commitlint/cli": "^11.0.0",
+		"@commitlint/config-angular": "^11.0.0",
+		"@typescript-eslint/eslint-plugin": "^2.22.0",
+		"@typescript-eslint/parser": "^2.22.0",
+		"eslint": "^6.8.0",
+		"eslint-config-marine": "^6.0.0",
+		"eslint-config-prettier": "^6.10.0",
+		"eslint-plugin-import": "^2.20.1",
+		"eslint-plugin-prettier": "^3.1.2",
+		"husky": "^4.2.3",
+		"lerna": "^3.22.1",
+		"lint-staged": "^10.0.8",
+		"prettier": "^1.19.1",
+		"typescript": "^3.9.6"
+	},
+	"engines": {
+		"node": ">=12.0.0"
+	},
+	"eslintConfig": {
+		"extends": "marine/prettier/node",
+		"rules": {
+			"@typescript-eslint/no-extraneous-class": "off",
+			"@typescript-eslint/no-floating-promises": 1,
+			"@typescript-eslint/no-use-before-define": [
+				"error",
+				{
+					"functions": false
+				}
+			],
+			"no-useless-constructor": "off"
+		}
+	},
+	"homepage": "https://github.com/Clemens-E/better-airhorn-next#readme",
+	"husky": {
+		"hooks": {
+			"pre-commit": "lint-staged",
+			"commit-msg": "commitlint -E HUSKY_GIT_PARAMS"
+		}
+	},
+	"keywords": [
+		"better-airhorn",
+		"discord",
+		"soundboard",
+		"web-dashboard"
+	],
+	"license": "GPL-3.0",
+	"lint-staged": {
+		"*.ts": [
+			"eslint --fix",
+			"prettier --write --use-tabs --single-quote --print-width 120 --trailing-comma all --end-of-line lf"
+		],
+		"*.{json,yml,yaml}": [
+			"prettier --write --use-tabs --single-quote --print-width 120 --trailing-comma all --end-of-line lf"
+		]
+	},
+	"private": true,
+	"publishConfig": {
+		"registry": "https://npm.pkg.github.com/"
+	},
+	"repository": "Clemens-E/better-airhorn-next.git",
+	"scripts": {
+		"bootstrap": "lerna bootstrap",
+		"build": "lerna run build",
+		"build:bot": "sh ./scripts/buildprod.sh",
+		"installAll": "lerna exec \"yarn install\" --parallel",
+		"lint": "eslint . --ext .ts",
+		"lint:fix": "eslint . --ext .ts --fix",
+		"prettier": "prettier --write --use-tabs --single-quote --print-width 120 --trailing-comma all --end-of-line lf",
+		"test": "yarn workspaces run test"
+	},
+	"workspaces": [
+		"apps/bot",
+		"packages/audio",
+		"packages/entities",
+		"packages/shori",
+		"packages/structures"
+	]
 }
