@@ -73,6 +73,7 @@ export class ListCommand extends CommandBase {
 			.addSelect('COUNT(DISTINCT(likes.id)) as likes')
 			.groupBy('sound.id')
 			.orderBy({ likes: 'DESC' })
+			.addOrderBy('uses', 'DESC')
 			.limit(this.pageSize)
 			.offset(offset)
 			.getRawMany()

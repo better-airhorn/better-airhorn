@@ -12,6 +12,7 @@ import { ListCommand } from './music/List';
 import { PlayCommand } from './music/Play';
 import { RandomCommand } from './music/Random';
 import { SoundInfoCommand } from './music/SoundInfo';
+import { StopCommand } from './music/Stop';
 import { ECommand } from './owner/E';
 import { ExecCommand } from './owner/Exec';
 import { LockDisplayCommand } from './owner/LockDisplay';
@@ -37,4 +38,5 @@ import { TimeCommand } from './owner/Time';
 	RandomCommand,
 	SoundInfoCommand,
 	LockDisplayCommand,
+	StopCommand,
 ];

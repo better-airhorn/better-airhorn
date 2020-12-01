@@ -8,7 +8,7 @@ import { HealthCheckGuard } from '../../guards/HealthCheckGuard';
 import { SoundCommandService } from '../../services/SoundCommandService';
 import { getSubLogger } from '../../utils/Logger';
 import { QueueUtils } from '../../utils/QueueUtils';
-import { getHumanReadableError, getSimiliarCommandMessageIfInputIsString, timeout } from '../../utils/Utils';
+import { getHumanReadableError, timeout } from '../../utils/Utils';
 
 @Command('play', {
 	channel: 'guild',
@@ -30,12 +30,23 @@ export class PlayCommand extends CommandBase {
 		if (!member.voice?.channelID) {
 			return message.error('you need to be in a voice channel to run this command');
 		}
-		const sound = await this.soundService.get(args[0]);
+		let sound = await this.soundService.get(args[0]);
 		if (!sound) {
-			return message.error(
-				`could not find sound named \`${args[0]}\``,
-				await getSimiliarCommandMessageIfInputIsString(args[0]),
-			);
+			const similarSound = await this.soundService.findSimilarSoundCommand(args[0]);
+			if (similarSound.similarity >= 0.7) {
+				await message.neutral(
+					`I was not able to find a Sound with that name, I'm ${(similarSound.similarity * 100).toFixed(
+						0,
+					)}% sure you meant ${similarSound.sound.name}`,
+					'I will play that one it for you',
+				);
+				sound = similarSound.sound;
+			} else {
+				return message.error(
+					`could not find sound named \`${args[0]}\``,
+					similarSound.similarity >= 0.5 ? `did you mean ${similarSound.sound.name}?` : '',
+				);
+			}
 		}
 
 		const job = await this.soundService.addJob(guild.shardID, {
