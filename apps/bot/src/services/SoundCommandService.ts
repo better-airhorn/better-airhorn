@@ -182,6 +182,17 @@ export class SoundCommandService implements OnReady {
 		return getRepository(SoundCommand).findOne({ where: { name } });
 	}
 
+	public async findSimilarSoundCommand(input: string): Promise<{ sound: SoundCommand; similarity: number }> {
+		const idAndSimilarity = await SoundCommand.createQueryBuilder('sound')
+			.select('sound.id')
+			.addSelect('SIMILARITY(sound.name, :val)', 'similarity')
+			.orderBy('similarity', 'DESC')
+			.setParameter('val', input)
+			.limit(1)
+			.getRawOne();
+		return { sound: await SoundCommand.findOne(idAndSimilarity.sound_id), similarity: idAndSimilarity.similarity };
+	}
+
 	public addJob(shardId: number, data: IPlayJobRequestData): Promise<Job<IPlayJobResponseData>> {
 		return this.queue.add(shardId.toString(), data);
 	}

@@ -11,7 +11,7 @@ export class BAClient extends ShoriClient {
 	}
 
 	public async getPrefix(id: string): Promise<string> {
-		const settings = await this.guildSettings.findOne(id, { cache: Config.caching.GuildSettingsCacheDuration });
+		const settings = await this.guildSettings.findOne(id);
 		if (!settings) {
 			const newSettings = new GuildSetting({ guild: id, prefix: Config.general.prefix });
 			await newSettings.save();

@@ -1,15 +1,13 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
 import { Logger } from 'typeorm';
 import { createLogger, format, transports } from 'winston';
+import LokiTransport from 'winston-loki';
+import { ConsoleTransportInstance } from 'winston/lib/winston/transports';
 import { Config } from '../config/Config';
 import { isProd } from './isEnvironment';
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const LokiTransport = require('winston-loki');
 
-const winston = createLogger();
-
-winston.add(
-	new transports.Console({
+const usedTransports: { loki?: LokiTransport; console: ConsoleTransportInstance } = {
+	console: new transports.Console({
 		format: format.combine(
 			format.colorize(),
 			format.splat(),
@@ -22,21 +20,26 @@ winston.add(
 		),
 		level: Config.logging.level,
 	}),
-);
+};
 
 if (isProd()) {
-	winston.add(
-		new LokiTransport({
-			host: Config.credentials.loki.url,
-			labels: { job: 'better-airhorn-bot' },
-			level: Config.logging.level,
-		}),
-	);
+	usedTransports.loki = new LokiTransport({
+		host: Config.credentials.loki.url,
+		labels: { job: 'better-airhorn-bot' },
+		level: Config.logging.level,
+	});
 }
+
+const winston = createLogger();
 export const logger = winston;
 
 export function getSubLogger(source: string) {
 	return logger.child({ labels: { source } });
+}
+
+export function changeLogLevel(level: 'debug' | 'info' | 'error') {
+	usedTransports.console.level = level;
+	if (usedTransports.loki) usedTransports.loki.level = level;
 }
 
 export class TypeORMLogger implements Logger {

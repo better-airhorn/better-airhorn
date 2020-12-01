@@ -18,9 +18,8 @@ jobs:
           node-version: ${{ matrix.node-version }}
       - name: Authenticate with GitHub package registry
         run: echo "//npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}" > ~/.npmrc
-      - run: npm ci
-      - run: npm run installAll
-      - run: npm run build:bot
+      - run: yarn
+      - run: yarn run build:bot
         env:
           CI: true
       - uses: edgarrc/action-7z@v1.0.4

@@ -12,6 +12,12 @@ export class Message extends DMessage {
 		this.commandFlags = [];
 	}
 
+	public get reactable(): boolean {
+		// @ts-ignore
+		if (this.channel.type === 'dm' || !this.guild) return true;
+		return this.channel.permissionsFor(this.guild.me).has('ADD_REACTIONS');
+	}
+
 	public error(description: string, footer?: string): Promise<this> {
 		const embed = new MessageEmbed();
 		if (description) embed.setDescription(description);

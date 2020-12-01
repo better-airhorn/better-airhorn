@@ -3,7 +3,7 @@ set -e
 set -x
 
 cd apps/bot
-npm run build
+yarn run build
 cd ../..
 
 rm builds -rf

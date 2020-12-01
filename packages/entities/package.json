@@ -1,33 +1,31 @@
 {
-	"name": "@better-airhorn/entities",
-	"version": "0.0.4",
-	"description": "shared entities used by better-airhorn",
-	"author": "Clemens Ertle",
-	"homepage": "https://github.com/Clemens-E/better-airhorn-next/tree/master/packages/entities#readme",
-	"license": "GPL-3.0",
-	"main": "dist/index.js",
-	"typings": "dist/index.d.ts",
-	"directories": {
-		"lib": "lib"
-	},
-	"files": [
-		"/dist"
-	],
-	"publishConfig": {
-		"access": "public",
-		"registry": "https://npm.pkg.github.com/"
-	},
-	"repository": {
-		"type": "git",
-		"url": "git+https://github.com/better-airhorn/better-airhorn.git"
-	},
-	"bugs": {
-		"url": "https://github.com/better-airhorn/better-airhorn/issues"
-	},
-	"dependencies": {
-		"typeorm": "^0.2.28"
-	},
-	"scripts": {
-		"build": "tsc"
-	}
+    "name": "@better-airhorn/entities",
+    "description": "shared entities used by better-airhorn",
+    "version": "0.0.4",
+    "bugs": "https://github.com/better-airhorn/better-airhorn/issues",
+    "contributors": [
+        "Clemens E (https://github.com/Clemens-E)"
+    ],
+    "dependencies": {
+        "typeorm": "^0.2.29"
+    },
+    "directories": {
+        "lib": "lib"
+    },
+    "files": [
+        "/dist"
+    ],
+    "homepage": "https://github.com/Clemens-E/better-airhorn-next/tree/master/packages/entities#readme",
+    "license": "GPL-3.0",
+    "main": "dist/index.js",
+    "publishConfig": {
+        "access": "public",
+        "registry": "https://npm.pkg.github.com/"
+    },
+    "repository": "better-airhorn/better-airhorn.git",
+    "scripts": {
+        "test": "exit 0",
+        "build": "tsc"
+    },
+    "typings": "dist/index.d.ts"
 }

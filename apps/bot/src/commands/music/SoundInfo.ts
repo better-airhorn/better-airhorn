@@ -4,7 +4,8 @@ import { stripIndent } from 'common-tags';
 import { MessageEmbed } from 'discord.js';
 import ms from 'ms';
 import { ArgsGuard } from '../../guards/ArgsGuard';
-import { filterInt, getSimiliarCommandMessageIfInputIsString, humanFileSize } from '../../utils/Utils';
+import { SoundCommandService } from '../../services/SoundCommandService';
+import { filterInt, humanFileSize } from '../../utils/Utils';
 
 @Command('soundinfo', {
 	channel: 'any',
@@ -12,17 +13,27 @@ import { filterInt, getSimiliarCommandMessageIfInputIsString, humanFileSize } fr
 	description: 'shows detailed information about a sound',
 })
 export class SoundInfoCommand extends CommandBase {
+	private constructor(private readonly soundService: SoundCommandService) {
+		super();
+	}
+
 	@UseGuard(new ArgsGuard(1))
 	public async exec(message: Message, args: string[]): Promise<any> {
 		const param = filterInt(args[0]) || args[0];
-		const sound = await (typeof param === 'number'
-			? SoundCommand.findOne(param)
-			: SoundCommand.findOne({ where: { name: param } }));
+		let sound = await SoundCommand.findOne({ where: { name: param } });
 
 		if (!sound) {
+			const similarSound = await this.soundService.findSimilarSoundCommand(args[0]);
+			if (similarSound.similarity > 90) {
+				await message.neutral(
+					`I was not able to find a Sound with that name, I'm ${similarSound.similarity}% sure you meant ${similarSound.sound.name}`,
+					'I will play that one it for you',
+				);
+				sound = similarSound.sound;
+			}
 			return message.error(
-				`No sound found with the id or name \`${args[0]}\``,
-				await getSimiliarCommandMessageIfInputIsString(args[0]),
+				`could not find sound named \`${args[0]}\``,
+				similarSound.similarity > 50 ? `did you mean ${similarSound.sound.name}?` : '',
 			);
 		}
 		const user = await this.client.users

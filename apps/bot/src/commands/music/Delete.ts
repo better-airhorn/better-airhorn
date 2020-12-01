@@ -1,9 +1,7 @@
-import { SoundCommand } from '@better-airhorn/entities';
 import { Command, CommandBase, Message, UseGuard } from '@better-airhorn/shori';
 import { Config } from '../../config/Config';
 import { HealthCheckGuard } from '../../guards/HealthCheckGuard';
 import { SoundCommandService } from '../../services/SoundCommandService';
-import { filterInt, getSimiliarCommandMessageIfInputIsString } from '../../utils/Utils';
 
 @Command('delete', {
 	channel: 'any',
@@ -12,26 +10,24 @@ import { filterInt, getSimiliarCommandMessageIfInputIsString } from '../../utils
 	parseArguments: true,
 })
 export class DeleteCommand extends CommandBase {
-	public constructor(private readonly scService: SoundCommandService) {
+	public constructor(private readonly soundService: SoundCommandService) {
 		super();
 	}
 
 	@UseGuard(HealthCheckGuard)
 	public async exec(message: Message, args: string[]): Promise<any> {
 		const canForce = Config.general.ownerIds.includes(message.author.id);
-		const param = filterInt(args[0]) || args[0];
-		const sound = await (typeof param === 'number'
-			? SoundCommand.findOne(param)
-			: SoundCommand.findOne({ where: { name: param } }));
+		const sound = await this.soundService.get(args[0]);
 		if (!sound) {
+			const similarSound = await this.soundService.findSimilarSoundCommand(args[0]);
 			return message.error(
 				`No sound found with the id or name \`${args[0]}\``,
-				await getSimiliarCommandMessageIfInputIsString(args[0]),
+				similarSound.similarity > 50 ? `did you mean ${similarSound.sound.name}?` : '',
 			);
 		}
 
 		if (sound.user === message.author.id || (canForce && message.arguments.f)) {
-			await this.scService.delete(sound);
+			await this.soundService.delete(sound);
 			return message.success(`Successfully deleted \`${sound.name}\``);
 		}
 
