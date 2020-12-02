@@ -5,7 +5,6 @@ import LokiTransport from 'winston-loki';
 import { ConsoleTransportInstance } from 'winston/lib/winston/transports';
 import { Config } from '../config/Config';
 import { isProd } from './isEnvironment';
-
 const usedTransports: { loki?: LokiTransport; console: ConsoleTransportInstance } = {
 	console: new transports.Console({
 		format: format.combine(
@@ -30,7 +29,7 @@ if (isProd()) {
 	});
 }
 
-const winston = createLogger();
+const winston = createLogger({ transports: Object.values(usedTransports) });
 export const logger = winston;
 
 export function getSubLogger(source: string) {
