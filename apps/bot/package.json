@@ -1,84 +1,84 @@
 {
-  "name": "@better-airhorn/bot",
-  "description": "discord bot to record, upload and use as soundboard",
-  "version": "0.0.1",
-  "bin": "dist/index.js",
-  "bugs": "https://github.com/Clemens-E/better-airhorn/issues",
-  "contributors": [
-    "Clemens E (https://github.com/Clemens-E)",
-    "Quentin W (https://github.com/qwright10)"
-  ],
-  "dependencies": {
-    "@better-airhorn/audio": "0.0.5",
-    "@better-airhorn/entities": "0.0.4",
-    "@better-airhorn/shori": "0.0.3",
-    "@better-airhorn/structures": "^0.0.1",
-    "@discordjs/opus": "^0.3.2",
-    "@rocka/mp3-duration": "^2.0.0",
-    "@types/ms": "^0.7.31",
-    "await-lock": "^2.1.0",
-    "bufferutil": "^4.0.1",
-    "bull": "^3.18.0",
-    "common-tags": "^1.8.0",
-    "discord.js": "^12.4.1",
-    "discord.js-prompts": "^3.0.0",
-    "dotenv": "^8.2.0",
-    "filesize-parser": "^1.5.0",
-    "ioredis": "^4.16.3",
-    "minio": "^7.0.15",
-    "moment-duration-format": "^2.3.2",
-    "ms": "^2.1.2",
-    "node-fetch": "^2.6.1",
-    "pg": "^8.3.3",
-    "reflect-metadata": "^0.1.13",
-    "rxjs": "^6.6.3",
-    "tsyringe": "^4.3.0",
-    "typeorm": "^0.2.29",
-    "utf-8-validate": "^5.0.2",
-    "winston": "^3.3.3",
-    "winston-loki": "^6.0.0-rc.9",
-    "ytdl-core": "^4.0.0",
-    "zlib-sync": "^0.1.6"
-  },
-  "devDependencies": {
-    "@types/bull": "^3.14.3",
-    "@types/common-tags": "^1.8.0",
-    "@types/filesize-parser": "^1.5.0",
-    "@types/minio": "^7.0.6",
-    "@types/mkdirp": "^1.0.0",
-    "@types/moment-duration-format": "^2.2.2",
-    "@types/node": "^14.11.2",
-    "@types/node-fetch": "^2.5.7",
-    "@types/ws": "^7.2.7"
-  },
-  "homepage": "https://github.com/better-airhorn/better-airhorn#readme",
-  "keywords": [
-    "better-airhorn",
-    "bot",
-    "discord",
-    "soundboard"
-  ],
-  "license": "GPL-3.0",
-  "main": "src/index.ts",
-  "nodemonConfig": {
-    "ignore": [
-      "**/*.test.ts",
-      "**/*.spec.ts",
-      ".git",
-      "node_modules"
-    ],
-    "watch": [
-      "src"
-    ],
-    "exec": "npm start",
-    "ext": "ts"
-  },
-  "private": true,
-  "repository": "Clemens-E/better-airhorn.git",
-  "scripts": {
-    "build": "tsc",
-    "test": "exit 0",
-    "start": "tsc && node ./dist/index.js",
-    "start:debug": "tsc && node --inspect-brk=55555 ./dist/index.js"
-  }
+	"name": "@better-airhorn/bot",
+	"description": "discord bot to record, upload and use as soundboard",
+	"version": "0.0.1",
+	"bin": "dist/index.js",
+	"bugs": "https://github.com/Clemens-E/better-airhorn/issues",
+	"contributors": [
+		"Clemens E (https://github.com/Clemens-E)",
+		"Quentin W (https://github.com/qwright10)"
+	],
+	"dependencies": {
+		"@better-airhorn/audio": "0.0.5",
+		"@better-airhorn/entities": "0.0.4",
+		"@better-airhorn/shori": "0.0.3",
+		"@better-airhorn/structures": "^0.0.1",
+		"@discordjs/opus": "^0.3.2",
+		"@rocka/mp3-duration": "^2.0.0",
+		"@types/ms": "^0.7.31",
+		"await-lock": "^2.1.0",
+		"bufferutil": "^4.0.1",
+		"bull": "^3.18.0",
+		"common-tags": "^1.8.0",
+		"discord.js": "^12.4.1",
+		"discord.js-prompts": "^3.0.0",
+		"dotenv": "^8.2.0",
+		"filesize-parser": "^1.5.0",
+		"ioredis": "^4.16.3",
+		"minio": "^7.0.15",
+		"moment-duration-format": "^2.3.2",
+		"ms": "^2.1.2",
+		"node-fetch": "^2.6.1",
+		"pg": "^8.3.3",
+		"reflect-metadata": "^0.1.13",
+		"rxjs": "^6.6.3",
+		"tsyringe": "^4.3.0",
+		"typeorm": "^0.2.29",
+		"utf-8-validate": "^5.0.2",
+		"winston": "^3.3.3",
+		"winston-loki": "^6.0.0-rc.9",
+		"ytdl-core": "^4.1.4",
+		"zlib-sync": "^0.1.6"
+	},
+	"devDependencies": {
+		"@types/bull": "^3.14.3",
+		"@types/common-tags": "^1.8.0",
+		"@types/filesize-parser": "^1.5.0",
+		"@types/minio": "^7.0.6",
+		"@types/mkdirp": "^1.0.0",
+		"@types/moment-duration-format": "^2.2.2",
+		"@types/node": "^14.11.2",
+		"@types/node-fetch": "^2.5.7",
+		"@types/ws": "^7.2.7"
+	},
+	"homepage": "https://github.com/better-airhorn/better-airhorn#readme",
+	"keywords": [
+		"better-airhorn",
+		"bot",
+		"discord",
+		"soundboard"
+	],
+	"license": "GPL-3.0",
+	"main": "src/index.ts",
+	"nodemonConfig": {
+		"ignore": [
+			"**/*.test.ts",
+			"**/*.spec.ts",
+			".git",
+			"node_modules"
+		],
+		"watch": [
+			"src"
+		],
+		"exec": "npm start",
+		"ext": "ts"
+	},
+	"private": true,
+	"repository": "Clemens-E/better-airhorn.git",
+	"scripts": {
+		"build": "tsc",
+		"test": "exit 0",
+		"start": "tsc && node ./dist/index.js",
+		"start:debug": "tsc && node --inspect-brk=55555 ./dist/index.js"
+	}
 }

@@ -27,7 +27,7 @@ export class SoundInfoCommand extends CommandBase {
 			if (similarSound.similarity > 90) {
 				await message.neutral(
 					`I was not able to find a Sound with that name, I'm ${similarSound.similarity}% sure you meant ${similarSound.sound.name}`,
-					'I will play that one it for you',
+					'I will play that one for you',
 				);
 				sound = similarSound.sound;
 			}
