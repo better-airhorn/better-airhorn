@@ -37,13 +37,13 @@ describe('Audio Conversion', () => {
 	supportedFormats.forEach(format => {
 		it(`should be able to convert ${format}`, async function test() {
 			this.timeout(10000);
-			return testFile(files.get(format));
+			return testFile(files.get(format)!);
 		});
 	});
 
 	it(`should throw error on invalid stream`, async function test() {
 		this.timeout(10000);
-		const file = files.get('invalid');
+		const file = files.get('invalid')!;
 		return strictEqual(
 			await convertToOGG(createReadStream(file.path)).catch(() => 'rejected'),
 			'rejected',
