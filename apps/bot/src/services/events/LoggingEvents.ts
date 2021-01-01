@@ -7,7 +7,7 @@ export class LoggingEvents {
 	private readonly log = getSubLogger(LoggingEvents.name);
 
 	@Client()
-	private readonly client: BAClient;
+	private readonly client!: BAClient;
 
 	@Event('success', {
 		source: resolveSingleton(MessageHandler),
@@ -25,7 +25,7 @@ export class LoggingEvents {
 		this.log.error(`error executing command ${command.name}\n${e.message}\n${e.stack}`, {
 			content: msg.content,
 			author: msg.author.id,
-			guild: msg.guild.id,
+			guild: msg.guild!.id,
 			channel: msg.channel.id,
 		});
 		await msg.error(`There was an error while executing the ${command.name} command`).catch(() => null);
@@ -41,7 +41,7 @@ export class LoggingEvents {
 
 	@Event('ready')
 	public onReady(): void {
-		this.log.info(`client ready as ${this.client.user.tag}`);
+		this.log.info(`client ready as ${this.client.user!.tag}`);
 	}
 
 	@Event('error')

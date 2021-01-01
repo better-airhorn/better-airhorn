@@ -13,6 +13,7 @@ import { ChannelLockService } from '../utils/ChannelLockService';
 import { getSubLogger } from '../utils/Logger';
 import { handleUploadAudioFile } from '../utils/prompts/SoundCommandPrompts';
 import { onceEmitted, timeout } from '../utils/Utils';
+import { LocalizationService } from './LocalizationService';
 import { SoundFilesManager } from './SoundFilesManager';
 
 /**
@@ -24,7 +25,7 @@ import { SoundFilesManager } from './SoundFilesManager';
 @Service()
 export class SoundCommandService implements OnReady {
 	@Client()
-	private readonly client: BAClient;
+	private readonly client!: BAClient;
 
 	private readonly log = getSubLogger(SoundCommandService.name);
 
@@ -46,6 +47,7 @@ export class SoundCommandService implements OnReady {
 	public constructor(
 		private readonly filesManager: SoundFilesManager,
 		private readonly lockService: ChannelLockService,
+		private readonly i18n: LocalizationService,
 	) {}
 
 	public shOnReady(): void {
@@ -74,23 +76,41 @@ export class SoundCommandService implements OnReady {
 		return connection.play(stream as Readable, { type: 'ogg/opus', volume: false });
 	}
 
-	public async delete(id: number | SoundCommand) {
-		let command: SoundCommand;
-		if (typeof id === 'number') {
-			command = await SoundCommand.findOne(id);
-		} else {
-			command = id;
+	public async getSoundCommand(opts: {
+		name: string;
+		message: Message;
+		autoSelect?: boolean;
+	}): Promise<SoundCommand | void> {
+		const { name, message, autoSelect } = { autoSelect: true, ...opts };
+		const sound = await SoundCommand.findOne({ name: name });
+		if (!sound) {
+			const similarSound = await this.findSimilarSoundCommand(name);
+			if (similarSound.similarity >= 0.7 && autoSelect) {
+				await message.neutral(
+					this.i18n.format('commands.generalKeys.playPredictedName', {
+						name: similarSound.sound.name,
+						percent: (similarSound.similarity * 100).toFixed(0),
+					}),
+				);
+				return similarSound.sound;
+			}
+			await message.error(
+				this.i18n.t().commands.generalKeys.soundNotFound,
+				similarSound.similarity >= 0.5
+					? this.i18n.format('commands.generalKeys.suggestPredictedName', { name: similarSound.sound.name })
+					: '',
+			);
+			return;
 		}
-		await this.filesManager.delete(command.id);
-		await command.remove();
+		return sound;
 	}
 
 	private async playProcessor(job: Job): Promise<IPlayJobResponseData> {
 		const data: IPlayJobRequestData = job.data;
 
-		let interval: NodeJS.Timeout;
-		let response: IPlayJobResponseData;
-		let channel: VoiceChannel;
+		let interval!: NodeJS.Timeout;
+		let response!: IPlayJobResponseData;
+		let channel!: VoiceChannel;
 		const lock = this.lockService.getLock(data.guild);
 		const soundCommand = await SoundCommand.findOne(data.sound);
 
@@ -111,7 +131,7 @@ export class SoundCommandService implements OnReady {
 				throw new ChannelError(PlayJobResponseCodes.CHANNEL_NOT_FOUND);
 			}
 			// check if client can join and speak
-			if (!channel.joinable || !channel.permissionsFor(channel.guild.me).has('SPEAK')) {
+			if (!channel.joinable || !channel.permissionsFor(channel.guild.me!)!.has('SPEAK')) {
 				response = { c: PlayJobResponseCodes.MISSING_PERMISSIONS, s: false };
 				throw new ChannelError(PlayJobResponseCodes.MISSING_PERMISSIONS);
 			}
@@ -173,13 +193,9 @@ export class SoundCommandService implements OnReady {
 			lock.release();
 		}
 		const usesKey: keyof SoundCommand = 'uses';
-		await getRepository(SoundCommand).increment({ id: soundCommand.id }, usesKey, 1);
+		await getRepository(SoundCommand).increment({ id: soundCommand!.id }, usesKey, 1);
 		await job.progress(100);
 		return response;
-	}
-
-	public get(name: string): Promise<SoundCommand | null> {
-		return getRepository(SoundCommand).findOne({ where: { name } });
 	}
 
 	public async findSimilarSoundCommand(input: string): Promise<{ sound: SoundCommand; similarity: number }> {
@@ -190,7 +206,7 @@ export class SoundCommandService implements OnReady {
 			.setParameter('val', input)
 			.limit(1)
 			.getRawOne();
-		return { sound: await SoundCommand.findOne(idAndSimilarity.sound_id), similarity: idAndSimilarity.similarity };
+		return { sound: (await SoundCommand.findOne(idAndSimilarity.sound_id))!, similarity: idAndSimilarity.similarity };
 	}
 
 	public addJob(shardId: number, data: IPlayJobRequestData): Promise<Job<IPlayJobResponseData>> {
@@ -205,7 +221,7 @@ export class SoundCommandService implements OnReady {
 		const { channel } = message;
 		if (
 			!channel.guild ||
-			channel.permissionsFor(message.guild.me).missing(['ADD_REACTIONS', 'SEND_MESSAGES', 'USE_EXTERNAL_EMOJIS'])
+			channel.permissionsFor(message.guild!.me!)!.missing(['ADD_REACTIONS', 'SEND_MESSAGES', 'USE_EXTERNAL_EMOJIS'])
 				.length > 0
 		) {
 			return;
@@ -213,7 +229,8 @@ export class SoundCommandService implements OnReady {
 
 		// find suitable attachment
 		const attachment = message.attachments.find(
-			(x: MessageAttachment) => supportedFormats.includes(x.name.split('.').pop()) && x.size < Config.files.maxFileSize,
+			(x: MessageAttachment) =>
+				supportedFormats.includes(x.name!.split('.').pop()!) && x.size < Config.files.maxFileSize,
 		);
 		if (!attachment) return;
 
@@ -224,7 +241,7 @@ export class SoundCommandService implements OnReady {
 	public onVoiceStateUpdate(oldState: VoiceState, newState: VoiceState) {
 		const channel = newState.channel ?? oldState.channel;
 		if (!channel) return;
-		const { id } = this.client.user;
+		const { id } = this.client.user!;
 		if (channel.members.some(m => m.id === id) && channel.members.filter(m => m.id !== id && !m.user.bot).size < 1) {
 			channel.leave();
 		}

@@ -5,6 +5,7 @@ import ytdl, { getInfo, videoFormat, videoInfo } from 'ytdl-core';
 import { Config } from '../../config/Config';
 import { ArgsGuard } from '../../guards/ArgsGuard';
 import { HealthCheckGuard } from '../../guards/HealthCheckGuard';
+import { LocalizationService } from '../../services/LocalizationService';
 import { SoundFilesManager } from '../../services/SoundFilesManager';
 import { getSubLogger } from '../../utils/Logger';
 import { promptSoundCommandValues } from '../../utils/prompts/SoundCommandPrompts';
@@ -13,21 +14,24 @@ import { getYoutubeContentSize } from '../../utils/YoutubeUtils';
 @Command('import', {
 	channel: 'any',
 	category: 'music',
-	description: 'imports a sound from youtube.\nuse the `-n` parameter to normalize audio level before importing',
+	description: 'imports a sound from youtube.\nuse the `-n` parameter to normalize audio volume before importing',
 	example: 'import https://www.youtube.com/watch?v=dQw4w9WgXcQ',
 	parseArguments: true,
 })
 export class ImportCommand extends CommandBase {
 	private readonly log = getSubLogger(ImportCommand.name);
 
-	public constructor(private readonly filesManager: SoundFilesManager) {
+	public constructor(private readonly filesManager: SoundFilesManager, private readonly i18n: LocalizationService) {
 		super();
 	}
 
 	@UseGuard(new ArgsGuard(1))
 	@UseGuard(HealthCheckGuard)
 	public async exec(message: Message, args: string[]): Promise<any> {
-		const videoUrl = args.shift();
+		if (args.length < 1) {
+			return message.error(`You need to supply a link`);
+		}
+		const videoUrl = args.shift()!;
 		let format: videoFormat;
 		let info: videoInfo;
 		try {
@@ -38,8 +42,8 @@ export class ImportCommand extends CommandBase {
 		}
 
 		const audioSize = parseInt(format.contentLength, 10) || (await getYoutubeContentSize(format));
-		const audioLength = parseInt(
-			format.approxDurationMs || info.formats.find(f => f.approxDurationMs)?.approxDurationMs,
+		const audioLength: number = parseInt(
+			format.approxDurationMs || info.formats.find(f => f.approxDurationMs)?.approxDurationMs || '',
 			10,
 		);
 		if (
@@ -57,13 +61,11 @@ export class ImportCommand extends CommandBase {
 			return this.log.error(promptData.err);
 		}
 		if (!promptData.data) return;
-		const loadingMsg = await message.neutral(
-			`Please wait, I'm downloading and converting your video ${Config.emojis.loading}`,
-		);
+		const loadingMsg = await message.neutral(this.i18n.t().commands.import.pleaseWaitDownloading);
 
 		const entity = new SoundCommand({
 			accessType: promptData.data.accessType,
-			guild: message.guild.id,
+			guild: message.guild!.id,
 			name: promptData.data.name,
 			user: message.author.id,
 			duration: 0,
@@ -77,6 +79,6 @@ export class ImportCommand extends CommandBase {
 		entity.size = (await this.filesManager.stat(entity.id)).size;
 		await entity.save();
 		await loadingMsg.delete();
-		await message.success(`I saved your sound as \`${entity.name}\``);
+		await message.success(this.i18n.format('commands.import.savedSoundAs', { name: entity.name }));
 	}
 }

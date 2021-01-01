@@ -1,12 +1,6 @@
 {
+	"extends": "../../tsconfig.json",
 	"compilerOptions": {
-		"outDir": "./dist",
-		"module": "commonjs",
-		"target": "ES2019",
-		"strict": true,
-		"strictNullChecks": false,
-		"declaration": true,
-		"moduleResolution": "node",
 		"baseUrl": ".",
 		"paths": {
 			"*": ["node_modules/*"]

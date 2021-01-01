@@ -4,27 +4,33 @@ import { Message } from './DiscordExtends/Message';
 import { BaseGuard } from './Guards/BaseGuard';
 
 export abstract class CommandBase {
-	public client: ShoriClient;
+	public client!: ShoriClient;
 	public guards: BaseGuard[] = [];
 
 	//* ~~~~~~~~~~~~ Miscellaneous ~~~~~~~~~~~~ //
-	public name: string;
-	public category: string;
-	public example?: string;
-	public description: string;
+	//* ~~~~~~~~~~~~ Miscellaneous ~~~~~~~~~~~~ //
 
-	public parseArguments: boolean;
+	public name!: string;
+	public category!: string;
+	public example?: string;
+	public description!: string;
+
+	public parseArguments!: boolean;
 	public showInHelp?: boolean;
 
 	//* ~~~~~~~~~~~~~ Permissions ~~~~~~~~~~~~~ //
-	public userPermissions: PermissionString[];
-	public userChannelPermissions: PermissionString[];
-	public botPermissions: PermissionString[];
-	public botChannelPermissions: PermissionString[];
+	//* ~~~~~~~~~~~~~ Permissions ~~~~~~~~~~~~~ //
+
+	public userPermissions!: PermissionString[];
+	public userChannelPermissions!: PermissionString[];
+	public botPermissions!: PermissionString[];
+	public botChannelPermissions!: PermissionString[];
 
 	//* ~~~~~~~~~~~~~ Requirements ~~~~~~~~~~~~ //
-	public onlyOwner: boolean;
-	public voteLock: boolean;
+	//* ~~~~~~~~~~~~~ Requirements ~~~~~~~~~~~~ //
+
+	public onlyOwner!: boolean;
+	public voteLock!: boolean;
 	public channel: CommandOptions['channel'];
 
 	/**
@@ -37,7 +43,7 @@ export abstract class CommandBase {
 	 * @returns {Promise<any>}
 	 * @memberof Command
 	 */
-	public abstract async exec(message: Message, args: string[]): Promise<any>;
+	public abstract exec(message: Message, args: string[]): Promise<any>;
 
 	public configure(options?: CommandOptions): void {
 		this.name = options?.name || 'not set';
@@ -52,8 +58,8 @@ export abstract class CommandBase {
 		this.userChannelPermissions = options?.userChannelPermissions || [];
 		this.botPermissions = options?.botPermissions || [];
 		this.botChannelPermissions = options?.botChannelPermissions || [];
-		this.parseArguments = options.parseArguments ?? false;
-		this.showInHelp = options.showInHelp ?? true;
+		this.parseArguments = options?.parseArguments ?? false;
+		this.showInHelp = options?.showInHelp ?? true;
 	}
 }
 

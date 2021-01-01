@@ -4,44 +4,56 @@ import { Like } from './Like';
 @Entity('sound_commands')
 export class SoundCommand extends BaseEntity {
 	@PrimaryGeneratedColumn()
-	public id: number;
+	public id!: number;
 
 	@Column({ unique: true })
-	public name: string;
+	public name!: string;
 
 	@Column()
-	public guild: string;
+	public guild!: string;
 
 	@Column()
-	public user: string;
+	public user!: string;
 
 	@Column({ type: 'smallint' })
-	public accessType: AccessType;
+	public accessType!: AccessType;
 
 	/**
 	 * duration of the mp3 file in ms
 	 */
+	/**
+	 * duration of the mp3 file in ms
+	 */
+
 	@Column('integer')
-	public duration: number;
+	public duration!: number;
 
 	/**
 	 * sound size in bytes
 	 */
+	/**
+	 * sound size in bytes
+	 */
+
 	@Column('bigint')
-	public size: number;
+	public size!: number;
 
 	/**
 	 * how often the sound has been played
 	 */
+	/**
+	 * how often the sound has been played
+	 */
+
 	@Column('integer', { default: 0 })
-	public uses: number;
+	public uses!: number;
 
 	@OneToMany(
 		() => Like,
 		like => like.soundCommand,
 		{ lazy: true, onDelete: 'CASCADE' },
 	)
-	public likes: Promise<Like[]>;
+	public likes!: Promise<Like[]>;
 
 	public constructor(values?: {
 		accessType: AccessType;

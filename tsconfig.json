@@ -4,7 +4,6 @@
 		"module": "commonjs",
 		"target": "ES2019",
 		"strict": true,
-		"strictNullChecks": false,
 		"moduleResolution": "node",
 		"experimentalDecorators": true,
 		"emitDecoratorMetadata": true,
@@ -17,6 +16,7 @@
 		"incremental": true,
 		"noEmitHelpers": true,
 		"importHelpers": true,
-		"skipLibCheck": true
+		"skipLibCheck": true,
+		"noUnusedLocals": true
 	}
 }

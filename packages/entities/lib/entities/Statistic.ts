@@ -3,16 +3,16 @@ import { BaseEntity, Column, CreateDateColumn, Entity, PrimaryGeneratedColumn } 
 @Entity('statistics')
 export class Statistic extends BaseEntity {
 	@PrimaryGeneratedColumn()
-	public id: number;
+	public id!: number;
 
 	@Column()
-	public event: string;
+	public event!: string;
 
 	@Column()
-	public value: number;
+	public value!: number;
 
 	@CreateDateColumn({ type: 'timestamp' })
-	public readonly createdAt: Date;
+	public readonly createdAt!: Date;
 
 	public constructor(values?: { event: string; value: number }) {
 		super();
@@ -26,22 +26,22 @@ export class Statistic extends BaseEntity {
 @Entity('usages')
 export class Usage extends BaseEntity {
 	@PrimaryGeneratedColumn()
-	public id: number;
+	public id!: number;
 
 	@CreateDateColumn({ type: 'timestamp' })
-	public createdAt: Date;
+	public createdAt!: Date;
 
 	@Column()
-	public command: string;
+	public command!: string;
 
 	@Column()
-	public user: string;
+	public user!: string;
 
 	@Column()
-	public guild: string;
+	public guild!: string;
 
 	@Column({ nullable: true })
-	public args: string;
+	public args?: string;
 
 	public constructor(values?: { command: string; user: string; guild: string; args: string }) {
 		super();

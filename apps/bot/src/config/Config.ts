@@ -1,6 +1,6 @@
 import { BitFieldResolvable, IntentsString } from 'discord.js';
 import fileSize from 'filesize-parser';
-import { normalize } from 'path';
+import { join, normalize } from 'path';
 
 export const Config = {
 	client: {
@@ -40,35 +40,33 @@ export const Config = {
 
 	emojis: {
 		import: '737771544280825976',
-		loading: '<a:BE_loading:505378765950550036>',
-		postgres: '<:postgres:707623202993602700>',
 		minIO: '<:minIO:713895494555926528>',
 	},
 
 	credentials: {
 		postgres: {
-			url: process.env.PG,
+			url: process.env.PG!,
 		},
 
 		redis: {
-			url: process.env.REDIS,
+			url: process.env.REDIS!,
 		},
 
 		discord: {
-			token: process.env.DISCORD_TOKEN,
+			token: process.env.DISCORD_TOKEN!,
 		},
 
 		minio: {
-			accessKey: process.env.MINIO_AK,
-			secretKey: process.env.MINIO_SK,
-			url: process.env.MINIO_URL?.split(':')[0],
+			accessKey: process.env.MINIO_AK!,
+			secretKey: process.env.MINIO_SK!,
+			url: process.env.MINIO_URL?.split(':')[0]!,
 			port: parseInt(process.env.MINIO_URL?.split(':')[1] ?? '8500', 10),
 		},
 		loki: {
-			url: process.env.LOKI_URL,
+			url: process.env.LOKI_URL!,
 		},
 		statping: {
-			url: process.env.STATPING_URL,
+			url: process.env.STATPING_URL!,
 		},
 	},
 
@@ -82,5 +80,10 @@ export const Config = {
 
 	logging: {
 		level: (process.env.LOGGING ?? 'debug') as 'debug' | 'info' | 'error',
+	},
+
+	localization: {
+		defaultLanguage: 'en-US',
+		files: join(__dirname, '../../../../localization/files'),
 	},
 };

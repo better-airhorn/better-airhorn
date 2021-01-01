@@ -28,15 +28,17 @@ export class MessageHandler extends EventEmitter {
 		const client = message.client as ShoriClient;
 		const prefix =
 			(await client.getPrefix((message.guild || message.channel).id).catch(() => undefined)) ?? client.prefix;
-		const prefixRegex = new RegExp(`^(<@!?${client.user.id}>|${escapeRegex(prefix)})\\s*`);
+		const prefixRegex = new RegExp(`^(<@!?${client.user!.id}>|${escapeRegex(prefix)})\\s*`);
 		if (!prefixRegex.test(message.content)) return;
 
-		const [, matchedPrefix] = prefixRegex.exec(message.content);
+		const match = prefixRegex.exec(message.content);
+		if (!match) return;
+		const [, matchedPrefix] = match;
 		const args = message.content
 			.slice(matchedPrefix.length)
 			.trim()
 			.split(/ +/);
-		const command = args.shift().toLowerCase();
+		const command = args.shift()!.toLowerCase();
 		const cmd = commandMap.get(command);
 
 		if (!cmd) return;
@@ -56,14 +58,16 @@ export class MessageHandler extends EventEmitter {
 			return;
 		}
 
-		let missingPermissionsMember: string[] = channel.permissionsFor(member).missing(cmd.class.userChannelPermissions);
-		missingPermissionsMember.push(...member.permissions.missing(cmd.class.userPermissions));
+		let missingPermissionsMember: string[] = channel!
+			.permissionsFor(member!)!
+			.missing(cmd.class.userChannelPermissions);
+		missingPermissionsMember.push(...member!.permissions.missing(cmd.class.userPermissions));
 		missingPermissionsMember = missingPermissionsMember
 			.filter((permission, index) => missingPermissionsMember.indexOf(permission) === index)
 			.map(value => value.toLocaleLowerCase().replace('_', ' '));
 
-		let missingPermissionsBot: string[] = channel.permissionsFor(guild.me).missing(cmd.class.botChannelPermissions);
-		missingPermissionsBot.push(...guild.me.permissions.missing(cmd.class.botPermissions));
+		let missingPermissionsBot: string[] = channel.permissionsFor(guild!.me!)!.missing(cmd.class.botChannelPermissions);
+		missingPermissionsBot.push(...guild!.me!.permissions.missing(cmd.class.botPermissions));
 		missingPermissionsBot = missingPermissionsBot
 			.filter((permission, index) => missingPermissionsBot.indexOf(permission) === index)
 			.map(value => value.toLocaleLowerCase().replace('_', ' '));

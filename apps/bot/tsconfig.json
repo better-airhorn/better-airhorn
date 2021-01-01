@@ -1,33 +1,13 @@
 {
-    "compilerOptions": {
-        "outDir": "./dist",
-        "module": "commonjs",
-        "target": "es2019",
-        "strict": true,
-        "strictNullChecks": false,
-        "sourceMap": true,
-        "moduleResolution": "node",
-        "experimentalDecorators": true,
-        "emitDecoratorMetadata": true,
-        "baseUrl": ".",
-        "paths": {
-            "*": [
-                "node_modules/*",
-                "src/types/*",
-                "../../node_modules"
-            ]
-        },
-        "types": [
-            "node"
-        ],
-        "esModuleInterop": true
-    },
-    "include": [
-        "./src/**/*.ts"
-    ],
-    "exclude": [
-        "**/node_modules",
-        "**/dist",
-        "**/coverage"
-    ]
+	"extends": "../../tsconfig.json",
+	"compilerOptions": {
+		"baseUrl": ".",
+		"paths": {
+			"*": ["node_modules/*", "src/types/*", "../../node_modules"]
+		},
+		"types": ["node"],
+		"esModuleInterop": true
+	},
+	"include": ["./src/**/*.ts"],
+	"exclude": ["**/node_modules", "**/dist", "**/coverage"]
 }

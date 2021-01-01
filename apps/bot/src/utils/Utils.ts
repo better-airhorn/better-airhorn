@@ -5,12 +5,12 @@ import { promisify } from 'util';
 export const timeout = promisify(setTimeout);
 export function getHumanReadableError(code: PlayJobResponseCodes): string {
 	// @ts-ignore
-	const key = Object.keys(PlayJobResponseCodes).find(s => PlayJobResponseCodes[s] === code);
+	const key = Object.keys(PlayJobResponseCodes).find(s => PlayJobResponseCodes[s] === code)!;
 	return key.replace(/\_/g, ' ').toLowerCase();
 }
 
 export function parseEnvExample(input: string): string[] {
-	return input.match(/([A-Z_-]+)/gim);
+	return input.match(/([A-Z_-]+)/gim)!;
 }
 
 export function roundDownToClosestMultiplierOf10(input: number) {
@@ -54,3 +54,7 @@ export function wrapInCodeBlock(text: string, opts?: { code: string; inline: boo
 export function isTimeOver(oldTime: number, timeout: number): boolean {
 	return Date.now() - timeout > oldTime;
 }
+
+export type Complete<T> = {
+	[P in keyof Required<T>]: Pick<T, P> extends Required<Pick<T, P>> ? T[P] : T[P];
+};

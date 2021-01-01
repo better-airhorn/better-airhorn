@@ -73,10 +73,13 @@ SoundCommandPrompt.addChild(new PromptNode(askAccessTypePrompt));
 
 export async function promptSoundCommandValues(
 	message: SMessage,
-): Promise<{ ok: boolean; err?: Error; data?: SoundCommandPromptType }> {
+): Promise<{ ok: boolean; err?: Error; data?: Required<SoundCommandPromptType> }> {
 	try {
 		const runner = new DiscordPromptRunner<SoundCommandPromptType>(message.author, {});
-		return { data: await runner.run(SoundCommandPrompt, message.channel), ok: true };
+		return {
+			data: (await runner.run(SoundCommandPrompt, message.channel)) as Required<SoundCommandPromptType>,
+			ok: true,
+		};
 	} catch (err) {
 		if (err instanceof Errors.UserInactivityError) {
 			await message.error('no response in time, cancelling prompt');
@@ -85,7 +88,7 @@ export async function promptSoundCommandValues(
 			await message.error('ok, I imported nothing');
 			return { ok: true, err };
 		}
-		await message.error('an unexpected error appeared');
+		await message.error('an unexpected error occurred');
 		return { ok: false, err };
 	}
 }
@@ -97,7 +100,7 @@ export async function handleUploadAudioFile(opts: {
 }) {
 	const { message, attachment, filesManager } = opts;
 	const log = getSubLogger('AudioUpload');
-	const fileformat = attachment.name.split('.').pop();
+	const fileformat = attachment.name!.split('.').pop();
 
 	const reaction = await message.react(Config.emojis.import);
 	const reacted = await message
@@ -113,13 +116,13 @@ export async function handleUploadAudioFile(opts: {
 	}
 
 	const promptData = await promptSoundCommandValues(message);
-	if (!promptData.ok) {
+	if (!promptData.ok || !promptData.data) {
 		return log.error(promptData.err);
 	}
 
 	const entity = new SoundCommand({
 		accessType: promptData.data.accessType,
-		guild: message.guild.id,
+		guild: message.guild!.id,
 		name: promptData.data.name,
 		user: message.author.id,
 		duration: 0,
@@ -145,7 +148,7 @@ export async function handleUploadAudioFile(opts: {
 			await cancel();
 			return { stream: undefined, duration: undefined };
 		});
-		if (!stream && !duration) return;
+		if (!stream || !duration) return;
 
 		await filesManager.set(entity.id, stream);
 		if ((await duration) < 0.5) {

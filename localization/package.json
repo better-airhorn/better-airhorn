@@ -1,0 +1,22 @@
+{
+	"name": "localization",
+	"version": "1.0.0",
+	"description": "",
+	"main": "generateInterface.js",
+	"scripts": {
+		"test": "echo \"Error: no test specified\" && exit 1",
+		"generateInterface": "node checkFiles.js",
+		"watch": "nodemon checkFiles.js",
+		"prv_generateInterface": "make_types -i ILocalization.ts files/en-US.json ILocalization"
+	},
+	"keywords": [],
+	"author": "",
+	"license": "ISC",
+	"dependencies": {
+		"dot-object": "^2.1.4",
+		"maketypes": "^1.1.2"
+	},
+	"devDependencies": {
+		"nodemon": "^2.0.6"
+	}
+}

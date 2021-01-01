@@ -24,6 +24,7 @@ export class ECommand extends CommandBase {
 	public async exec(message: Message, args: string[]): Promise<any> {
 		const m = await message.channel.send('evaluating...');
 		let evaled: any;
+		// @ts-ignore
 		const context = {
 			msg: message,
 			getRepository,

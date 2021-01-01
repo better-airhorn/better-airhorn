@@ -3,7 +3,7 @@ import { TextChannel } from './TextChannel';
 
 export class Message extends DMessage {
 	public commandFlags: string[];
-	public channel: TextChannel;
+	public channel!: TextChannel;
 	public eventEmittedAt?: number;
 	public arguments: { _: any[]; [key: string]: any } = { _: [] };
 
@@ -15,7 +15,7 @@ export class Message extends DMessage {
 	public get reactable(): boolean {
 		// @ts-ignore
 		if (this.channel.type === 'dm' || !this.guild) return true;
-		return this.channel.permissionsFor(this.guild.me).has('ADD_REACTIONS');
+		return this.channel.permissionsFor(this.guild!.me!)!.has('ADD_REACTIONS');
 	}
 
 	public error(description: string, footer?: string): Promise<this> {

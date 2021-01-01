@@ -3,17 +3,17 @@ import { BaseEntity, Column, Entity, PrimaryColumn } from 'typeorm';
 @Entity('guilds')
 export class Guild extends BaseEntity {
 	@PrimaryColumn()
-	public readonly id: string;
+	public readonly id!: string;
 
 	@Column()
-	public name: string;
+	public name!: string;
 
 	@Column()
-	public iconURL: string;
+	public iconURL!: string;
 
 	@Column()
-	public memberCount: number;
+	public memberCount!: number;
 
 	@Column()
-	public owner: string;
+	public owner!: string;
 }

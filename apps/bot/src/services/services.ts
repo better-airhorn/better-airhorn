@@ -1,6 +1,7 @@
 import { LoggingEvents } from './events/LoggingEvents';
 import { VoiceChannelRequestService } from './events/VoiceChannelRequestService';
 import { FileCachingService } from './FileCachingService';
+import { LocalizationService } from './LocalizationService';
 import { MinIOService } from './MinIOService';
 import { SoundCommandService } from './SoundCommandService';
 import { SoundFilesManager } from './SoundFilesManager';
@@ -20,6 +21,7 @@ const RealServices: any[] = [
 	SoundCommandService,
 	SoundFilesManager,
 	StatisticsService,
+	LocalizationService,
 ];
 
 /**

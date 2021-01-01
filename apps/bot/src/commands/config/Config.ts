@@ -1,6 +1,8 @@
 import { GuildSetting } from '@better-airhorn/entities';
 import { Command, CommandBase, Message } from '@better-airhorn/shori';
 import { MessageEmbed } from 'discord.js';
+import { LocalizationKeys } from '../../models/ILocalization';
+import { LocalizationService } from '../../services/LocalizationService';
 
 @Command('config', {
 	channel: 'guild',
@@ -10,23 +12,27 @@ import { MessageEmbed } from 'discord.js';
 	description: 'change the guilds configuration',
 })
 export class ConfigCommand extends CommandBase {
+	private constructor(private readonly i18n: LocalizationService) {
+		super();
+	}
+
 	private readonly configKeys: {
-		name: string;
+		name: LocalizationKeys;
 		applier: (setting: GuildSetting, value: boolean) => void;
 		getter: (setting: GuildSetting) => boolean;
-		description: string;
+		description: LocalizationKeys;
 	}[] = [
 		{
-			name: 'stay-in-voice',
+			name: 'commands.config.availableConfigurationsList.leaveAfterPlay.name',
 			applier: (g, v) => (g.leaveAfterPlay = !v),
 			getter: g => !g.leaveAfterPlay,
-			description: 'stay in the voice channel after playing a sound',
+			description: 'commands.config.availableConfigurationsList.leaveAfterPlay.description',
 		},
 		{
-			name: 'send-messages',
+			name: 'commands.config.availableConfigurationsList.sendMessageAfterPlay.name',
 			applier: (g, v) => (g.sendMessageAfterPlay = v),
 			getter: g => g.sendMessageAfterPlay,
-			description: 'send a success message after playing a sound',
+			description: 'commands.config.availableConfigurationsList.sendMessageAfterPlay.description',
 		},
 	];
 
@@ -35,25 +41,36 @@ export class ConfigCommand extends CommandBase {
 		if (!key) {
 			return message.channel.send(
 				new MessageEmbed().setDescription(
-					`**Available Configurations**\n\n${this.configKeys
-						.map(v => `\`${v.name}\`\n${v.description}`)
-						.join('\n\n')}\n\n\`run config <key> true/false\``,
+					this.i18n.format('commands.config.availableConfigurations', {
+						configs: this.configKeys
+							.map(v => `\`${this.i18n.format(v.name, {})}\`\n${this.i18n.format(v.description, {})}`)
+							.join('\n\n'),
+					}),
 				),
 			);
 		}
 
 		const value = args[1]?.toLowerCase();
-		const settings = await GuildSetting.findOne(message.guild.id);
+		const settings = (await GuildSetting.findOne(message.guild!.id))!;
 		if (!value) {
-			return message.neutral(`${key.name} is currently ${key.getter(settings) ? 'enabled' : 'disabled'}`);
+			return message.neutral(
+				this.i18n.format(
+					key.getter(settings)
+						? 'commands.config.optionIsCurrentlyEnabled'
+						: 'commands.config.optionIsCurrentlyDisabled',
+					{
+						option: key.name,
+					},
+				),
+			);
 		}
 		const yes = /^(y|yes|1|t|true)$/i;
 		const no = /^(n|no|0|f|false)$/i;
-		if (!yes.test(value) && !no.test(value)) return message.error('Please use `true` or `false`');
+		if (!yes.test(value) && !no.test(value)) return message.error(this.i18n.t().commands.config.pleaseUseTrueOrFalse);
 
 		const booleanValue = yes.test(value);
 		key.applier(settings, booleanValue);
 		await settings.save();
-		return message.success('Successfully updated settings');
+		return message.success(this.i18n.t().commands.config.updatedSettings);
 	}
 }

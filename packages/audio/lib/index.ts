@@ -41,7 +41,7 @@ export function convertToOGG(stream: Readable): Promise<{ stream: Readable; dura
 			if (err) rej(err);
 		});
 		const duration = new Promise<number>((res2, rej2) => {
-			let totalTime: number = undefined;
+			let totalTime = -1;
 			child.stderr.once('error', rej2);
 			child.on('exit', () => {
 				res2(totalTime);

@@ -12,7 +12,7 @@ import { Config } from '../../config/Config';
 @Service()
 export class VoiceChannelRequestService implements OnReady {
 	@Client()
-	private readonly client: BAClient;
+	private readonly client!: BAClient;
 
 	public queue = new Bull(Config.queue.channelRequestQueue.name, Config.credentials.redis.url, {
 		defaultJobOptions: {

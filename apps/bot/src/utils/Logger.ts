@@ -29,7 +29,10 @@ if (isProd()) {
 	});
 }
 
-const winston = createLogger({ transports: Object.values(usedTransports) });
+const winston = createLogger({
+	// @ts-ignore
+	transports: Object.values(usedTransports),
+});
 export const logger = winston;
 
 export function getSubLogger(source: string) {

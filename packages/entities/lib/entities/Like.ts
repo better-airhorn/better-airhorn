@@ -4,20 +4,20 @@ import { SoundCommand } from './SoundCommand';
 @Entity('likes')
 export class Like extends BaseEntity {
 	@PrimaryGeneratedColumn()
-	public readonly id: number;
+	public readonly id!: number;
 
 	@CreateDateColumn({ type: 'timestamp' })
-	public readonly createdAt: Date;
+	public readonly createdAt!: Date;
 
 	@ManyToOne(
 		() => SoundCommand,
 		command => command.likes,
 		{ onDelete: 'CASCADE' },
 	)
-	public soundCommand: SoundCommand;
+	public soundCommand!: SoundCommand;
 
 	@Column()
-	public user: string;
+	public user!: string;
 
 	public constructor(values?: { soundCommand: SoundCommand; user: string }) {
 		super();

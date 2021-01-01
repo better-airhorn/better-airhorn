@@ -1,6 +1,7 @@
 import { Like } from '@better-airhorn/entities';
 import { Command, CommandBase, Message, UseGuard } from '@better-airhorn/shori';
 import { ArgsGuard } from '../../guards/ArgsGuard';
+import { LocalizationService } from '../../services/LocalizationService';
 import { SoundCommandService } from '../../services/SoundCommandService';
 import { getSubLogger } from '../../utils/Logger';
 
@@ -12,24 +13,22 @@ import { getSubLogger } from '../../utils/Logger';
 export class LikeCommand extends CommandBase {
 	private readonly log = getSubLogger(LikeCommand.name);
 
-	private constructor(private readonly soundService: SoundCommandService) {
+	private constructor(private readonly soundService: SoundCommandService, private readonly i18n: LocalizationService) {
 		super();
 	}
 
 	@UseGuard(new ArgsGuard(1))
 	public async exec(message: Message, args: string[]): Promise<any> {
-		const sound = await this.soundService.get(args[0]);
-
-		if (!sound) {
-			const similarSound = await this.soundService.findSimilarSoundCommand(args[0]);
-			return message.error(
-				`could not find sound named \`${args[0]}\``,
-				similarSound.similarity > 50 ? `did you mean ${similarSound.sound.name}?` : '',
-			);
-		}
+		const sound = await this.soundService.getSoundCommand({ message, name: args[0], autoSelect: false });
+		if (!sound) return;
 
 		await new Like({ soundCommand: sound, user: message.author.id }).save();
 		this.log.debug(`new like for ${sound.name} by ${message.author.tag}(${message.author.id})`);
-		return message.success(`Done! \`${sound.name}\` now has ${(await sound.likes)?.length || '<Unknown>'} Likes`);
+		return message.success(
+			this.i18n.format('commands.like.soundLike', {
+				name: sound.name,
+				likes: (await sound.likes)?.length || '<Unknown>',
+			}),
+		);
 	}
 }

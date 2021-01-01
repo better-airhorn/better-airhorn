@@ -4,7 +4,7 @@ import { CommandBase } from '../CommandBase';
 import { Message } from '../DiscordExtends/Message';
 
 export abstract class BaseGuard {
-	protected client: ShoriClient;
+	protected client!: ShoriClient;
 	public abstract canActivate(
 		message: Message,
 		cmd: CommandBase,
