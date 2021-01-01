@@ -1,9 +1,10 @@
 {
 	"extends": "../../tsconfig.json",
 	"compilerOptions": {
+		"outDir": "./dist",
 		"baseUrl": ".",
 		"paths": {
-			"*": ["node_modules/*", "src/types/*", "../../node_modules"]
+			"*": ["node_modules/*", "src/types/*", "../../node_modules/*"]
 		},
 		"types": ["node"],
 		"esModuleInterop": true
