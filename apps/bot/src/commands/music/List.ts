@@ -3,6 +3,7 @@ import { Command, CommandBase, Message, UseGuard } from '@better-airhorn/shori';
 import { Guild, MessageEmbed, User } from 'discord.js';
 import ms from 'ms';
 import { HealthCheckGuard } from '../../guards/HealthCheckGuard';
+import { LocalizationService } from '../../services/LocalizationService';
 import { getSubLogger } from '../../utils/Logger';
 import { PageabelEmbed } from '../../utils/PagableEmbed';
 import { wrapInCodeBlock } from '../../utils/Utils';
@@ -13,13 +14,17 @@ import { wrapInCodeBlock } from '../../utils/Utils';
 	description: 'lists all sounds',
 })
 export class ListCommand extends CommandBase {
+	private constructor(private readonly i18n: LocalizationService) {
+		super();
+	}
+
 	private readonly log = getSubLogger(ListCommand.name);
 
 	private readonly pageSize = 15;
 
 	@UseGuard(HealthCheckGuard)
 	public async exec(message: Message, args: string[]): Promise<any> {
-		const whereFilter = this.buildWhereFilter(args, { user: message.author, guild: message.guild });
+		const whereFilter = this.buildWhereFilter(args, { user: message.author, guild: message.guild! });
 		const msg = await message.neutral('Fetching Information');
 		const count = await SoundCommand.count({ where: whereFilter });
 
@@ -34,7 +39,7 @@ export class ListCommand extends CommandBase {
 					return undefined;
 				}
 				const longestKey = Math.max(...data.map(d => d.likes.toLocaleString().length + d.name.length + 3));
-				const alreadyShowedCount = this.pageSize * page - this.pageSize + data.length;
+				const showedCount = this.pageSize * page - this.pageSize + data.length;
 
 				return new MessageEmbed()
 					.setDescription(
@@ -49,7 +54,14 @@ export class ListCommand extends CommandBase {
 							'css',
 						),
 					)
-					.setFooter(`Page ${page}/${Math.ceil(count / this.pageSize)} | ${alreadyShowedCount}/${count} Entries`);
+					.setFooter(
+						this.i18n.format('commands.list.pageFooter', {
+							totalPages: Math.ceil(count / this.pageSize),
+							page,
+							showedCount,
+							count,
+						}),
+					);
 			},
 			message.author.id,
 		)

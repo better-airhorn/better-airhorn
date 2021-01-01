@@ -14,13 +14,13 @@ import { ArgsGuard } from '../../guards/ArgsGuard';
 export class TimeCommand extends CommandBase {
 	@UseGuard(new ArgsGuard(1))
 	public async exec(message: Message, args: string[]): Promise<any> {
-		const cmd = commandMap.get(args.shift());
+		const cmd = commandMap.get(args.shift()!);
 		if (!cmd) {
 			return message.error('command not found');
 		}
 		const handler = container.resolve(MessageHandler);
-		const settings = await GuildSetting.findOne(message.guild.id);
-		message.content = `${settings.prefix} ${cmd.name} ${args.join(' ')}`;
+		const settings = await GuildSetting.findOne(message.guild!.id);
+		message.content = `${settings!.prefix} ${cmd.name} ${args.join(' ')}`;
 		let hrDiff: [number, number] = process.hrtime();
 		await handler.onMessage(message);
 		hrDiff = process.hrtime(hrDiff);

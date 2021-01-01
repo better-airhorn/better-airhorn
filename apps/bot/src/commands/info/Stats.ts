@@ -1,10 +1,10 @@
 import { Command, CommandBase, Message, version } from '@better-airhorn/shori';
-import { stripIndents } from 'common-tags';
 import { MessageEmbed, version as DJSVersion } from 'discord.js';
-import moment from 'moment';
 import 'moment-duration-format';
+import ms from 'ms';
 import os from 'os';
 import { Config } from '../../config/Config';
+import { LocalizationService } from '../../services/LocalizationService';
 import { wrapInCodeBlock } from '../../utils/Utils';
 
 enum ShardStatus {
@@ -26,17 +26,12 @@ enum ShardStatus {
 	parseArguments: true,
 })
 export class StatsCommand extends CommandBase {
+	public constructor(private readonly i18n: LocalizationService) {
+		super();
+	}
+
 	public async exec(message: Message): Promise<any> {
 		const { rss } = process.memoryUsage();
-
-		const cpu = `CPU: ${os.cpus()[0].model}`;
-		const ram = `RAM: ${(rss / 1024 / 1024).toFixed(2)}MB`;
-		const arch = `Arch: ${os.platform()}`;
-		const uptime = `Uptime: ${moment.duration(this.client.uptime).format('d[d ]h[h ]m[m ]s[s]')}`;
-
-		const node = `Node: ${process.version}`;
-		const discord = `D.JS: v${DJSVersion}`;
-		const shori = `shori: v${version}`;
 
 		const guilds =
 			(await this.client.shard
@@ -65,31 +60,36 @@ export class StatsCommand extends CommandBase {
 
 		const embed = new MessageEmbed()
 			.setAuthor(message.author.tag, message.author.displayAvatarURL())
-			.setThumbnail(this.client.user.displayAvatarURL({ size: 1024 }))
+			.setThumbnail(this.client.user!.displayAvatarURL({ size: 1024 }))
 			.addField(
-				'System',
-				wrapInCodeBlock(stripIndents`
-				${cpu}
-				${ram}
-				${arch}
-				${uptime}
-			`),
+				this.i18n.t().commands.stats.embeds.field1.title,
+				wrapInCodeBlock(
+					this.i18n.format('commands.stats.embeds.field1.title', {
+						cpu: os.cpus()[0].model,
+						ram: (rss / 1024 / 1024).toFixed(2),
+						members: ms(this.client.uptime!),
+					}),
+				),
 			)
 			.addField(
-				'Bot',
-				wrapInCodeBlock(stripIndents`
-        Guilds: ${guilds}
-				Channels: ${channels}
-				Members: ${members}
-        `),
+				this.i18n.t().commands.stats.embeds.field2.title,
+				wrapInCodeBlock(
+					this.i18n.format('commands.stats.embeds.field2.title', {
+						guilds,
+						channels,
+						members,
+					}),
+				),
 			)
 			.addField(
-				'Versions',
-				wrapInCodeBlock(stripIndents`
-        ${node}
-        ${discord}
-				${shori}
-        `),
+				this.i18n.t().commands.stats.embeds.field3.title,
+				wrapInCodeBlock(
+					this.i18n.format('commands.stats.embeds.field3.title', {
+						node: process.version,
+						discord: DJSVersion,
+						shori: version,
+					}),
+				),
 			)
 			.addField('Shards', wrapInCodeBlock(shardStatus))
 			.setFooter(`Made by ${owners}`);

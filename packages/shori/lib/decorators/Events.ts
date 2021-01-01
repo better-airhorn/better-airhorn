@@ -4,7 +4,7 @@ import { EventOptions } from '../struct/options/EventOptions';
 export function Event(event: string, options?: Omit<EventOptions, 'event' | 'method'>) {
 	return function decorator(target: any, propertyKey: string, descriptor: PropertyDescriptor): void {
 		const accurateOptions: EventOptions = {
-			...(options || { once: false, source: null }),
+			...(options ?? { once: false, source: null }),
 			event,
 			method: descriptor.value,
 		};

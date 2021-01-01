@@ -11,8 +11,9 @@ import { Config } from '../../config/Config';
 })
 export class HelpCommand extends CommandBase {
 	public async exec(message: Message, args: string[]): Promise<any> {
+		// todo: dont show all commands in a single embed, link github wiki or similar
 		if (args.length > 0) {
-			const { class: cmd } = commandMap.get(args[0].toLowerCase());
+			const { class: cmd } = commandMap.get(args[0].toLowerCase()) ?? {};
 			if (!cmd) return message.warn(`Command \`${args[0].toLowerCase()}\` not found`);
 
 			return message.channel.send(

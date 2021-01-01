@@ -13,7 +13,7 @@ import { resolveSingleton } from '../struct/util/Util';
 export abstract class ShoriClient extends Client {
 	public readonly prefix: string;
 	public readonly ownerIds: string[] = [];
-	private readonly allServicesInitiated: () => Promise<void[]>;
+	private readonly allServicesInitiated: undefined | (() => Promise<void[]>);
 	private readonly isDev: boolean;
 	public constructor(shoriOptions: ShoriOptions, clientOptions?: ClientOptions) {
 		super(clientOptions);
@@ -29,7 +29,7 @@ export abstract class ShoriClient extends Client {
 		if (shoriOptions.services) {
 			this.allServicesInitiated = () => {
 				return Promise.all(
-					shoriOptions.services.map(async service => {
+					shoriOptions.services!.map(async service => {
 						const instance: OnInit = resolveSingleton(service);
 						if (typeof instance.shOnInit === 'function') {
 							this.emit('debug', `[ShoriClient] running ${service.name}'s init`);
@@ -46,7 +46,7 @@ export abstract class ShoriClient extends Client {
 				);
 			};
 			this.once('ready', () => {
-				shoriOptions.services.forEach(service => {
+				shoriOptions.services!.forEach(service => {
 					const instance: { shOnReady?: () => any } = resolveSingleton(service);
 					if (typeof instance.shOnReady === 'function') {
 						instance.shOnReady();
@@ -57,7 +57,7 @@ export abstract class ShoriClient extends Client {
 	}
 
 	public start(token: string): Promise<string | void> {
-		return this.allServicesInitiated()
+		return this.allServicesInitiated!()
 			.then(() => this.login(token))
 			.catch(e => {
 				if (this.isDev) {
@@ -82,5 +82,5 @@ export abstract class ShoriClient extends Client {
 	 * @returns {Promise<string>}
 	 * @memberof ShoriClient
 	 */
-	public abstract async getPrefix(id: string): Promise<string | undefined>;
+	public abstract getPrefix(id: string): Promise<string | undefined>;
 }

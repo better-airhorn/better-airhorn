@@ -11,7 +11,7 @@ export class ChannelLockService {
 			this.lockMap.set(resource, lock);
 			return lock;
 		}
-		return this.lockMap.get(resource);
+		return this.lockMap.get(resource)!;
 	}
 
 	public release(resource: string) {

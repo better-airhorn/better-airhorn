@@ -1,0 +1,83 @@
+{
+	"commands": {
+		"config": {
+			"availableConfigurations": "**Available Configurations**\n\n{configs}\n\nrun `config <key> true/false`",
+			"availableConfigurationsList": {
+				"leaveAfterPlay": {
+					"name": "stay-in-voice",
+					"description": "stay in the voice channel after playing a sound"
+				},
+				"sendMessageAfterPlay": {
+					"name": "send-messages",
+					"description": "send a success message after playing a sound"
+				}
+			},
+			"pleaseUseTrueOrFalse": "Please use `true` or `false`",
+			"updatedSettings": "Successfully updated settings",
+			"optionIsCurrentlyEnabled": "{option} is currently enabled",
+			"optionIsCurrentlyDisabled": "{option} is currently disabled"
+		},
+		"prefix": {
+			"currentPrefixIs": "the current prefix for this guild is {prefix}",
+			"provideArgumentToSetPrefix": "provide an argument to set a new prefix",
+			"prefixTooShort": "prefixes must be at least 1 character",
+			"prefixTooLong": "prefixes can't be longer than 3 characters",
+			"changedPrefix": "successfully changed prefix",
+			"newPrefixIs": "new prefix is {prefix}"
+		},
+		"ping": {
+			"generalPingInformation": "⚙️  {processTime}ms - Time to command execution\n🏓  {discordPing}ms - Discord Gateway\n<:postgres:707623202993602700>  {pgPing}ms - PostgreSQL\n<:minIO:713895494555926528>  {minIOPing}ms - MinIO"
+		},
+		"stats": {
+			"embeds": {
+				"field1": {
+					"title": "System",
+					"description": "```CPU: {cpu}\nRAM: {ram}\nArch: {arch}\nUptime: {uptime}```"
+				},
+				"field2": {
+					"title": "Bot",
+					"description": "```Guilds: {guilds}\nChannels: {channels}\nMembers: {members}```"
+				},
+				"field3": {
+					"title": "Versions",
+					"description": "```Node: {node}\ndiscord.js: {discord}\n@better-airhorn/shori: {shori}```"
+				}
+			}
+		},
+		"invite": "Invite me with [this link]{url}",
+		"list": {
+			"pageFooter": "Page {page}/{totalPages} | {showedCount}/{count} Entries"
+		},
+		"delete": {
+			"successfullyDeleted": "Successfully deleted {name}",
+			"missingPermissions": "You cant delete this sound",
+			"useForce": "use -f to force deletion"
+		},
+		"import": {
+			"failedToLocateAudio": "failed to locate or download audio",
+			"audioTooBig": "the provided audio is too big/long",
+			"wasntAbleToGetSizeOrLength": "I wasn't able to get the audios size or length, usually not my fault",
+			"pleaseWaitDownloading": "Please wait, I'm downloading and converting your video <a:BE_loading:505378765950550036>",
+			"savedSoundAs": "I saved your sound as {name}"
+		},
+		"like": {
+			"soundLike": "Done! {name} now has {likes} Likes"
+		},
+		"play": {
+			"jobIsTakingLongToStart": "The job is taking longer than usual to start",
+			"finishedPlaying": "finished playing `{name}`\n you can react with ❤ to like it"
+		},
+		"random": {
+			"finishedPlaying": "finished playing `{name}`\n you can react with ❤ to like it"
+		},
+		"soundinfo": "Name: {name}\nOwner: {user}\nLength: {msLength}\nSize: {size}\nUses: {uses}\nLikes: {likes}",
+		"generalKeys": {
+			"soundNotFound": "I was not able to find a Sound with that name",
+			"suggestPredictedName": "Do you mean `{name}`?",
+			"playPredictedName": "I'm {percentage}% sure you meant {name}",
+			"needToBeInVoiceChannel": "You need to be in a voice channel to run this command",
+			"unexpectedError": "an unexpected error occurred",
+			"somethingDidntGoRight": "Something didn't go right"
+		}
+	}
+}

@@ -1,8 +1,7 @@
 import { GuildSetting } from '@better-airhorn/entities';
 import { Command, CommandBase, Message } from '@better-airhorn/shori';
-import { stripIndents } from 'common-tags';
 import { getRepository } from 'typeorm';
-import { Config } from '../../config/Config';
+import { LocalizationService } from '../../services/LocalizationService';
 import { MinIOService } from '../../services/MinIOService';
 
 @Command('ping', {
@@ -12,22 +11,24 @@ import { MinIOService } from '../../services/MinIOService';
 	showInHelp: false,
 })
 export class PingCommand extends CommandBase {
-	public constructor(private readonly minIOService: MinIOService) {
+	public constructor(private readonly minIOService: MinIOService, private readonly i18n: LocalizationService) {
 		super();
 	}
 
 	public async exec(message: Message): Promise<any> {
 		const startTime = Date.now();
-		const processTime = startTime - message.eventEmittedAt;
+		const processTime = startTime - message.eventEmittedAt!;
 		await getRepository(GuildSetting)
 			.findOne()
 			.catch(() => null);
-
-		return message.channel.send(stripIndents`
-			⚙️  ${processTime}ms - Time to command execution
-			🏓  ${this.client.ws.ping}ms - Discord Gateway
-			${Config.emojis.postgres} ${Date.now() - startTime}ms - PostgreSQL
-			${Config.emojis.minIO} ${await this.minIOService.pseudoPing()}ms - MinIO
-		`);
+		const pgPing = Date.now() - startTime;
+		return message.channel.send(
+			this.i18n.format('commands.ping.generalPingInformation', {
+				processTime: processTime.toString(),
+				discordPing: this.client.ws.ping.toString(),
+				pgPing: pgPing.toString(),
+				minIOPing: await (await this.minIOService.pseudoPing()).toString(),
+			}),
+		);
 	}
 }
