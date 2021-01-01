@@ -129,7 +129,7 @@ export async function handleUploadAudioFile(opts: {
 		size: 0,
 	});
 	await entity.save();
-	const msg = await message.neutral(`Please wait, I'm downloading and converting your file ${Config.emojis.loading}`);
+	const msg = await message.neutral(`Please wait, I'm downloading and converting your file`);
 	try {
 		const { ok, body, statusText } = await fetch(attachment.url);
 		if (!ok) {
