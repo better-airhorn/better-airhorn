@@ -1,5 +1,6 @@
 import { spawn, spawnSync } from 'child_process';
 import { pipeline, Readable } from 'stream';
+import { HotWordEngine, HotWords } from './hotword-engine';
 
 let thrown = false;
 try {
@@ -19,7 +20,7 @@ try {
  * @param stream input stream
  * @returns {Promise<{ stream: Readable; duration: Promise<number> }>}
  */
-export function convertToOGG(stream: Readable): Promise<{ stream: Readable; duration: Promise<number> }> {
+function convertToOGG(stream: Readable): Promise<{ stream: Readable; duration: Promise<number> }> {
 	return new Promise((res, rej) => {
 		const child = spawn('ffmpeg', [
 			'-i',
@@ -76,8 +77,9 @@ export function convertToOGG(stream: Readable): Promise<{ stream: Readable; dura
 		child.stdout.once('readable', () => res({ stream: child.stdout, duration }));
 	});
 }
+convertToOGG.supportedFormats = ['aac', 'ac3', 'flac', 'mp3', 'ogg', 'opus', 'wav', 'wma'];
 
-export function normalizeAudio(stream: Readable): Promise<Readable> {
+function normalizeAudio(stream: Readable): Promise<Readable> {
 	return new Promise((res, rej) => {
 		const child = spawn('ffmpeg', [
 			'-i',
@@ -113,4 +115,53 @@ export function normalizeAudio(stream: Readable): Promise<Readable> {
 	});
 }
 
-export const supportedFormats: string[] = ['aac', 'ac3', 'flac', 'mp3', 'ogg', 'opus', 'wav', 'wma'];
+/**
+ * Converts [s16le, 48kH, 2 ac] to [pcm_s16le, 16kH, 1ac]
+ *
+ * @param stream
+ */
+function convertPcmTo16khPCM(stream: Readable): Promise<Readable> {
+	return new Promise((res, rej) => {
+		const child = spawn('ffmpeg', [
+			'-f',
+			's16le',
+			'-ar',
+			'48000',
+			'-ac',
+			'2',
+			'-i',
+			'pipe:0',
+			'-acodec',
+			'pcm_s16le',
+			'-ac',
+			'1',
+			'-ar',
+			'16000',
+			'-f',
+			's16le',
+			'pipe:1',
+		]);
+		child.once('error', rej);
+		const pipe = pipeline(stream, child.stdin, err => {
+			if (err) throw err;
+		});
+		child.stderr.on('data', (b: Buffer) => {
+			// ffmpeg writes the usual output into stderr
+			if (b.toString().includes('pipe:0: Invalid data found when processing input')) {
+				rej(
+					new TypeError(
+						`invalid data found in stream\n\n${b
+							.toString()
+							.split('\n')
+							.slice(-2)
+							.join('\n')}`,
+					),
+				);
+				pipe.destroy();
+			}
+		});
+		child.stdout.once('readable', () => res(child.stdout));
+	});
+}
+
+export = { normalizeAudio, convertToOGG, convertPcmTo16khPCM, HotWordEngine, HotWords };

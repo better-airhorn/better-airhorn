@@ -1,4 +1,4 @@
-import { supportedFormats } from '@better-airhorn/audio';
+import { convertToOGG } from '@better-airhorn/audio';
 import { GuildSetting, isPlayable, SoundCommand } from '@better-airhorn/entities';
 import { Client, Event, Message, OnReady, Service } from '@better-airhorn/shori';
 import { IPlayJobRequestData, IPlayJobResponseData, PlayJobResponseCodes } from '@better-airhorn/structures';
@@ -86,12 +86,14 @@ export class SoundCommandService implements OnReady {
 		if (!sound) {
 			const similarSound = await this.findSimilarSoundCommand(name);
 			if (similarSound.similarity >= 0.7 && autoSelect) {
-				await message.neutral(
-					this.i18n.format('commands.generalKeys.playPredictedName', {
-						name: similarSound.sound.name,
-						percent: (similarSound.similarity * 100).toFixed(0),
-					}),
-				);
+				await message
+					.neutral(
+						this.i18n.format('commands.generalKeys.playPredictedName', {
+							name: similarSound.sound.name,
+							percent: (similarSound.similarity * 100).toFixed(0),
+						}),
+					)
+					.then(r => r.delete({ timeout: 10000 }).catch(() => null));
 				return similarSound.sound;
 			}
 			await message.error(
@@ -166,7 +168,6 @@ export class SoundCommandService implements OnReady {
 				);
 			}
 			await finishedPlaying;
-			dispatcher.destroy();
 			response = { c: PlayJobResponseCodes.SUCCESS, s: true };
 		} catch (error) {
 			this.log.debug(`[Play Queue] ${error.toString()}`);
@@ -230,7 +231,7 @@ export class SoundCommandService implements OnReady {
 		// find suitable attachment
 		const attachment = message.attachments.find(
 			(x: MessageAttachment) =>
-				supportedFormats.includes(x.name!.split('.').pop()!) && x.size < Config.files.maxFileSize,
+				convertToOGG.supportedFormats.includes(x.name!.split('.').pop()!) && x.size < Config.files.maxFileSize,
 		);
 		if (!attachment) return;
 

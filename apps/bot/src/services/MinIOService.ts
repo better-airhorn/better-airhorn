@@ -30,6 +30,8 @@ export class MinIOService implements OnInit {
 				return this.client.makeBucket(this.bucketName, 'us-east-1');
 			}
 		});
+		// ensure the file is there
+		await this.stat('hotword-detected');
 	}
 
 	public add(name: string, stream: Readable): Promise<string> {

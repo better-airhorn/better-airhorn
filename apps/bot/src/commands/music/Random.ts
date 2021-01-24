@@ -6,8 +6,7 @@ import { HealthCheckGuard } from '../../guards/HealthCheckGuard';
 import { LocalizationService } from '../../services/LocalizationService';
 import { SoundCommandService } from '../../services/SoundCommandService';
 import { getSubLogger } from '../../utils/Logger';
-import { QueueUtils } from '../../utils/QueueUtils';
-import { getHumanReadableError, timeout } from '../../utils/Utils';
+import { getHumanReadableError } from '../../utils/Utils';
 
 @Command('random', {
 	channel: 'guild',
@@ -17,11 +16,7 @@ import { getHumanReadableError, timeout } from '../../utils/Utils';
 export class RandomCommand extends CommandBase {
 	private readonly log = getSubLogger(RandomCommand.name);
 
-	public constructor(
-		private readonly soundService: SoundCommandService,
-		private readonly i18n: LocalizationService,
-		private readonly queueUtils: QueueUtils,
-	) {
+	public constructor(private readonly soundService: SoundCommandService, private readonly i18n: LocalizationService) {
 		super();
 	}
 
@@ -29,7 +24,7 @@ export class RandomCommand extends CommandBase {
 	public async exec(message: Message): Promise<any> {
 		const { guild, author, member } = message;
 		if (!member!.voice?.channelID) {
-			return message.error('you need to be in a voice channel to run this command');
+			return message.error(this.i18n.t().commands.generalKeys.needToBeInVoiceChannel);
 		}
 		const sound = await SoundCommand.createQueryBuilder()
 			.where({ accessType: AccessType.EVERYONE })
@@ -45,13 +40,6 @@ export class RandomCommand extends CommandBase {
 			sound: sound!.id,
 			user: author.id,
 		});
-		const res = await Promise.race([
-			timeout(5000).then(() => false),
-			this.queueUtils.onActive(job.id).then(() => true),
-		]);
-		if (res) {
-			await this.queueUtils.onActive(job.id);
-		}
 
 		const settings = GuildSetting.findOne(guild!.id);
 		await job

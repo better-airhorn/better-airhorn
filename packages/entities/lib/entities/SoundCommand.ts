@@ -21,30 +21,18 @@ export class SoundCommand extends BaseEntity {
 	/**
 	 * duration of the mp3 file in ms
 	 */
-	/**
-	 * duration of the mp3 file in ms
-	 */
-
 	@Column('integer')
 	public duration!: number;
 
 	/**
 	 * sound size in bytes
 	 */
-	/**
-	 * sound size in bytes
-	 */
-
 	@Column('bigint')
 	public size!: number;
 
 	/**
 	 * how often the sound has been played
 	 */
-	/**
-	 * how often the sound has been played
-	 */
-
 	@Column('integer', { default: 0 })
 	public uses!: number;
 

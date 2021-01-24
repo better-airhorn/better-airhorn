@@ -11,7 +11,7 @@
 	},
 	"keywords": [],
 	"author": "",
-	"license": "ISC",
+	"license": "PolyForm Perimeter License 1.0.0 (https://polyformproject.org/licenses/perimeter/1.0.0/)",
 	"dependencies": {
 		"dot-object": "^2.1.4",
 		"maketypes": "^1.1.2"

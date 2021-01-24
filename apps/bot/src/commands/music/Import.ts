@@ -1,15 +1,15 @@
 import { convertToOGG, normalizeAudio } from '@better-airhorn/audio';
 import { SoundCommand } from '@better-airhorn/entities';
 import { Command, CommandBase, Message, UseGuard } from '@better-airhorn/shori';
-import ytdl, { getInfo, videoFormat, videoInfo } from 'ytdl-core';
+import ytdl, { chooseFormat, getInfo, videoFormat, videoInfo } from 'ytdl-core';
 import { Config } from '../../config/Config';
 import { ArgsGuard } from '../../guards/ArgsGuard';
 import { HealthCheckGuard } from '../../guards/HealthCheckGuard';
 import { LocalizationService } from '../../services/LocalizationService';
 import { SoundFilesManager } from '../../services/SoundFilesManager';
+import { getYoutubeContentSize } from '../../utils/AudioUtils';
 import { getSubLogger } from '../../utils/Logger';
 import { promptSoundCommandValues } from '../../utils/prompts/SoundCommandPrompts';
-import { getYoutubeContentSize } from '../../utils/YoutubeUtils';
 
 @Command('import', {
 	channel: 'any',
@@ -36,7 +36,7 @@ export class ImportCommand extends CommandBase {
 		let info: videoInfo;
 		try {
 			info = await getInfo(videoUrl);
-			format = ytdl.chooseFormat(info.formats, { quality: 'highestaudio', filter: 'audioonly' });
+			format = chooseFormat(info.formats, { quality: 'highestaudio', filter: 'audioonly' });
 		} catch {
 			return message.error('failed to locate or download audio');
 		}

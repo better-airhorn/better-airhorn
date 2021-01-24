@@ -82,7 +82,7 @@
 		"soundboard",
 		"web-dashboard"
 	],
-	"license": "GPL-3.0",
+	"license": "PolyForm Perimeter License 1.0.0 (https://polyformproject.org/licenses/perimeter/1.0.0/)",
 	"lint-staged": {
 		"*.ts": [
 			"eslint --fix",

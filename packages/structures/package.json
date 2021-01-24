@@ -1,28 +1,28 @@
 {
-    "name": "@better-airhorn/structures",
-    "description": "shared structures used by better-airhorn",
-    "version": "0.0.1",
-    "bugs": "https://github.com/better-airhorn/better-airhorn/issues",
-    "contributors": [
-        "Clemens E (https://github.com/Clemens-E)"
-    ],
-    "directories": {
-        "lib": "lib"
-    },
-    "files": [
-        "/dist"
-    ],
-    "homepage": "https://github.com/Clemens-E/better-airhorn-next/tree/master/apps/structures#readme",
-    "license": "GPL-3.0",
-    "main": "dist/index.js",
-    "publishConfig": {
-        "access": "public",
-        "registry": "https://npm.pkg.github.com/"
-    },
-    "repository": "better-airhorn/better-airhorn.git",
-    "scripts": {
-        "build": "tsc",
-        "test": "exit 0"
-    },
-    "typings": "dist/index.d.ts"
+	"name": "@better-airhorn/structures",
+	"description": "shared structures used by better-airhorn",
+	"version": "0.0.1",
+	"bugs": "https://github.com/better-airhorn/better-airhorn/issues",
+	"contributors": [
+		"Clemens E (https://github.com/Clemens-E)"
+	],
+	"directories": {
+		"lib": "lib"
+	},
+	"files": [
+		"/dist"
+	],
+	"homepage": "https://github.com/Clemens-E/better-airhorn-next/tree/master/apps/structures#readme",
+	"license": "PolyForm Perimeter License 1.0.0 (https://polyformproject.org/licenses/perimeter/1.0.0/)",
+	"main": "dist/index.js",
+	"publishConfig": {
+		"access": "public",
+		"registry": "https://npm.pkg.github.com/"
+	},
+	"repository": "better-airhorn/better-airhorn.git",
+	"scripts": {
+		"build": "tsc",
+		"test": "exit 0"
+	},
+	"typings": "dist/index.d.ts"
 }

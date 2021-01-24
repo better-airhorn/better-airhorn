@@ -15,7 +15,7 @@ import { MinIOService } from './MinIOService';
 export class SoundFilesManager {
 	public constructor(private readonly fileCache: FileCachingService, private readonly minIO: MinIOService) {}
 
-	public async get(id: number): Promise<Readable> {
+	public async get(id: number | string): Promise<Readable> {
 		try {
 			return await this.fileCache.get(id.toString());
 		} catch (e) {

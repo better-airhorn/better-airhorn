@@ -9,6 +9,7 @@ import { DeleteCommand } from './music/Delete';
 import { ImportCommand } from './music/Import';
 import { LikeCommand } from './music/Like';
 import { ListCommand } from './music/List';
+import { ListenCommand } from './music/Listen';
 import { PlayCommand } from './music/Play';
 import { RandomCommand } from './music/Random';
 import { SoundInfoCommand } from './music/SoundInfo';
@@ -39,4 +40,5 @@ import { TimeCommand } from './owner/Time';
 	SoundInfoCommand,
 	LockDisplayCommand,
 	StopCommand,
+	ListenCommand,
 ];

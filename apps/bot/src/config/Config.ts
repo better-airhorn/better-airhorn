@@ -1,5 +1,6 @@
 import { BitFieldResolvable, IntentsString } from 'discord.js';
 import fileSize from 'filesize-parser';
+import { existsSync } from 'fs';
 import { join, normalize } from 'path';
 
 export const Config = {
@@ -68,6 +69,8 @@ export const Config = {
 		statping: {
 			url: process.env.STATPING_URL!,
 		},
+
+		googleCloudApiKey: process.env.GOOGLE_CLOUD_APIKEY,
 	},
 
 	caching: {
@@ -84,6 +87,20 @@ export const Config = {
 
 	localization: {
 		defaultLanguage: 'en-US',
-		files: join(__dirname, '../../../../localization/files'),
+		files: '',
+	},
+
+	misc: {
+		appmetricsPort: process.env.DASH_PORT,
 	},
 };
+
+const prodFilesLocation = join(__dirname, '../../localization/files');
+const devFilesLocation = join(__dirname, '../../../../localization/files');
+if (existsSync(prodFilesLocation)) {
+	Config.localization.files = prodFilesLocation;
+} else if (existsSync(devFilesLocation)) {
+	Config.localization.files = devFilesLocation;
+} else {
+	throw new Error('localization files not found');
+}

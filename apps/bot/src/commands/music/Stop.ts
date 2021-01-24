@@ -7,7 +7,7 @@ import { Command, CommandBase, Message } from '@better-airhorn/shori';
 })
 export class StopCommand extends CommandBase {
 	public async exec(message: Message): Promise<any> {
-		message.guild?.voice?.connection?.dispatcher?.destroy();
+		message.guild?.voice?.connection?.dispatcher?.end();
 		if (message.reactable) return message.react('👍').catch(() => null);
 	}
 }

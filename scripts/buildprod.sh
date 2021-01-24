@@ -11,4 +11,5 @@ rm builds -rf
 mkdir builds
 mkdir builds/bot
 cp apps/bot/* builds/bot/ -r
+cp localization/files builds/bot/ -r
 rm builds/bot/src -rf

@@ -12,6 +12,8 @@ export class InviteCommand extends CommandBase {
 	}
 
 	public async exec(message: Message): Promise<any> {
-		return message.neutral(this.i18n.format('commands.invite', { url: await this.client.generateInvite(36703232) }));
+		return message.neutral(
+			this.i18n.format('commands.invite', { url: await this.client.generateInvite({ permissions: 36703232 }) }),
+		);
 	}
 }

@@ -18,7 +18,7 @@ export class PageabelEmbed extends EventEmitter {
 		this.msg
 			.createReactionCollector(
 				(r: MessageReaction, u: User) => ['◀', '▶'].includes(r.emoji.name) && u.id === this.user,
-				{ idle: 300_000 },
+				{ idle: 900_000 },
 			)
 			.on('collect', async (r: MessageReaction, u: User) => {
 				await r.users.remove(u).catch(() => null);

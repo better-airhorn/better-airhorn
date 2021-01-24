@@ -2,6 +2,7 @@ import { PlayJobResponseCodes } from '@better-airhorn/structures';
 import { getConnection } from 'typeorm';
 import { EventEmitter } from 'typeorm/platform/PlatformTools';
 import { promisify } from 'util';
+
 export const timeout = promisify(setTimeout);
 export function getHumanReadableError(code: PlayJobResponseCodes): string {
 	// @ts-ignore

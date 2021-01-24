@@ -3,7 +3,6 @@ import { constants, createReadStream, createWriteStream, promises } from 'fs';
 import { join } from 'path';
 import { Readable } from 'stream';
 import { Config } from '../config/Config';
-import { isProd } from '../utils/isEnvironment';
 import { onceEmitted } from '../utils/Utils';
 
 /**
@@ -14,9 +13,7 @@ import { onceEmitted } from '../utils/Utils';
 @Service()
 export class FileCachingService implements OnInit {
 	public async shOnInit() {
-		if (isProd()) {
-			await promises.rmdir(Config.files.cacheDirectory, { recursive: true });
-		}
+		await promises.rmdir(Config.files.cacheDirectory, { recursive: true });
 		await promises.mkdir(Config.files.cacheDirectory, { recursive: true });
 	}
 
