@@ -4,7 +4,7 @@ import { createReadStream, createWriteStream, mkdirSync, rmdirSync, statSync, un
 import 'mocha';
 import { join } from 'path';
 import { pipeline } from 'stream';
-import { convertToOGG, supportedFormats } from '../lib/index';
+import { convertToOGG } from '../dist/index';
 const outputDir = join(__dirname, './output');
 const outputFile = join(outputDir, 'out.ogg');
 
@@ -34,7 +34,7 @@ describe('Audio Conversion', () => {
 		} catch {}
 	});
 
-	supportedFormats.forEach(format => {
+	convertToOGG.supportedFormats.forEach(format => {
 		it(`should be able to convert ${format}`, async function test() {
 			this.timeout(10000);
 			return testFile(files.get(format)!);
