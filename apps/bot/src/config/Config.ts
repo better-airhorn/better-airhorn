@@ -95,7 +95,7 @@ export const Config = {
 	},
 };
 
-const prodFilesLocation = join(__dirname, '../../localization/files');
+const prodFilesLocation = join(__dirname, '../../files');
 const devFilesLocation = join(__dirname, '../../../../localization/files');
 if (existsSync(prodFilesLocation)) {
 	Config.localization.files = prodFilesLocation;
