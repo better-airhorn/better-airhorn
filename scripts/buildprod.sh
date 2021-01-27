@@ -4,6 +4,7 @@ set -x
 
 cd apps/bot
 yarn run build
+yarn install --modules-folder node_modules
 cd ../..
 
 rm builds -rf
