@@ -1,4 +1,5 @@
-Unless specified different, this license is active for everything
+# Unless specified different in e.g. package.json, this license is active for the whole repository and each of its packages
+
 
 # PolyForm Perimeter License 1.0.0
 
