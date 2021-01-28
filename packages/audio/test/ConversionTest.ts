@@ -17,14 +17,14 @@ try {
 mkdirSync(outputDir);
 
 const files: Map<string, { path: string; length: number; size: number }> = new Map()
-	.set('aac', { path: join(__dirname, './testfiles/ff-16b-2c-44100hz.aac'), length: 18_7000, size: 2600000 })
-	.set('ac3', { path: join(__dirname, './testfiles/ff-16b-2c-44100hz.ac3'), length: 18_7000, size: 2600000 })
-	.set('flac', { path: join(__dirname, './testfiles/ff-16b-2c-44100hz.flac'), length: 18_7000, size: 2600000 })
-	.set('mp3', { path: join(__dirname, './testfiles/ff-16b-2c-44100hz.mp3'), length: 18_7000, size: 2600000 })
-	.set('ogg', { path: join(__dirname, './testfiles/ff-16b-2c-44100hz.ogg'), length: 18_7000, size: 2600000 })
-	.set('opus', { path: join(__dirname, './testfiles/ff-16b-2c-44100hz.opus'), length: 18_7000, size: 2600000 })
-	.set('wav', { path: join(__dirname, './testfiles/ff-16b-2c-44100hz.wav'), length: 18_7000, size: 2600000 })
-	.set('wma', { path: join(__dirname, './testfiles/ff-16b-2c-44100hz.wma'), length: 18_7000, size: 2600000 })
+	.set('aac', { path: join(__dirname, './testfiles/sample.aac'), length: 18_7000, size: 173000 })
+	.set('ac3', { path: join(__dirname, './testfiles/sample.ac3'), length: 18_7000, size: 173000 })
+	.set('flac', { path: join(__dirname, './testfiles/sample.flac'), length: 18_7000, size: 173000 })
+	.set('mp3', { path: join(__dirname, './testfiles/sample.mp3'), length: 18_7000, size: 173000 })
+	.set('ogg', { path: join(__dirname, './testfiles/sample.ogg'), length: 18_7000, size: 173000 })
+	.set('opus', { path: join(__dirname, './testfiles/sample.opus'), length: 18_7000, size: 173000 })
+	.set('wav', { path: join(__dirname, './testfiles/sample.wav'), length: 18_7000, size: 173000 })
+	.set('wma', { path: join(__dirname, './testfiles/sample.wma'), length: 18_7000, size: 173000 })
 	.set('invalid', { path: join(__dirname, './testfiles/invalid.mp3') });
 
 describe('Audio Conversion', () => {
