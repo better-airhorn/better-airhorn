@@ -83,7 +83,7 @@ export class ListenCommand extends CommandBase {
 			if (currentlyListening) return;
 			// @ts-expect-error 2339
 			// get the old stream
-			const inputStream: Readable = connection?.dispatcher.streams?.opus;
+			const inputStream: Readable = connection?.dispatcher?.streams?.opus;
 			if (inputStream) {
 				const oldDestroy = inputStream.destroy;
 				// overwrite the destroy method so d.js cant destroy the stream
