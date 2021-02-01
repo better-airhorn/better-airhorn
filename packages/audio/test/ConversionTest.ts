@@ -17,14 +17,14 @@ try {
 mkdirSync(outputDir);
 
 const files: Map<string, { path: string; length: number; size: number }> = new Map()
-	.set('aac', { path: join(__dirname, './testfiles/sample.aac'), length: 18_7000, size: 173000 })
-	.set('ac3', { path: join(__dirname, './testfiles/sample.ac3'), length: 18_7000, size: 173000 })
-	.set('flac', { path: join(__dirname, './testfiles/sample.flac'), length: 18_7000, size: 173000 })
-	.set('mp3', { path: join(__dirname, './testfiles/sample.mp3'), length: 18_7000, size: 173000 })
-	.set('ogg', { path: join(__dirname, './testfiles/sample.ogg'), length: 18_7000, size: 173000 })
-	.set('opus', { path: join(__dirname, './testfiles/sample.opus'), length: 18_7000, size: 173000 })
-	.set('wav', { path: join(__dirname, './testfiles/sample.wav'), length: 18_7000, size: 173000 })
-	.set('wma', { path: join(__dirname, './testfiles/sample.wma'), length: 18_7000, size: 173000 })
+	.set('aac', { path: join(__dirname, './testfiles/sample.aac'), length: 10_000, size: 150_000 })
+	.set('ac3', { path: join(__dirname, './testfiles/sample.ac3'), length: 10_000, size: 150_000 })
+	.set('flac', { path: join(__dirname, './testfiles/sample.flac'), length: 10_000, size: 150_000 })
+	.set('mp3', { path: join(__dirname, './testfiles/sample.mp3'), length: 10_000, size: 150_000 })
+	.set('ogg', { path: join(__dirname, './testfiles/sample.ogg'), length: 10_000, size: 150_000 })
+	.set('opus', { path: join(__dirname, './testfiles/sample.opus'), length: 10_000, size: 150_000 })
+	.set('wav', { path: join(__dirname, './testfiles/sample.wav'), length: 10_000, size: 150_000 })
+	.set('wma', { path: join(__dirname, './testfiles/sample.wma'), length: 10_000, size: 150_000 })
 	.set('invalid', { path: join(__dirname, './testfiles/invalid.mp3') });
 
 describe('Audio Conversion', () => {
@@ -78,7 +78,7 @@ async function testFile(file: { path: string; length: number; size: number }) {
 
 	const size = statSync(outputFile).size;
 	strictEqual(
-		Math.abs(size - file.size) < 100_000,
+		Math.abs(size - file.size) < 50_000,
 		true,
 		`file size differs too much. Difference: ${Math.abs(size - file.size)}`,
 	);
