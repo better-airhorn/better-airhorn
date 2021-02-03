@@ -6,12 +6,13 @@ import { HealthCheckGuard } from '../../guards/HealthCheckGuard';
 import { LocalizationService } from '../../services/LocalizationService';
 import { getSubLogger } from '../../utils/Logger';
 import { PageabelEmbed } from '../../utils/PagableEmbed';
-import { wrapInCodeBlock } from '../../utils/Utils';
+import { humanFileSize, wrapInCodeBlock } from '../../utils/Utils';
 
 @Command('list', {
 	channel: 'any',
 	category: 'music',
 	description: 'lists all sounds',
+	parseArguments: true,
 })
 export class ListCommand extends CommandBase {
 	private constructor(private readonly i18n: LocalizationService) {
@@ -27,7 +28,7 @@ export class ListCommand extends CommandBase {
 		const whereFilter = this.buildWhereFilter(args, { user: message.author, guild: message.guild! });
 		const msg = await message.neutral('Fetching Information');
 		const count = await SoundCommand.count({ where: whereFilter });
-
+		const getSize = Boolean(message.arguments.size);
 		await new PageabelEmbed(
 			msg,
 			async page => {
@@ -40,7 +41,6 @@ export class ListCommand extends CommandBase {
 				}
 				const longestKey = Math.max(...data.map(d => d.likes.toLocaleString().length + d.name.length + 3));
 				const showedCount = this.pageSize * page - this.pageSize + data.length;
-
 				return new MessageEmbed()
 					.setDescription(
 						wrapInCodeBlock(
@@ -48,7 +48,7 @@ export class ListCommand extends CommandBase {
 								.map(d => {
 									const string = `[${d.likes}] ${d.name}`;
 									const repeatFor = longestKey - string.length > 0 ? longestKey - string.length : 0;
-									return `${string}${' '.repeat(repeatFor)} (${ms(d.duration)})`;
+									return `${string}${' '.repeat(repeatFor)} (${getSize ? humanFileSize(d.size) : ms(d.duration)})`;
 								})
 								.join('\n'),
 							'css',
@@ -72,7 +72,7 @@ export class ListCommand extends CommandBase {
 	private async next(opts: {
 		page: number;
 		filter: WhereFilter;
-	}): Promise<{ id: number; name: string; likes: number; duration: number }[]> {
+	}): Promise<{ id: number; name: string; likes: number; duration: number; size: number }[]> {
 		const offset = (opts.page - 1) * this.pageSize;
 		if (offset < 0) return [];
 
@@ -82,6 +82,7 @@ export class ListCommand extends CommandBase {
 			.select('sound.name', 'name')
 			.addSelect('sound.id', 'id')
 			.addSelect('sound.duration', 'duration')
+			.addSelect('sound.size', 'size')
 			.addSelect('COUNT(DISTINCT(likes.id)) as likes')
 			.groupBy('sound.id')
 			.orderBy({ likes: 'DESC' })
