@@ -27,6 +27,10 @@ const askNameVisual = new MessageVisual('What should your sound be named?');
 const askNameFn: DiscordPromptFunction<SoundCommandPromptType> = async (m: Message, data: SoundCommandPromptType) => {
 	const content = m.content.trim().replace(/\s/g, '-');
 
+	if (content.length < 1) {
+		throw new Rejection('The name you provided is empty');
+	}
+
 	if (content.length > 20) {
 		throw new Rejection(`The name you provided is ${content.length - 20} characters too long`, 'try something shorter');
 	}
