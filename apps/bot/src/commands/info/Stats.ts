@@ -63,33 +63,31 @@ export class StatsCommand extends CommandBase {
 			.setThumbnail(this.client.user!.displayAvatarURL({ size: 1024 }))
 			.addField(
 				this.i18n.t().commands.stats.embeds.field1.title,
-				wrapInCodeBlock(
-					this.i18n.format('commands.stats.embeds.field1.title', {
-						cpu: os.cpus()[0].model,
-						ram: (rss / 1024 / 1024).toFixed(2),
-						members: ms(this.client.uptime!),
-					}),
-				),
+
+				this.i18n.format('commands.stats.embeds.field1.description', {
+					cpu: os.cpus()[0].model,
+					ram: (rss / 1024 / 1024).toFixed(2),
+					arch: `${os.platform()} ${os.arch()}`,
+					uptime: ms(this.client.uptime!),
+				}),
 			)
 			.addField(
 				this.i18n.t().commands.stats.embeds.field2.title,
-				wrapInCodeBlock(
-					this.i18n.format('commands.stats.embeds.field2.title', {
-						guilds,
-						channels,
-						members,
-					}),
-				),
+
+				this.i18n.format('commands.stats.embeds.field2.description', {
+					guilds,
+					channels,
+					members,
+				}),
 			)
 			.addField(
 				this.i18n.t().commands.stats.embeds.field3.title,
-				wrapInCodeBlock(
-					this.i18n.format('commands.stats.embeds.field3.title', {
-						node: process.version,
-						discord: DJSVersion,
-						shori: version,
-					}),
-				),
+
+				this.i18n.format('commands.stats.embeds.field3.description', {
+					node: process.version,
+					discord: DJSVersion,
+					shori: version,
+				}),
 			)
 			.addField('Shards', wrapInCodeBlock(shardStatus))
 			.setFooter(`Made by ${owners}`);
