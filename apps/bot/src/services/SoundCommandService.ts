@@ -3,7 +3,16 @@ import { GuildSetting, isPlayable, SoundCommand } from '@better-airhorn/entities
 import { Client, Event, Message, OnReady, Service } from '@better-airhorn/shori';
 import { IPlayJobRequestData, IPlayJobResponseData, PlayJobResponseCodes } from '@better-airhorn/structures';
 import Bull, { Job } from 'bull';
-import { MessageAttachment, StreamDispatcher, VoiceChannel, VoiceConnection, VoiceState } from 'discord.js';
+import {
+	GuildMember,
+	MessageAttachment,
+	Snowflake,
+	StreamDispatcher,
+	User,
+	VoiceChannel,
+	VoiceConnection,
+	VoiceState,
+} from 'discord.js';
 import { Readable, Stream } from 'stream';
 import { getRepository } from 'typeorm';
 import { BAClient } from '../client/BAClient';
@@ -29,6 +38,7 @@ export class SoundCommandService implements OnReady {
 
 	private readonly log = getSubLogger(SoundCommandService.name);
 
+	public readonly activeUsers = new Set<Snowflake>();
 	public queue = new Bull(Config.queue.playQueue.name, Config.credentials.redis.url, {
 		settings: {
 			backoffStrategies: {
@@ -74,6 +84,10 @@ export class SoundCommandService implements OnReady {
 			stream = id;
 		}
 		return connection.play(stream as Readable, { type: 'ogg/opus', volume: false });
+	}
+
+	public IsChannelBeingListenedTo(users: (GuildMember | User)[]) {
+		return users.some(user => this.activeUsers.has(user.id));
 	}
 
 	public async getSoundCommand(opts: {
@@ -186,7 +200,7 @@ export class SoundCommandService implements OnReady {
 		const settings = await getRepository(GuildSetting)
 			.findOne(data.guild, { cache: Config.caching.GuildSettingsCacheDuration })
 			.catch(() => null);
-		if (settings?.leaveAfterPlay) {
+		if (settings?.leaveAfterPlay && !this.IsChannelBeingListenedTo(Array.from(channel.members.values()))) {
 			channel?.leave();
 			// eslint-disable-next-line @typescript-eslint/no-floating-promises
 			timeout(1000).then(() => lock.release());

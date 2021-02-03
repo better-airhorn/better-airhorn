@@ -1,6 +1,5 @@
 import { convertPcmTo16khPCM, HotWordEngine, HotWords } from '@better-airhorn/audio';
 import { Command, CommandBase, commandMap, Message } from '@better-airhorn/shori';
-import { Snowflake } from 'discord.js';
 import { appendFile, promises } from 'fs';
 import { join } from 'path';
 import { Readable } from 'stream';
@@ -27,7 +26,6 @@ enum Intents {
 })
 export class ListenCommand extends CommandBase {
 	private readonly log = getSubLogger(ListenCommand.name);
-	private readonly activeUsers = new Set<Snowflake>();
 	private constructor(
 		private readonly soundService: SoundCommandService,
 		private readonly filesService: SoundFilesManager,
@@ -38,8 +36,9 @@ export class ListenCommand extends CommandBase {
 	public async exec(message: Message): Promise<any> {
 		await message.warn(
 			`This command is experimental, if something doesnt work consider reporting it on the support server`,
+			`Trigger words are Alexa, Ok Google, Hey Google, Hey Siri`,
 		);
-		if (this.activeUsers.has(message.author.id)) {
+		if (this.soundService.activeUsers.has(message.author.id)) {
 			return message.error(
 				`I'm already listening to you.\nIf you think it stopped working, rejoin the voice channel and run the command again.\nIf it still doesn't work, please join the support server`,
 			);
@@ -48,7 +47,7 @@ export class ListenCommand extends CommandBase {
 			return message.error('You need to be in a voice channel');
 		}
 		const connection = await message.member?.voice.channel?.join()!;
-		this.activeUsers.add(message.author.id);
+		this.soundService.activeUsers.add(message.author.id);
 		await new Promise<void>(res => {
 			if (connection.dispatcher) return res();
 			const disp = connection.play(new Silence(), { type: 'opus', volume: 0.001 }).on('finish', res);
@@ -65,12 +64,12 @@ export class ListenCommand extends CommandBase {
 		const voiceStream = connection?.receiver.createStream(message.author, { end: 'manual', mode: 'pcm' })!;
 		// eslint-disable-next-line prefer-const
 		let pcm16khStream: Readable;
-		const hw = new HotWordEngine([HotWords.ALEXA, HotWords.OK_GOOGLE]);
+		const hw = new HotWordEngine([HotWords.ALEXA, HotWords.OK_GOOGLE, HotWords.HEY_GOOGLE, HotWords.HEY_SIRI]);
 		connection.on('disconnect', async () => {
 			clearInterval(playInterval);
 			pcm16khStream?.destroy();
 			hw?.release();
-			this.activeUsers.delete(message.author.id);
+			this.soundService.activeUsers.delete(message.author.id);
 		});
 
 		pcm16khStream = await convertPcmTo16khPCM(voiceStream);
