@@ -44,7 +44,7 @@
 				}
 			}
 		},
-		"invite": "Invite me with [this link]{url}",
+		"invite": "Invite me with [this link]({url})",
 		"list": {
 			"pageFooter": "Page {page}/{totalPages} | {showedCount}/{count} Entries"
 		},
