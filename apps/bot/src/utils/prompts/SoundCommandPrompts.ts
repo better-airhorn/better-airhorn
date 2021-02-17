@@ -15,9 +15,11 @@ import {
 import fetch from 'node-fetch';
 import { Readable } from 'typeorm/platform/PlatformTools';
 import { Config } from '../../config/Config';
+import { SoundCommandService } from '../../services/SoundCommandService';
 import { SoundFilesManager } from '../../services/SoundFilesManager';
 import { getSubLogger } from '../Logger';
-import { wrapInCodeBlock } from '../Utils';
+import { humanFileSize, wrapInCodeBlock } from '../Utils';
+
 export interface SoundCommandPromptType {
 	name?: string;
 	accessType?: AccessType;
@@ -59,7 +61,9 @@ const askAccessTypeFn: DiscordPromptFunction<SoundCommandPromptType> = async (
 	const content = message.content as keyof typeof AccessTypeUserMapping;
 	if (!Object.keys(AccessTypeUserMapping).includes(content)) {
 		throw new Rejection(
-			`The option you provided wasn't one of those ${Object.keys(AccessTypeUserMapping).join('`')}, try again`,
+			`The option you provided wasn't one of those ${Object.keys(AccessTypeUserMapping)
+				.map(v => `\`${v}\``)
+				.join(', ')}, try again`,
 		);
 	}
 	return {
@@ -101,8 +105,9 @@ export async function handleUploadAudioFile(opts: {
 	message: SMessage;
 	attachment: MessageAttachment;
 	filesManager: SoundFilesManager;
+	soundS: SoundCommandService;
 }) {
-	const { message, attachment, filesManager } = opts;
+	const { message, attachment, filesManager, soundS } = opts;
 	const log = getSubLogger('AudioUpload');
 	const fileformat = attachment.name!.split('.').pop();
 
@@ -117,6 +122,11 @@ export async function handleUploadAudioFile(opts: {
 	await reaction.remove().catch(() => null);
 	if (!reacted) {
 		return;
+	}
+
+	const usedStorage = parseInt(await soundS.getUsedStorage(message.author.id), 10);
+	if (usedStorage > Config.files.maxUserFiles) {
+		return message.error(`You already store a whopping ${humanFileSize(usedStorage)} of sounds...`);
 	}
 
 	const promptData = await promptSoundCommandValues(message);

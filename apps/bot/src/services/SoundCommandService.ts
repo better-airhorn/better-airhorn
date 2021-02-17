@@ -90,6 +90,14 @@ export class SoundCommandService implements OnReady {
 		return users.some(user => this.activeUsers.has(user.id));
 	}
 
+	public async getUsedStorage(user: Snowflake): Promise<string> {
+		const v = await SoundCommand.createQueryBuilder('sound')
+			.select('SUM(sound.size)', 'sum')
+			.where('sound.user = :id', { id: user })
+			.getRawOne();
+		return v.sum;
+	}
+
 	public async getSoundCommand(opts: {
 		name: string;
 		message: Message;
@@ -104,10 +112,12 @@ export class SoundCommandService implements OnReady {
 					.neutral(
 						this.i18n.format('commands.generalKeys.playPredictedName', {
 							name: similarSound.sound.name,
-							percent: (similarSound.similarity * 100).toFixed(0),
+							percentage: (similarSound.similarity * 100).toFixed(0),
 						}),
 					)
-					.then(r => r.delete({ timeout: 10000 }).catch(() => null));
+					.then(r => {
+						r.delete({ timeout: 10000 }).catch(() => null);
+					});
 				return similarSound.sound;
 			}
 			await message.error(
@@ -249,7 +259,9 @@ export class SoundCommandService implements OnReady {
 		);
 		if (!attachment) return;
 
-		handleUploadAudioFile({ attachment, filesManager: this.filesManager, message }).catch(e => this.log.error(e));
+		handleUploadAudioFile({ attachment, filesManager: this.filesManager, message, soundS: this }).catch(e =>
+			this.log.error(e),
+		);
 	}
 
 	@Event('voiceStateUpdate')

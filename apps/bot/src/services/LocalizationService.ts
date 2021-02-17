@@ -64,7 +64,7 @@ export class LocalizationService implements OnInit {
 		const allMatches = value.matchAll(placeHolderRegex);
 		for (const match of allMatches) {
 			const valueToPlace = realArguments[match[1]];
-			if (!valueToPlace) continue;
+			if (valueToPlace === undefined) continue;
 			value = value.replace(match[0], valueToPlace.toString());
 		}
 		return value;
