@@ -1,7 +1,7 @@
 import { convertToOGG, normalizeAudio } from '@better-airhorn/audio';
 import { SoundCommand } from '@better-airhorn/entities';
 import { Command, CommandBase, Message, UseGuard } from '@better-airhorn/shori';
-import ytdl, { chooseFormat, getInfo, videoFormat, videoInfo } from 'ytdl-core';
+import ytdl, { chooseFormat, getInfo, validateURL, videoFormat, videoInfo } from 'ytdl-core';
 import { Config } from '../../config/Config';
 import { ArgsGuard } from '../../guards/ArgsGuard';
 import { HealthCheckGuard } from '../../guards/HealthCheckGuard';
@@ -28,8 +28,8 @@ export class ImportCommand extends CommandBase {
 	@UseGuard(new ArgsGuard(1))
 	@UseGuard(HealthCheckGuard)
 	public async exec(message: Message, args: string[]): Promise<any> {
-		if (args.length < 1) {
-			return message.error(`You need to supply a link`);
+		if (!validateURL(args[0])) {
+			return message.error(`Your link is invalid`);
 		}
 		const videoUrl = args.shift()!;
 		let format: videoFormat;

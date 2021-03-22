@@ -116,7 +116,7 @@ function normalizeAudio(stream: Readable): Promise<Readable> {
 }
 
 /**
- * Converts [s16le, 48kH, 2 ac] to [pcm_s16le, 16kH, 1ac]
+ * Converts [pcm_s16le, 48kH, 2 ac] to [pcm_s16le, 16kH, 1ac]
  *
  * @param stream
  */

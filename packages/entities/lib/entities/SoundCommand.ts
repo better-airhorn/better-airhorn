@@ -1,4 +1,12 @@
-import { BaseEntity, Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import {
+	BaseEntity,
+	Column,
+	CreateDateColumn,
+	Entity,
+	OneToMany,
+	PrimaryGeneratedColumn,
+	UpdateDateColumn,
+} from 'typeorm';
 import { Like } from './Like';
 
 @Entity('sound_commands')
@@ -35,6 +43,12 @@ export class SoundCommand extends BaseEntity {
 	 */
 	@Column('integer', { default: 0 })
 	public uses!: number;
+
+	@UpdateDateColumn({ type: 'timestamp' })
+	public lastUsedAt!: Date;
+
+	@CreateDateColumn({ type: 'timestamp' })
+	public readonly createdAt!: Date;
 
 	@OneToMany(
 		() => Like,

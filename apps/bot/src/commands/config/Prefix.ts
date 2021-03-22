@@ -4,7 +4,6 @@ import { LocalizationService } from '../../services/LocalizationService';
 
 @Command('prefix', {
 	channel: 'guild',
-	userPermissions: ['MANAGE_GUILD'],
 	category: 'config',
 	example: 'prefix !ba',
 	description: 'change the guilds prefix',
@@ -23,6 +22,9 @@ export class PrefixCommand extends CommandBase {
 				this.i18n.t().commands.prefix.provideArgumentToSetPrefix,
 			);
 		}
+
+		if (!message.member?.permissions.has('MANAGE_GUILD'))
+			return message.error('you need the `manage guild` permission to change the prefix');
 
 		if (prefix.length < 1) return message.error(this.i18n.t().commands.prefix.prefixTooShort);
 		if (prefix.length > 3) return message.error(this.i18n.t().commands.prefix.prefixTooLong);
