@@ -11,7 +11,7 @@ export function getHumanReadableError(code: PlayJobResponseCodes): string {
 }
 
 export function parseEnvExample(input: string): string[] {
-	return input.match(/([A-Z_-]+)/gim)!;
+	return input.match(/^(\w+)/gim)!;
 }
 
 export function roundDownToClosestMultiplierOf10(input: number) {
