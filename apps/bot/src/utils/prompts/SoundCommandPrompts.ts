@@ -1,6 +1,6 @@
 import { convertToOGG } from '@better-airhorn/audio';
 import { AccessType, AccessTypeUserMapping, SoundCommand } from '@better-airhorn/entities';
-import { Message as SMessage } from '@better-airhorn/shori';
+import { Message as SMessage, resolveSingleton } from '@better-airhorn/shori';
 import { stripIndents } from 'common-tags';
 import { Message, MessageAttachment, MessageReaction, User } from 'discord.js';
 import {
@@ -101,28 +101,12 @@ export async function promptSoundCommandValues(
 	}
 }
 
-export async function handleUploadAudioFile(opts: {
-	message: SMessage;
-	attachment: MessageAttachment;
-	filesManager: SoundFilesManager;
-	soundS: SoundCommandService;
-}) {
-	const { message, attachment, filesManager, soundS } = opts;
+export async function importAudioFile(opts: { message: SMessage; attachment: MessageAttachment }) {
+	const { message, attachment } = opts;
+	const soundS = resolveSingleton<SoundCommandService>(SoundCommandService);
+	const filesManager = resolveSingleton<SoundFilesManager>(SoundFilesManager);
 	const log = getSubLogger('AudioUpload');
 	const fileformat = attachment.name!.split('.').pop();
-
-	const reaction = await message.react(Config.emojis.import);
-	const reacted = await message
-		.awaitReactions(
-			(r: MessageReaction, u: User) => r.emoji?.id === Config.emojis.import && u.id === message.author.id,
-			{ time: 50000, max: 1, errors: ['time'] },
-		)
-		.then(() => true)
-		.catch(() => false);
-	await reaction.remove().catch(() => null);
-	if (!reacted) {
-		return;
-	}
 
 	const usedStorage = parseInt(await soundS.getUsedStorage(message.author.id), 10);
 	if (usedStorage > Config.files.maxUserFiles) {
@@ -181,4 +165,20 @@ export async function handleUploadAudioFile(opts: {
 	}
 	await msg.delete();
 	await message.success(`I saved your sound as \`${entity.name}\``);
+}
+
+export async function handleUploadAudioFile(opts: { message: SMessage; attachment: MessageAttachment }) {
+	const { message } = opts;
+
+	const reaction = await message.react(Config.emojis.import);
+	const reacted = await message
+		.awaitReactions(
+			(r: MessageReaction, u: User) => r.emoji?.id === Config.emojis.import && u.id === message.author.id,
+			{ time: 50000, max: 1, errors: ['time'] },
+		)
+		.then(() => true)
+		.catch(() => false);
+	await reaction.remove().catch(() => null);
+	if (!reacted) return;
+	return importAudioFile(opts);
 }

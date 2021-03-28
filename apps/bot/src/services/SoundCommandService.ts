@@ -259,9 +259,7 @@ export class SoundCommandService implements OnReady {
 		);
 		if (!attachment) return;
 
-		handleUploadAudioFile({ attachment, filesManager: this.filesManager, message, soundS: this }).catch(e =>
-			this.log.error(e),
-		);
+		handleUploadAudioFile({ attachment, message }).catch(e => this.log.error(e));
 	}
 
 	@Event('voiceStateUpdate')

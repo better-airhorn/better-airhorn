@@ -94,6 +94,7 @@ export const Config = {
 
 	misc: {
 		appmetricsPort: process.env.DASH_PORT,
+		supportServerUrl: 'https://discord.gg/5bfhkJ3',
 	},
 };
 
