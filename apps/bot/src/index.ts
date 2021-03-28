@@ -1,4 +1,5 @@
 import { Guild as GuildEntity, GuildSetting, Like, SoundCommand, Statistic, Usage } from '@better-airhorn/entities';
+import { Util } from 'discord.js';
 import 'dotenv/config';
 import { readFileSync } from 'fs';
 import { join } from 'path';
@@ -51,6 +52,13 @@ matches.forEach(key => {
 		{
 			ws: {
 				intents: Config.client.intents,
+			},
+			shardCount: await Util.fetchRecommendedShards(Config.credentials.discord.token, 1000),
+			presence: {
+				status: 'idle',
+				activity: {
+					name: 'Shard Starting',
+				},
 			},
 		},
 	);
