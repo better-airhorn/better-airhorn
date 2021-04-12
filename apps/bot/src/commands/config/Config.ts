@@ -37,7 +37,7 @@ export class ConfigCommand extends CommandBase {
 	];
 
 	public async exec(message: Message, args: string[]): Promise<any> {
-		const key = this.configKeys.find(v => v.name === args[0]?.toLowerCase());
+		const key = this.configKeys.find(v => this.i18n.format(v.name, {}) === args[0]?.toLowerCase());
 		if (!key) {
 			return message.channel.send(
 				new MessageEmbed().setDescription(
