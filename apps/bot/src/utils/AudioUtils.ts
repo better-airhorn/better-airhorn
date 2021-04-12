@@ -13,7 +13,7 @@ const defaultStTBody = {
 		languageCode: 'en-US',
 		model: 'command_and_search',
 		sampleRateHertz: 48000,
-		audioChannelCount: 2,
+		audioChannelCount: 1,
 		maxAlternatives: 3,
 	},
 };
@@ -39,7 +39,7 @@ export async function speechToText(data: Buffer): Promise<Alternatives | void> {
 			headers: {
 				'Content-Type': 'application/json',
 			},
-			body: JSON.stringify({ ...defaultStTBody, audio: { content: data.toString('base64') } }),
+			body: JSON.stringify({ ...defaultStTBody, audio: { content: convertToMono(data).toString('base64') } }),
 		},
 	);
 	if (!res.ok) throw new Error(`${res.statusText}. ${await res.text()}`);
@@ -48,6 +48,23 @@ export async function speechToText(data: Buffer): Promise<Alternatives | void> {
 	return body.results[0].alternatives
 		.map((alt: any): Alternative => ({ confidence: alt.confidence, string: alt.transcript }))
 		.filter((alt: Alternative) => alt.confidence > 0.6);
+}
+
+/**
+ * Converts raw pcm Stereo to Mono
+ */
+export function convertToMono(input: Buffer): Buffer {
+	const data = new Int16Array(input);
+
+	// create new array for the mono audio data
+	const ndata = new Int16Array(data.length / 2);
+
+	// copy left audio data (skip the right part)
+	for (let i = 0, j = 0; i < data.length; i += 4) {
+		ndata[j++] = data[i];
+		ndata[j++] = data[i + 1];
+	}
+	return Buffer.from(ndata);
 }
 
 export async function findSoundInAlternatives(alternatives: Alternatives): Promise<SoundCommand | void> {

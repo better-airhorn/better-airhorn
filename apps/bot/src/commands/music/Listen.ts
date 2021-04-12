@@ -141,8 +141,8 @@ export class ListenCommand extends CommandBase {
 				if (data.every(v => v === 0)) {
 					return;
 				}
-				// dont listen longer than 20 Seconds
-				if (isTimeOver(started, 20 * 1000)) {
+				// dont listen longer than 14 Seconds
+				if (isTimeOver(started, 14 * 1000)) {
 					onFinish().catch(err => this.log.error(err));
 				}
 				buffs.push(data);
