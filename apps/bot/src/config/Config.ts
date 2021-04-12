@@ -1,7 +1,16 @@
 import { BitFieldResolvable, IntentsString } from 'discord.js';
 import fileSize from 'filesize-parser';
-import { existsSync } from 'fs';
+import { existsSync, readFileSync } from 'fs';
 import { join, normalize } from 'path';
+import { logger } from '../utils/Logger';
+import { parseEnvExample } from '../utils/Utils';
+
+const matches = parseEnvExample(readFileSync(join(__dirname, '../env.example')).toString());
+for (const key of matches) {
+	if (!(key in process.env) || process.env[key]?.length === 0) {
+		logger.warn(`missing env variable: ${key}`);
+	}
+}
 
 export const Config = {
 	client: {
