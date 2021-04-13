@@ -8,6 +8,7 @@ import { InviteCommand } from './misc/Invite';
 import { DeleteCommand } from './music/Delete';
 import { ImportCommand } from './music/Import';
 import { ImportYTCommand } from './music/ImportYT';
+import { LeaveCommand } from './music/Leave';
 import { LikeCommand } from './music/Like';
 import { ListCommand } from './music/List';
 import { ListenCommand } from './music/Listen';
@@ -43,4 +44,5 @@ import { TimeCommand } from './owner/Time';
 	LockDisplayCommand,
 	StopCommand,
 	ListenCommand,
+	LeaveCommand,
 ];
