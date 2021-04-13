@@ -28,7 +28,7 @@ export const Config = {
 		maxFileSize: fileSize('50MB'),
 		// a sum of all files a user is allowed to have
 		maxUserFiles: fileSize('500MB'),
-		minIOBucketName: 'better-airhorn-audio-files',
+		minIOBucketName: process.env.MINIO_BUCKETNAME!,
 		cacheDirectory: normalize(`${__dirname}../../../file_cache`),
 	},
 
