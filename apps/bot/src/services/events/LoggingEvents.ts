@@ -1,5 +1,4 @@
 import { Client, CommandBase, Event, Message, MessageHandler, resolveSingleton, Service } from '@better-airhorn/shori';
-import { MessageEmbed } from 'discord.js';
 import { BAClient } from '../../client/BAClient';
 import { Config } from '../../config/Config';
 import { getSubLogger, logger } from '../../utils/Logger';
@@ -17,15 +16,6 @@ export class LoggingEvents {
 	})
 	public async onCommandRan(cmd: CommandBase, _result: Promise<any>, message: Message): Promise<void> {
 		this.log.debug(`successfully ran ${cmd.name} for ${message.author.id}`);
-		if (Math.random() < 0.25) {
-			await message.channel
-				.send(
-					new MessageEmbed().setDescription(
-						`Was everything fine with this command?\nI would be happy if you could give some feedback in the [support server](${Config.misc.supportServerUrl})`,
-					),
-				)
-				.catch(() => null);
-		}
 	}
 
 	@Event('error', {
