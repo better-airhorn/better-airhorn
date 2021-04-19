@@ -136,7 +136,7 @@ export class SoundCommandService implements OnReady {
 
 		let interval!: NodeJS.Timeout;
 		let response!: IPlayJobResponseData;
-		let channel!: VoiceChannel;
+		let channel: VoiceChannel | undefined;
 		const lock = this.lockService.getLock(data.guild);
 		const soundCommand = await SoundCommand.findOne(data.sound);
 
@@ -217,7 +217,11 @@ export class SoundCommandService implements OnReady {
 		const settings = await getRepository(GuildSetting)
 			.findOne(data.guild, { cache: Config.caching.GuildSettingsCacheDuration })
 			.catch(() => null);
-		if (settings?.leaveAfterPlay && !this.IsChannelBeingListenedTo(Array.from(channel.members.values()))) {
+		if (
+			settings?.leaveAfterPlay &&
+			!this.IsChannelBeingListenedTo(Array.from(channel?.members.values() ?? [])) &&
+			lock.resolverLength === 0
+		) {
 			channel?.leave();
 			// eslint-disable-next-line @typescript-eslint/no-floating-promises
 			timeout(1000).then(() => lock.release());

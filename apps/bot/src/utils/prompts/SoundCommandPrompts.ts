@@ -90,10 +90,10 @@ export async function promptSoundCommandValues(
 		};
 	} catch (err) {
 		if (err instanceof Errors.UserInactivityError) {
-			await message.error('no response in time, cancelling prompt');
+			await message.error('no response in time, cancelling import');
 			return { ok: true, err };
 		} else if (err instanceof Errors.UserVoluntaryExitError) {
-			await message.error('ok, I imported nothing');
+			await message.error('import cancelled');
 			return { ok: true, err };
 		}
 		await message.error('an unexpected error occurred');
