@@ -17,6 +17,7 @@ supported audio formats are:
 - ogg
 - opus
 - wav
+
 (and maybe some other formats that haven’t been tested)
 
 just upload them into a channel the bot can read and wait for the bot to react with ”+", then also react with that emoji

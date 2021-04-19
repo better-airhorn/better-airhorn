@@ -47,7 +47,9 @@ export class LoggingEvents {
 	@Event('ready')
 	public async onReady(): Promise<void> {
 		this.log.info(`client ready as ${this.client.user!.tag}`);
-		await this.client.user?.setPresence({ status: 'online' });
+		setTimeout(() => {
+			this.client.user?.setPresence({ status: 'online' }).catch(() => null);
+		}, 10_000);
 	}
 
 	@Event('error')

@@ -12,6 +12,7 @@ import { humanFileSize, wrapInCodeBlock } from '../../utils/Utils';
 	channel: 'any',
 	category: 'music',
 	description: 'lists all sounds',
+	botChannelPermissions: ['READ_MESSAGE_HISTORY', 'ADD_REACTIONS'],
 	parseArguments: true,
 })
 export class ListCommand extends CommandBase {

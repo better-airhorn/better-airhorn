@@ -149,7 +149,14 @@ export class SoundCommandService implements OnReady {
 			// lock the channel
 			await lock.acquireAsync();
 
-			channel = this.client.channels.cache.get(data.channel) as VoiceChannel;
+			if (data.channel) {
+				channel = this.client.channels.cache.get(data.channel) as VoiceChannel;
+			} else {
+				const member = await this.client.guilds.cache.get(data.guild)?.members.fetch(data.user);
+				if (member && member.voice.channel) {
+					channel = member.voice.channel;
+				}
+			}
 
 			// make sure the channel exists and its a voice channel
 			if (!channel || channel.type !== 'voice') {

@@ -4,7 +4,7 @@ set -x
 
 cd apps/bot
 yarn run build
-yarn install --modules-folder node_modules
+yarn install --immutable --modules-folder node_modules
 rm -rf node_modules/@better-airhorn/bot
 cd ../..
 
