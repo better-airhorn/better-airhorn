@@ -16,7 +16,7 @@
 		"@discordjs/opus": "^0.3.2",
 		"@rocka/mp3-duration": "^2.0.0",
 		"appmetrics-dash": "^5.3.0",
-		"await-lock": "^2.1.0",
+		"await-lock": "https://github.com/better-airhorn/await-lock",
 		"bufferutil": "^4.0.1",
 		"bull": "^3.18.0",
 		"bunyan": "^1.8.15",
