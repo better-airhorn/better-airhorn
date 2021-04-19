@@ -32,10 +32,10 @@ export class LocalizationService implements OnInit {
 				this.languages[iterator.language] = JSON.parse(data.toString());
 			} catch (e) {
 				if (iterator.language === this.defaultLanguage) {
-					logger.error(`unable to load language\n${e.message}`);
+					logger.error(`unable to load default language`, e);
 					throw new Error(`unable to load default language\n${e.message}`);
 				}
-				logger.error(`unable to load language\n${e.message}`);
+				logger.error(`unable to load language`, e);
 			}
 		}
 	}

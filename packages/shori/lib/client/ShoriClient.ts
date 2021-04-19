@@ -33,7 +33,10 @@ export abstract class ShoriClient extends Client {
 						const instance: OnInit = resolveSingleton(service);
 						if (typeof instance.shOnInit === 'function') {
 							this.emit('debug', `[ShoriClient] running ${service.name}'s init`);
-							await instance.shOnInit();
+							await instance.shOnInit().catch((e: any) => {
+								e.service = service;
+								throw e;
+							});
 							this.emit('debug', `[ShoriClient] ${service.name} finished initializing`);
 						}
 						const events: EventOptions[] = Reflect.getMetadata(ReflectKeys.EVENT, service) || [];
@@ -63,7 +66,7 @@ export abstract class ShoriClient extends Client {
 				if (this.isDev) {
 					this.emit(
 						'debug',
-						`[ShoriClient] Skipping failed initiation of Service, disable dev mode to prevent this\n ${e}`,
+						`[ShoriClient] Skipping failed initiation of Service (${e.service.name}), disable dev mode to prevent skipping\n ${e}`,
 					);
 					return this.login(token);
 				}

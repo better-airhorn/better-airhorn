@@ -73,10 +73,6 @@ if (isMissing) throw new Error(`missing env variables, see logs`);
 
 	await client.start(Config.credentials.discord.token);
 })().catch(e => {
-	if (e instanceof Error) {
-		logger.error(`${e.message}\n${e.stack}`);
-	} else {
-		logger.error(e);
-	}
+	logger.error(e);
 	process.exit(1);
 });

@@ -23,7 +23,7 @@ export class LoggingEvents {
 		once: false,
 	})
 	public async onCommandError(e: Error, command: CommandBase, msg: Message): Promise<void> {
-		this.log.error(`error executing command ${command.name}\n${e.message}\n${e.stack}`, {
+		this.log.error(`error executing command ${command.name}`, e, {
 			content: msg.content,
 			author: msg.author.id,
 			guild: msg.guild!.id,
@@ -67,10 +67,6 @@ export class LoggingEvents {
 		once: false,
 	})
 	public onUnhandledRejection(reason: Error | any) {
-		if (reason instanceof Error) {
-			logger.error(`${reason.message}\n${reason.stack}`);
-			return;
-		}
 		logger.error(reason);
 	}
 }

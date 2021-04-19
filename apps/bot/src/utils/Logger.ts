@@ -12,11 +12,19 @@ export class TypeORMLogger implements Logger {
 	private readonly childLogger = getSubLogger('typeorm');
 
 	public logQuery(query: string, parameters?: any[]) {
-		this.childLogger.debug(query, parameters);
+		if (parameters) {
+			this.childLogger.debug(query, parameters);
+		} else {
+			this.childLogger.debug(query);
+		}
 	}
 
 	public logQueryError(error: string, query: string, parameters?: any[]) {
-		this.childLogger.error(error, query, parameters);
+		if (parameters) {
+			this.childLogger.debug(error, query, parameters);
+		} else {
+			this.childLogger.debug(error, query);
+		}
 	}
 
 	public logQuerySlow(time: number, query: string, parameters?: any[]) {
