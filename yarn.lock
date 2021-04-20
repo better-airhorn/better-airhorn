@@ -825,6 +825,13 @@ bl@^1.0.0:
     readable-stream "^2.3.5"
     safe-buffer "^5.1.1"
 
+blapi@^2.1.0:
+  version "2.1.0"
+  resolved "https://registry.yarnpkg.com/blapi/-/blapi-2.1.0.tgz#422f93f285a4dddd39c3380319bf4aefcf12c7b3"
+  integrity sha512-ngmTXCh8gyqDKtEuyeuHsXFL2pEKZG2MkO4RQE2Q48CL61BjrpxeLhT/CgBWVmetR+WHf4xbIJPkCSW8RUdqLg==
+  dependencies:
+    centra "^2.4.2"
+
 blob@0.0.5:
   version "0.0.5"
   resolved "https://registry.yarnpkg.com/blob/-/blob-0.0.5.tgz#d680eeef25f8cd91ad533f5b01eed48e64caf683"
@@ -988,6 +995,11 @@ caseless@~0.12.0:
   version "0.12.0"
   resolved "https://registry.yarnpkg.com/caseless/-/caseless-0.12.0.tgz#1b681c21ff84033c826543090689420d187151dc"
   integrity sha1-G2gcIf+EAzyCZUMJBolCDRhxUdw=
+
+centra@^2.4.2:
+  version "2.4.2"
+  resolved "https://registry.yarnpkg.com/centra/-/centra-2.4.2.tgz#3bad51dbca2250dbecad84598dc7184973f4c4a9"
+  integrity sha512-f1RaP0V1HqVNEXfLfjNBthB2yy3KnSGnPCnOPCFLUk9e/Z4rNJ8nBaJNnghflnp88mi1IT8mfmW+HlMS1/H+bg==
 
 chalk@4.1.0, chalk@^4.0.0, chalk@^4.1.0:
   version "4.1.0"

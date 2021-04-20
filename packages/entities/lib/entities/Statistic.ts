@@ -42,14 +42,4 @@ export class Usage extends BaseEntity {
 
 	@Column({ nullable: true })
 	public args?: string;
-
-	public constructor(values?: { command: string; user: string; guild: string; args: string }) {
-		super();
-		if (values) {
-			this.command = values.command;
-			this.user = values.user;
-			this.guild = values.guild;
-			this.args = values.args;
-		}
-	}
 }

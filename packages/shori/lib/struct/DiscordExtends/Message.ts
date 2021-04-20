@@ -6,6 +6,7 @@ export class Message extends DMessage {
 	public channel!: TextChannel;
 	public eventEmittedAt?: number;
 	public arguments: { _: any[]; [key: string]: any } = { _: [] };
+	public args: string[] = [];
 
 	public constructor(client: Client, data: object, channel: TextChannel) {
 		super(client, data, channel);

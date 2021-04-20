@@ -1,5 +1,8 @@
+import { Usage } from '@better-airhorn/entities';
 import { Client, CommandBase, Event, Message, MessageHandler, resolveSingleton, Service } from '@better-airhorn/shori';
+import { handle, setBotblock, setLogging } from 'blapi';
 import { BAClient } from '../../client/BAClient';
+import { PlayCommand } from '../../commands/music/Play';
 import { Config } from '../../config/Config';
 import { getSubLogger, logger } from '../../utils/Logger';
 
@@ -16,6 +19,15 @@ export class LoggingEvents {
 	})
 	public async onCommandRan(cmd: CommandBase, _result: Promise<any>, message: Message): Promise<void> {
 		this.log.debug(`successfully ran ${cmd.name} for ${message.author.id}`);
+		if (cmd instanceof PlayCommand) {
+			const usage = Usage.create({
+				command: 'play',
+				user: message.author.id,
+				guild: message.guild?.id ?? 'dm',
+				args: message.args.join(' '),
+			});
+			await usage.save();
+		}
 	}
 
 	@Event('error', {
@@ -50,6 +62,9 @@ export class LoggingEvents {
 		setTimeout(() => {
 			this.client.user?.setPresence({ status: 'online' }).catch(() => null);
 		}, 10_000);
+		setBotblock(false);
+		setLogging({ logger: getSubLogger('BotLists') });
+		await handle(this.client, Config.credentials.botlists);
 	}
 
 	@Event('error')

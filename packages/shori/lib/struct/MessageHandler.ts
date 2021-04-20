@@ -42,6 +42,7 @@ export class MessageHandler extends EventEmitter {
 		const cmd = commandMap.get(command);
 
 		if (!cmd) return;
+		message.args = args;
 		const { channel, author, member, guild } = message;
 		if (!cmd.class.client) {
 			cmd.class.client = client;

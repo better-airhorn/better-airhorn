@@ -73,6 +73,14 @@ export const Config = {
 		},
 
 		googleCloudApiKey: process.env.GOOGLE_CLOUD_APIKEY,
+
+		botlists: {
+			'top.gg': process.env.BOTLISTS_TOPGG!,
+			'discordbotlist.com': process.env.BOTLISTS_DBL!,
+			'discord.bots.gg': process.env.BOTLISTS_DBGG!,
+			'bots.ondiscord.xyz': process.env.BOTLISTS_BOD!,
+			'botsfordiscord.com': process.env.BOTLISTS_BFD!,
+		},
 	},
 
 	caching: {

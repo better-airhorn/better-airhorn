@@ -4,6 +4,7 @@ import { IPlayJobResponseData } from '@better-airhorn/structures';
 import { MessageReaction, User } from 'discord.js';
 import { ArgsGuard } from '../../guards/ArgsGuard';
 import { HealthCheckGuard } from '../../guards/HealthCheckGuard';
+import { VoiceChannelGuard } from '../../guards/VoiceChannelGuard';
 import { LocalizationService } from '../../services/LocalizationService';
 import { SoundCommandService } from '../../services/SoundCommandService';
 import { getSubLogger } from '../../utils/Logger';
@@ -28,6 +29,7 @@ export class PlayCommand extends CommandBase {
 	}
 
 	@UseGuard(new ArgsGuard(1))
+	@UseGuard(VoiceChannelGuard)
 	@UseGuard(HealthCheckGuard)
 	public async exec(message: Message, args: string[]): Promise<any> {
 		const { guild, author, member } = message;
