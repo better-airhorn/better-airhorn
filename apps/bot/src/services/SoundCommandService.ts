@@ -164,14 +164,19 @@ export class SoundCommandService implements OnReady {
 				throw new ChannelError(PlayJobResponseCodes.CHANNEL_NOT_FOUND);
 			}
 			// check if client can join and speak
-			if (!channel.joinable || !channel.permissionsFor(channel.guild.me!)!.has('SPEAK')) {
+			if (
+				(!channel.members.has(this.client.user!.id) && !channel.joinable) ||
+				!channel.permissionsFor(channel.guild.me!)!.has('SPEAK')
+			) {
 				response = { c: PlayJobResponseCodes.MISSING_PERMISSIONS, s: false };
 				throw new ChannelError(PlayJobResponseCodes.MISSING_PERMISSIONS);
 			}
 
-			const connection = await channel.join().catch(e => {
-				throw new ChannelJoinError(e.message);
-			});
+			const connection =
+				channel.guild.voice?.connection ??
+				(await channel.join().catch(e => {
+					throw new ChannelJoinError(e.message);
+				}));
 			const stream = await this.filesManager.get(data.sound).catch(() => {
 				throw new SoundNotFound();
 			});
