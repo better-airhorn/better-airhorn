@@ -1,0 +1,23 @@
+{
+	"name": "@better-airhorn/voteserver",
+	"version": "1.0.0",
+	"description": "received votes from various bot lists",
+	"main": "src/index.ts",
+	"repository": "github:better-airhorn/better-airhorn",
+	"author": "Clemens Ertle",
+	"license": "MIT",
+	"private": true,
+	"dependencies": {
+		"@better-airhorn/entities": "0.0.4",
+		"@types/body-parser": "^1.19.0",
+		"body-parser": "^1.19.0",
+		"bunyan": "^1.8.15",
+		"dotenv": "^8.2.0",
+		"ioredis": "^4.27.1",
+		"restana": "^4.8.1",
+		"typeorm": "^0.2.29"
+	},
+	"devDependencies": {
+		"@types/dotenv": "^8.2.0"
+	}
+}

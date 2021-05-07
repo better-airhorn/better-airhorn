@@ -1,9 +1,9 @@
 {
 	"$schema": "http://json.schemastore.org/package",
-	"name": "better-airhorn-next",
+	"name": "better-airhorn",
 	"description": "A feature-rich discord bot to use as soundboard, including a web dashboard",
 	"version": "3.0.0-dev",
-	"bugs": "https://github.com/Clemens-E/better-airhorn-next/issues",
+	"bugs": "https://github.com/better-airhorn/better-airhorn/issues",
 	"commitlint": {
 		"extends": [
 			"@commitlint/config-angular"
@@ -68,7 +68,7 @@
 			"no-useless-constructor": "off"
 		}
 	},
-	"homepage": "https://github.com/Clemens-E/better-airhorn-next#readme",
+	"homepage": "https://github.com/better-airhorn/better-airhorn#readme",
 	"husky": {
 		"hooks": {
 			"pre-commit": "lint-staged",
@@ -95,7 +95,7 @@
 	"publishConfig": {
 		"registry": "https://npm.pkg.github.com/"
 	},
-	"repository": "better-airhorn/better-airhorn.git",
+	"repository": "github:better-airhorn/better-airhorn",
 	"scripts": {
 		"build:bot": "sh ./scripts/buildprod.sh",
 		"lint": "eslint . --ext .ts",
@@ -109,6 +109,7 @@
 		"packages/entities",
 		"packages/shori",
 		"packages/structures",
-		"apps/bot"
+		"apps/bot",
+		"apps/voteserver"
 	]
 }
