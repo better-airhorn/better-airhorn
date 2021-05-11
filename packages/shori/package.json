@@ -25,14 +25,14 @@
 	"files": [
 		"/dist"
 	],
-	"homepage": "https://github.com/Clemens-E/better-airhorn-next/tree/master/packages/shori#readme",
+	"homepage": "https://github.com/better-airhorn/better-airhorn/tree/master/packages/shori#readme",
 	"license": "GPL-3.0",
 	"main": "dist/index.js",
 	"publishConfig": {
 		"access": "public",
 		"registry": "https://npm.pkg.github.com/"
 	},
-	"repository": "better-airhorn/better-airhorn.git",
+	"repository": "github:better-airhorn/better-airhorn",
 	"scripts": {
 		"build": "tsc",
 		"test": "exit 0"

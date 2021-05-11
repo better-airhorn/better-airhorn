@@ -21,14 +21,14 @@
 	"files": [
 		"/dist"
 	],
-	"homepage": "https://github.com/Clemens-E/better-airhorn-next/tree/master/packages/audio#readme",
+	"homepage": "https://github.com/better-airhorn/better-airhorn/tree/master/packages/audio#readme",
 	"license": "PolyForm Perimeter License 1.0.0 (https://polyformproject.org/licenses/perimeter/1.0.0/)",
 	"main": "dist/index.js",
 	"publishConfig": {
 		"access": "public",
 		"registry": "https://npm.pkg.github.com/"
 	},
-	"repository": "better-airhorn/better-airhorn.git",
+	"repository": "github:better-airhorn/better-airhorn",
 	"scripts": {
 		"build": "tsc",
 		"test": "mocha -r ts-node/register test/ConversionTest.ts"

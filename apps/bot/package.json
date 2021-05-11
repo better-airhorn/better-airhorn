@@ -3,7 +3,7 @@
 	"description": "discord bot to record, upload and use as soundboard",
 	"version": "0.0.1",
 	"bin": "dist/index.js",
-	"bugs": "https://github.com/Clemens-E/better-airhorn/issues",
+	"bugs": "https://github.com/better-airhorn/better-airhorn/issues",
 	"contributors": [
 		"Clemens E (https://github.com/Clemens-E)",
 		"Quentin W (https://github.com/qwright10)"
@@ -78,7 +78,7 @@
 		"ext": "ts"
 	},
 	"private": true,
-	"repository": "Clemens-E/better-airhorn.git",
+	"repository": "github:better-airhorn/better-airhorn",
 	"scripts": {
 		"build": "tsc",
 		"test": "exit 0",
