@@ -17,6 +17,12 @@
 		"restana": "^4.8.1",
 		"typeorm": "^0.2.29"
 	},
+	"scripts": {
+		"build": "tsc",
+		"test": "exit 0",
+		"start": "tsc && node ./dist/index.js",
+		"start:debug": "tsc && node --inspect-brk=55555 ./dist/index.js"
+	},
 	"devDependencies": {
 		"@types/dotenv": "^8.2.0"
 	}
