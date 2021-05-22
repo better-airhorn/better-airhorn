@@ -1,7 +1,7 @@
 {
 	"name": "@better-airhorn/voteserver",
 	"version": "1.0.0",
-	"description": "received votes from various bot lists",
+	"description": "receives votes from various bot lists",
 	"main": "src/index.ts",
 	"repository": "github:better-airhorn/better-airhorn",
 	"author": "Clemens Ertle",
@@ -9,7 +9,6 @@
 	"private": true,
 	"dependencies": {
 		"@better-airhorn/entities": "0.0.4",
-		"@types/body-parser": "^1.19.0",
 		"body-parser": "^1.19.0",
 		"bunyan": "^1.8.15",
 		"dotenv": "^8.2.0",
@@ -24,6 +23,7 @@
 		"start:debug": "tsc && node --inspect-brk=55555 ./dist/index.js"
 	},
 	"devDependencies": {
-		"@types/dotenv": "^8.2.0"
+		"@types/dotenv": "^8.2.0",
+		"@types/body-parser": "^1.19.0"
 	}
 }

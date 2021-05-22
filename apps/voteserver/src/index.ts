@@ -13,7 +13,7 @@ import { server } from './WebServer';
 		entities: [BotListVote],
 		synchronize: true,
 	});
-	server.getServer().listen(3000, () => {
+	server.getServer().listen(Config.port, () => {
 		logger.info('web server listening');
 	});
 })().catch(e => {
