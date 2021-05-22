@@ -6,11 +6,12 @@ import { MinIOService } from './MinIOService';
 import { SoundCommandService } from './SoundCommandService';
 import { SoundFilesManager } from './SoundFilesManager';
 import { StatisticsService } from './StatisticsService';
+import { VoteService } from './VoteService';
 
 /**
  * List of Services that purely exists for events
  */
-const ServicesForEvents: any[] = [LoggingEvents, VoiceChannelRequestService];
+const ServicesForEvents: any[] = [LoggingEvents, VoiceChannelRequestService, VoteService];
 
 /**
  * List of real Services

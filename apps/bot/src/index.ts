@@ -5,6 +5,7 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 import 'reflect-metadata';
 import { createConnection } from 'typeorm';
+import { BotListVote } from '../../../packages/entities/dist';
 import { BAClient } from './client/BAClient';
 import './commands/commands';
 import { Config } from './config/Config';
@@ -35,7 +36,7 @@ if (isMissing) throw new Error(`missing env variables, see logs`);
 		logging: isDev() || Config.logging.level === 'debug',
 		logger: new TypeORMLogger(),
 		synchronize: isDev(),
-		entities: [GuildSetting, Like, Statistic, SoundCommand, Usage, GuildEntity],
+		entities: [GuildSetting, Like, Statistic, SoundCommand, Usage, GuildEntity, BotListVote],
 		cache: {
 			type: 'ioredis',
 			alwaysEnabled: false,
@@ -70,7 +71,6 @@ if (isMissing) throw new Error(`missing env variables, see logs`);
 	);
 
 	client.on('debug', (log: string) => logger.debug(log));
-
 	await client.start(Config.credentials.discord.token);
 })().catch(e => {
 	logger.error(e);

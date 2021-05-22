@@ -1,8 +1,11 @@
-import { BaseEntity, Column, CreateDateColumn, Entity, PrimaryColumn } from 'typeorm';
+import { BaseEntity, Column, CreateDateColumn, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity('blvotes')
 export class BotListVote extends BaseEntity {
-	@PrimaryColumn()
+	@PrimaryGeneratedColumn()
+	public id!: number;
+
+	@Column()
 	public user!: string;
 
 	@CreateDateColumn({ type: 'timestamp' })

@@ -1,10 +1,11 @@
-import { GuildSetting, Like } from '@better-airhorn/entities';
+import { GuildSetting, Like, Usage } from '@better-airhorn/entities';
 import { Command, CommandBase, Message, UseGuard } from '@better-airhorn/shori';
 import { IPlayJobResponseData } from '@better-airhorn/structures';
 import { MessageReaction, User } from 'discord.js';
 import { ArgsGuard } from '../../guards/ArgsGuard';
 import { HealthCheckGuard } from '../../guards/HealthCheckGuard';
 import { VoiceChannelGuard } from '../../guards/VoiceChannelGuard';
+import { VoteGuard } from '../../guards/VoteGuard';
 import { LocalizationService } from '../../services/LocalizationService';
 import { SoundCommandService } from '../../services/SoundCommandService';
 import { getSubLogger } from '../../utils/Logger';
@@ -29,6 +30,7 @@ export class PlayCommand extends CommandBase {
 	}
 
 	@UseGuard(new ArgsGuard(1))
+	@UseGuard(new VoteGuard(20))
 	@UseGuard(VoiceChannelGuard)
 	@UseGuard(HealthCheckGuard)
 	public async exec(message: Message, args: string[]): Promise<any> {
@@ -61,6 +63,7 @@ export class PlayCommand extends CommandBase {
 			.finished()
 			.then(async (value: IPlayJobResponseData) => {
 				if (value.s) {
+					await this.trackUsage(message);
 					if (message.deletable) await message.delete();
 					if ((await settings)?.sendMessageAfterPlay) {
 						await message.success(this.i18n.format('commands.play.finishedPlaying', { name: sound.name })).then(m => {
@@ -93,5 +96,15 @@ export class PlayCommand extends CommandBase {
 				this.log.error(e);
 				return message.error(this.i18n.t().commands.generalKeys.somethingDidntGoRight);
 			});
+	}
+
+	private trackUsage(message: Message) {
+		const usage = Usage.create({
+			command: 'play',
+			user: message.author.id,
+			guild: message.guild?.id ?? 'dm',
+			args: message.args.join(' '),
+		});
+		return usage.save();
 	}
 }
