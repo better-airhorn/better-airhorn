@@ -1,7 +1,6 @@
 import { BotList } from '@better-airhorn/entities';
-import { Client, Service, TextChannel } from '@better-airhorn/shori';
+import { Client, OnInit, Service, TextChannel } from '@better-airhorn/shori';
 import Redis, { Redis as RedisClient } from 'ioredis';
-import { OnInit } from '../../../../packages/shori/dist';
 import { BAClient } from '../client/BAClient';
 import { Config } from '../config/Config';
 import { getSubLogger } from '../utils/Logger';

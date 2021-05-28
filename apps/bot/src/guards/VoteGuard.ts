@@ -1,9 +1,8 @@
-import { Usage } from '@better-airhorn/entities';
+import { BotListVote, Usage } from '@better-airhorn/entities';
 import { BaseGuard, Message, resolveSingleton } from '@better-airhorn/shori';
 import { stripIndent } from 'common-tags';
 import { MessageEmbed } from 'discord.js';
 import { MoreThanOrEqual } from 'typeorm';
-import { BotListVote } from '../../../../packages/entities/dist';
 import { VoteService } from '../services/VoteService';
 
 export class VoteGuard extends BaseGuard {

@@ -1,11 +1,18 @@
-import { Guild as GuildEntity, GuildSetting, Like, SoundCommand, Statistic, Usage } from '@better-airhorn/entities';
+import {
+	BotListVote,
+	Guild as GuildEntity,
+	GuildSetting,
+	Like,
+	SoundCommand,
+	Statistic,
+	Usage,
+} from '@better-airhorn/entities';
 import { Util } from 'discord.js';
 import 'dotenv/config';
 import { readFileSync } from 'fs';
 import { join } from 'path';
 import 'reflect-metadata';
 import { createConnection } from 'typeorm';
-import { BotListVote } from '../../../packages/entities/dist';
 import { BAClient } from './client/BAClient';
 import './commands/commands';
 import { Config } from './config/Config';
