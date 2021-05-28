@@ -31,7 +31,7 @@ export class VoteGuard extends BaseGuard {
 						stripIndent`you already used the play command ${usageCount} times today!
           [Vote for my Bot here](https://top.gg/bot/${
 						message.client.user!.id
-					}) to play as much as you want for the next 24 Hours.
+					}/vote) to play as much as you want for the next 24 Hours.
           || Why should you vote?
           I think its only fair if you use 10 Seconds of your time and vote for a free Service. ||`,
 					)
