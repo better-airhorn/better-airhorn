@@ -10,7 +10,7 @@
 		"prv_generateInterface": "make_types -i ILocalization.ts files/en-US.json ILocalization"
 	},
 	"keywords": [],
-	"author": "",
+	"author": "Clemens Ertle",
 	"license": "PolyForm Perimeter License 1.0.0 (https://polyformproject.org/licenses/perimeter/1.0.0/)",
 	"dependencies": {
 		"dot-object": "^2.1.4",

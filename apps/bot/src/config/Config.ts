@@ -1,6 +1,6 @@
 import { BitFieldResolvable, IntentsString } from 'discord.js';
 import fileSize from 'filesize-parser';
-import { existsSync } from 'fs';
+import { existsSync, readdirSync } from 'fs';
 import { join, normalize } from 'path';
 
 export const Config = {
@@ -17,7 +17,6 @@ export const Config = {
 	queue: {
 		playQueue: {
 			name: 'play',
-			simulationsProcessors: 25,
 		},
 		channelRequestQueue: {
 			name: 'channel-request',
@@ -48,11 +47,11 @@ export const Config = {
 
 	credentials: {
 		postgres: {
-			url: process.env.PG!,
+			url: `postgresql://postgres:${process.env.POSTGRES_PASSWORD}@postgres:5432/postgres`,
 		},
 
 		redis: {
-			url: process.env.REDIS!,
+			url: `redis://:${process.env.REDIS_PASSWORD}@redis:6379`,
 		},
 
 		discord: {
@@ -60,8 +59,8 @@ export const Config = {
 		},
 
 		minio: {
-			accessKey: process.env.MINIO_AK!,
-			secretKey: process.env.MINIO_SK!,
+			accessKey: process.env.MINIO_ROOT_USER!,
+			secretKey: process.env.MINIO_ROOT_PASSWORD!,
 			url: process.env.MINIO_URL?.split(':')[0]!,
 			port: parseInt(process.env.MINIO_URL?.split(':')[1] ?? '8500', 10),
 		},
@@ -70,6 +69,10 @@ export const Config = {
 		},
 		statping: {
 			url: process.env.STATPING_URL!,
+		},
+		meili: {
+			url: 'http://meili:7700',
+			apiKey: process.env.MEILI_MASTER_KEY!,
 		},
 
 		googleCloudApiKey: process.env.GOOGLE_CLOUD_APIKEY,
@@ -114,5 +117,6 @@ if (existsSync(prodFilesLocation)) {
 } else if (existsSync(devFilesLocation)) {
 	Config.localization.files = devFilesLocation;
 } else {
+	console.log(readdirSync(join(__dirname, '../../../..')));
 	throw new Error('localization files not found');
 }

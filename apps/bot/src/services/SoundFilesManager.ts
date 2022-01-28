@@ -1,5 +1,5 @@
 import { Service } from '@better-airhorn/shori';
-import { BucketItemStat } from 'minio';
+import { BucketItemStat, UploadedObjectInfo } from 'minio';
 import { Readable } from 'stream';
 import { FileCachingService } from './FileCachingService';
 import { MinIOService } from './MinIOService';
@@ -25,7 +25,7 @@ export class SoundFilesManager {
 		}
 	}
 
-	public set(id: number, stream: Readable): Promise<string> {
+	public set(id: number, stream: Readable): Promise<UploadedObjectInfo> {
 		return this.minIO.add(id.toString(), stream);
 	}
 

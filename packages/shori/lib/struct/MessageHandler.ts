@@ -1,3 +1,4 @@
+import { MessageEmbed } from 'discord.js';
 import { EventEmitter } from 'events';
 import parseArgs from 'minimist';
 import { CommandBase } from '..';
@@ -95,8 +96,20 @@ export class MessageHandler extends EventEmitter {
 		try {
 			const res = await cmd.class.exec(message, args);
 			this.emit('success', cmd.class, res, message);
+			// yeah yeah dont care
+			const slashcommands = ['Sync', 'Config', 'Invite', 'Clear', 'Play', 'Skip', 'Upload'];
+			if (slashcommands.includes(cmd.name)) {
+				message.channel
+					.send(
+						new MessageEmbed().setDescription(
+							`use my slash commands now!\nyou might have to re-add the bot, [click me](https://discord.com/api/oauth2/authorize?client_id=${message.client.user?.id}&permissions=274881431616&scope=bot%20applications.commands)`,
+						),
+					)
+					.then(m => m.delete())
+					.catch(() => null);
+			}
 		} catch (e) {
-			this.emit('error', e, cmd.class, message);
+			this.emit('error', e as Error, cmd.class, message);
 		}
 	}
 }

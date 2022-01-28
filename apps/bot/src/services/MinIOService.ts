@@ -1,5 +1,5 @@
 import { OnInit, Service } from '@better-airhorn/shori';
-import { BucketItemStat, Client } from 'minio';
+import { BucketItemStat, Client, UploadedObjectInfo } from 'minio';
 import { Readable } from 'stream';
 import { Config } from '../config/Config';
 import { isProd } from '../utils/isEnvironment';
@@ -25,7 +25,7 @@ export class MinIOService implements OnInit {
 	}
 
 	public async shOnInit() {
-		await this.client.bucketExists(this.bucketName).then(exists => {
+		await this.client.bucketExists(this.bucketName).then((exists: boolean) => {
 			if (!exists) {
 				return this.client.makeBucket(this.bucketName, 'us-east-1');
 			}
@@ -34,7 +34,7 @@ export class MinIOService implements OnInit {
 		await this.stat('hotword-detected');
 	}
 
-	public add(name: string, stream: Readable): Promise<string> {
+	public add(name: string, stream: Readable): Promise<UploadedObjectInfo> {
 		return this.client.putObject(this.bucketName, name, stream);
 	}
 

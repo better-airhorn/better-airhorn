@@ -1,0 +1,117 @@
+version: "3.7"
+
+# USE ——PARALLEL FOR BUILDING
+
+services:
+  slashbackend:
+    build:
+      context: .
+      dockerfile: "apps/slashbackend/Dockerfile"
+    depends_on:
+      - postgres
+      - redis
+      - voicenode
+      - meili
+    ports:
+      - "9999:8080"
+    networks:
+      - databases
+      - backend
+      - meili
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+      MEILI_MASTER_KEY: ${MEILI_MASTER_KEY}
+
+  voicenode:
+    build:
+      context: .
+      dockerfile: "apps/voicenode/Dockerfile"
+    expose:
+      - "8888"
+    networks:
+      - backend
+      - minio
+    depends_on:
+      - minio
+
+  bot:
+    build:
+      context: .
+      dockerfile: "apps/bot/Dockerfile"
+    networks:
+      - minio
+      - databases
+      - meili
+    depends_on:
+      - minio
+      - postgres
+      - redis
+      - meili
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+      MEILI_MASTER_KEY: ${MEILI_MASTER_KEY}
+
+  redis:
+    image: "redis:alpine"
+    volumes:
+      - databases:/data
+    networks:
+      - databases
+    expose:
+      - "6379"
+    command: redis-server --requirepass ${REDIS_PASSWORD}
+
+  postgres:
+    image: "postgres:alpine"
+    volumes:
+      - databases:/var/lib/postgres
+    networks:
+      - databases
+    expose:
+      - "5432"
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+
+  minio:
+    image: minio/minio
+    command: server /data
+    volumes:
+      - minio:/data
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    expose:
+      - "9000"
+    networks:
+      - minio
+
+  meili:
+    image: getmeili/meilisearch
+    user: "root"
+    environment:
+      MEILI_MASTER_KEY: ${MEILI_MASTER_KEY}
+    expose:
+      - "7700"
+    networks:
+      - meili
+    volumes:
+      - meili:/home/meili/data.ms
+    ports:
+      - "7700:7700"  
+
+networks:
+  databases:
+  backend:
+  minio:
+  meili:
+
+volumes:
+  databases:
+  meili:
+  minio:

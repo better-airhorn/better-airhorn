@@ -22,9 +22,6 @@ import { isDev } from './utils/isEnvironment';
 import { logger, TypeORMLogger } from './utils/Logger';
 import { ensureDatabaseExtensions, parseEnvExample } from './utils/Utils';
 
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-require('appmetrics-dash').monitor({ port: Config.misc.appmetricsPort });
-
 const matches = parseEnvExample(readFileSync(join(__dirname, '../env.example')).toString());
 let isMissing = false;
 for (const key of matches) {

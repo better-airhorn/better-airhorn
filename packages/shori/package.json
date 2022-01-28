@@ -1,41 +1,41 @@
 {
-	"name": "@better-airhorn/shori",
-	"description": "simple typescript d.js framework used by better-airhorn",
-	"version": "0.0.3",
-	"bugs": "https://github.com/better-airhorn/better-airhorn/issues",
-	"contributors": [
-		"Clemens E (https://github.com/Clemens-E)"
-	],
-	"dependencies": {
-		"discord.js": "^12.4.1",
-		"minimist": "^1.2.5",
-		"reflect-metadata": "^0.1.13",
-		"rxjs": "^6.6.3",
-		"tsyringe": "^4.3.0"
-	},
-	"devDependencies": {
-		"@types/minimist": "^1.2.0",
-		"@types/node": "^14.11.2",
-		"@types/ws": "^7.2.7",
-		"barrelsby": "^2.2.0"
-	},
-	"directories": {
-		"lib": "lib"
-	},
-	"files": [
-		"/dist"
-	],
-	"homepage": "https://github.com/better-airhorn/better-airhorn/tree/master/packages/shori#readme",
-	"license": "GPL-3.0",
-	"main": "dist/index.js",
-	"publishConfig": {
-		"access": "public",
-		"registry": "https://npm.pkg.github.com/"
-	},
-	"repository": "github:better-airhorn/better-airhorn",
-	"scripts": {
-		"build": "tsc",
-		"test": "exit 0"
-	},
-	"typings": "dist/index.d.ts"
+    "name": "@better-airhorn/shori",
+    "description": "simple typescript d.js framework used by better-airhorn",
+    "version": "0.0.3",
+    "bugs": "https://github.com/better-airhorn/better-airhorn/issues",
+    "contributors": [
+        "Clemens E (https://github.com/Clemens-E)"
+    ],
+    "dependencies": {
+        "discord.js": "^12.4.1",
+        "minimist": "^1.2.5",
+        "reflect-metadata": "^0.1.13",
+        "rxjs": "^6.6.3",
+        "tsyringe": "^4.3.0",
+        "@types/minimist": "^1.2.0",
+        "@types/node": "^14.11.2",
+        "@types/ws": "^7.2.7"
+    },
+    "devDependencies": {
+        "barrelsby": "^2.2.0"
+    },
+    "directories": {
+        "lib": "lib"
+    },
+    "files": [
+        "/dist"
+    ],
+    "homepage": "https://github.com/better-airhorn/better-airhorn/tree/master/packages/shori#readme",
+    "license": "GPL-3.0",
+    "main": "dist/index.js",
+    "publishConfig": {
+        "access": "public",
+        "registry": "https://npm.pkg.github.com/"
+    },
+    "repository": "github:better-airhorn/better-airhorn",
+    "scripts": {
+        "build": "tsc",
+        "test": "exit 0"
+    },
+    "typings": "dist/index.d.ts"
 }

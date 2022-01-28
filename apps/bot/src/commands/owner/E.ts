@@ -36,7 +36,7 @@ export class ECommand extends CommandBase {
 			evaled = eval(args.join(' '));
 			if (evaled instanceof Promise) evaled = await evaled;
 		} catch (err) {
-			evaled = err.message;
+			evaled = (err as Error).message;
 		}
 
 		const cleaned = await this.clean(evaled);

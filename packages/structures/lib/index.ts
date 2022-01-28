@@ -1,2 +1,2 @@
-export * from './struct/EventSourceStructures';
 export * from './struct/QueueStructures';
+export * from './struct/EventSourceStructures';

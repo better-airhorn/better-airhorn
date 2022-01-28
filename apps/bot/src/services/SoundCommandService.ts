@@ -61,13 +61,7 @@ export class SoundCommandService implements OnReady {
 	) {}
 
 	public shOnReady(): void {
-		this.client.ws.shards.map(shard =>
-			this.queue.process(
-				shard.id.toString(),
-				Config.queue.playQueue.simulationsProcessors,
-				this.playProcessor.bind(this),
-			),
-		);
+		this.client.ws.shards.map(shard => this.queue.process(shard.id.toString(), this.playProcessor.bind(this)));
 	}
 
 	/**
@@ -206,7 +200,7 @@ export class SoundCommandService implements OnReady {
 			await finishedPlaying;
 			response = { c: PlayJobResponseCodes.SUCCESS, s: true };
 		} catch (error) {
-			this.log.debug(`[Play Queue] ${error.toString()}`);
+			this.log.debug(`[Play Queue] ${(error as Error).toString()}`);
 			if (error instanceof ChannelJoinError) {
 				response = { c: PlayJobResponseCodes.FAILED_TO_JOIN, s: false, e: error.toString() };
 			} else if (error instanceof SoundNotFound) {
@@ -214,7 +208,7 @@ export class SoundCommandService implements OnReady {
 			} else if (error instanceof ChannelError) {
 				// do nothing
 			} else {
-				response = { c: PlayJobResponseCodes.UNKNOWN_ERROR, s: false, e: error.toString() };
+				response = { c: PlayJobResponseCodes.UNKNOWN_ERROR, s: false, e: (error as Error).toString() };
 			}
 		}
 

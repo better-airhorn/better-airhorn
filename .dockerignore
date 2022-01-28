@@ -1,0 +1,34 @@
+# Packages
+node_modules/
+builds/
+
+# Log files
+logs/
+*.log
+npm-debug.log*
+
+# Editors
+.vscode
+
+# Runtime data
+pids
+*.pid
+*.seed
+
+# Env
+.env
+
+# Dist
+dist/
+typings/
+docs/
+
+# Caches
+file_cache/
+
+# Editor
+.vscode/
+
+# Miscellaneous
+.tmp/
+coverage/

@@ -1,4 +1,6 @@
 import {
+	AfterInsert,
+	AfterRemove,
 	BaseEntity,
 	Column,
 	CreateDateColumn,
@@ -8,6 +10,10 @@ import {
 	UpdateDateColumn,
 } from 'typeorm';
 import { Like } from './Like';
+let meili: any = null;
+export function setMeiliSearch(meiliInstance: any) {
+	meili = meiliInstance;
+}
 
 @Entity('sound_commands')
 export class SoundCommand extends BaseEntity {
@@ -56,6 +62,33 @@ export class SoundCommand extends BaseEntity {
 		{ lazy: true, onDelete: 'CASCADE' },
 	)
 	public likes!: Promise<Like[]>;
+
+	@AfterInsert()
+	public async insertInIndex() {
+		if (!meili) {
+			console.error('meili is not set!!!');
+			return;
+		}
+		const index = meili.index('sounds');
+		await index.addDocuments([
+			{
+				id: this.id,
+				name: this.name,
+				guild: this.guild,
+				accesstype: this.accessType,
+			},
+		]);
+	}
+
+	@AfterRemove()
+	public async removeFromIndex() {
+		if (!meili) {
+			console.error('meili is not set!!!');
+			return;
+		}
+		const index = meili.index('sounds');
+		await index.deleteDocument(this.id);
+	}
 
 	public constructor(values?: {
 		accessType: AccessType;
