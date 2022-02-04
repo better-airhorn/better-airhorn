@@ -1,4 +1,5 @@
-import { Like, SoundCommand } from '@better-airhorn/entities';
+import { AccessType, Like, SoundCommand } from '@better-airhorn/entities';
+import Raccoon from '@better-airhorn/raccoon';
 import MeiliSearch from 'meilisearch';
 import {
 	AutocompleteContext,
@@ -20,6 +21,7 @@ export class PlayCommand extends SlashCommand {
 		creator: SlashCreator,
 		private readonly search: MeiliSearch,
 		private readonly voice: VoiceService,
+		private readonly recommendations: Raccoon,
 	) {
 		super(creator, {
 			name: 'play',
@@ -41,9 +43,25 @@ export class PlayCommand extends SlashCommand {
 	}
 
 	public async autocomplete(ctx: AutocompleteContext) {
+		const searchText = ctx.options[ctx.focused];
+		if (!searchText) {
+			let recommendations = await this.recommendations.recommendFor(ctx.user.id.toString(), 10);
+			if (recommendations.length < 3) {
+				recommendations = recommendations.concat(await this.recommendations.bestRated(10 - recommendations.length));
+			}
+			if (recommendations.length > 4)
+				return (await Promise.all(recommendations.map(id => SoundCommand.findOne({ where: { id } }))))
+					.filter(v => Boolean(v))
+					.filter(
+						v =>
+							(v?.accessType === AccessType.ONLY_GUILD && ctx.guildID === v.guild) ||
+							v?.accessType === AccessType.EVERYONE,
+					)
+					.map(hit => ({ name: hit!.name, value: hit!.name }));
+		}
 		const searchResults = await this.search
 			.index('sounds')
-			.search(ctx.options[ctx.focused], {
+			.search(searchText, {
 				filter: `(accesstype = 2 AND guild = "${ctx.guildID}") OR (accesstype = 3)`,
 				limit: 10,
 			})
@@ -61,8 +79,13 @@ export class PlayCommand extends SlashCommand {
 			return ctx.send(`could not find command with name ${wrapInCodeBlock(ctx.options.sound, { inline: true })}`, {
 				ephemeral: true,
 			});
-
-		const res = await this.voice.add({ guildId: ctx.guildID!, sound: sound.id, userId: ctx.user.id });
+		let res;
+		try {
+			res = await this.voice.add({ guildId: ctx.guildID!, sound: sound.id, userId: ctx.user.id });
+		} catch (e) {
+			await ctx.send('Could not play sound, are you in a voice channel?');
+			return;
+		}
 		const msg = (await ctx.send(
 			res.length === 0
 				? `now playing ${wrapInCodeBlock(sound.name, { inline: true })}`

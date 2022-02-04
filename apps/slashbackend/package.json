@@ -13,6 +13,7 @@
     "dependencies": {
         "@better-airhorn/entities": "0.0.4",
         "@better-airhorn/structures": "0.0.1",
+        "@better-airhorn/raccoon": "^0.4.2",
         "@types/body-parser": "1.19.2",
         "@types/bunyan": "1.8.8",
         "@types/eventsource": "1.1.8",

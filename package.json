@@ -105,6 +105,7 @@
 		"build": "yarn workspaces run build"
 	},
 	"workspaces": [
+        "packages/raccoon",
 		"packages/audio",
 		"packages/entities",
 		"packages/structures",

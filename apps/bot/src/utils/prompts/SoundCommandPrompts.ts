@@ -1,7 +1,6 @@
 import { convertToOGG } from '@better-airhorn/audio';
-import { AccessType, AccessTypeUserMapping, SoundCommand } from '@better-airhorn/entities';
+import { AccessType, SoundCommand } from '@better-airhorn/entities';
 import { Message as SMessage, resolveSingleton } from '@better-airhorn/shori';
-import { stripIndents } from 'common-tags';
 import { Message, MessageAttachment, MessageReaction, User } from 'discord.js';
 import {
 	DiscordPrompt,
@@ -18,7 +17,7 @@ import { Config } from '../../config/Config';
 import { SoundCommandService } from '../../services/SoundCommandService';
 import { SoundFilesManager } from '../../services/SoundFilesManager';
 import { getSubLogger } from '../Logger';
-import { humanFileSize, wrapInCodeBlock } from '../Utils';
+import { humanFileSize } from '../Utils';
 
 export interface SoundCommandPromptType {
 	name?: string;
@@ -47,37 +46,9 @@ const askNameFn: DiscordPromptFunction<SoundCommandPromptType> = async (m: Messa
 	};
 };
 
-const askAccessTypeVisual = new MessageVisual(
-	wrapInCodeBlock(stripIndents`
-  Who should be able to use the sound?
-  [guild]    only members of this guild can use it
-  [everyone] anyone can use it`),
-);
-
-const askAccessTypeFn: DiscordPromptFunction<SoundCommandPromptType> = async (
-	message: Message,
-	data: SoundCommandPromptType,
-) => {
-	const content = message.content as keyof typeof AccessTypeUserMapping;
-	if (!Object.keys(AccessTypeUserMapping).includes(content)) {
-		throw new Rejection(
-			`The option you provided wasn't one of those ${Object.keys(AccessTypeUserMapping)
-				.map(v => `\`${v}\``)
-				.join(', ')}, try again`,
-		);
-	}
-	return {
-		...data,
-		accessType: AccessTypeUserMapping[content],
-	};
-};
-
-const askAccessTypePrompt = new DiscordPrompt(askAccessTypeVisual, askAccessTypeFn);
-
 const askNamePrompt = new DiscordPrompt(askNameVisual, askNameFn);
 
 export const SoundCommandPrompt = new PromptNode(askNamePrompt);
-SoundCommandPrompt.addChild(new PromptNode(askAccessTypePrompt));
 
 export async function promptSoundCommandValues(
 	message: SMessage,
@@ -119,7 +90,7 @@ export async function importAudioFile(opts: { message: SMessage; attachment: Mes
 	}
 
 	const entity = new SoundCommand({
-		accessType: promptData.data.accessType,
+		accessType: AccessType.EVERYONE,
 		guild: message.guild!.id,
 		name: promptData.data.name,
 		user: message.author.id,

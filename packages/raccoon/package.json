@@ -1,0 +1,58 @@
+{
+  "name": "@better-airhorn/raccoon",
+  "author": "maruware",
+  "contributors": [
+      "maruware",
+      "Clemens Ertle"
+  ],
+  "description": "A Collaborative Filtering Recommendation Engine for Node.js utilizing Redis",
+  "version": "0.4.2",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/maruware/recommendationRaccoon.git"
+  },
+  "scripts": {
+    "build": "tsc",
+    "prepare": "npm run build",
+    "tsc": "tsc"
+  },
+  "dependencies": {
+    "ioredis": "^4.14.1",
+    "lodash": "^4.17.15",
+    "p-all": "^2.1.0",
+    "p-map": "^3.0.0",
+    "@types/ioredis": "^4.14.3",
+    "@types/jest": "^24.0.25",
+    "@types/lodash": "^4.14.149",
+    "@types/node": "^12.12.21"
+  },
+  "main": "./dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": ">=11.0.0"
+  },
+  "licenses": [
+    {
+      "type": "MIT",
+      "url": "https://github.com/maruware/recommendationRaccoon/LICENSE"
+    }
+  ],
+  "keywords": [
+    "recommend",
+    "recommended",
+    "recommendation",
+    "engine",
+    "collaborative",
+    "filtering",
+    "middleware",
+    "redis"
+  ],
+  "license": "MIT",
+  "readmeFilename": "README.md",
+  "bugs": {
+    "url": "https://github.com/maruware/recommendationRaccoon/issues"
+  }
+}

@@ -7,6 +7,7 @@ import {
 	Statistic,
 	Usage,
 } from '@better-airhorn/entities';
+import Raccoon from '@better-airhorn/raccoon';
 import { json } from 'body-parser';
 import 'dotenv/config';
 import { createServer } from 'http';
@@ -18,6 +19,7 @@ import { createConnection } from 'typeorm';
 import { commands } from './commands/commands';
 import { Config } from './Config';
 import { VoiceService } from './services/VoiceService';
+import { updateRecommendations, updateSearchIndex } from './startup-tasks';
 import { getSubLogger, TypeORMLogger } from './util/Logger';
 import { RestanaServer } from './util/RestanaServer';
 import { ensureDatabaseExtensions } from './util/Utils';
@@ -72,22 +74,14 @@ console.log(Config.credentials);
 	});
 	container.register<MeiliSearch>(MeiliSearch, { useValue: se });
 	container.register<VoiceService>(VoiceService, { useValue: new VoiceService() });
+	container.register<Raccoon>(Raccoon, {
+		useValue: new Raccoon({ redisUrl: Config.credentials.redis, className: 'sounds' }),
+	});
 
-	await se.getIndex('sounds').catch(() => se.createIndex('sounds'));
-	const sounds = (await SoundCommand.find()).map((v: SoundCommand) => ({
-		id: v.id,
-		name: v.name,
-		guild: v.guild,
-		accesstype: v.accessType,
-	}));
+	// running init functions
+	await updateSearchIndex();
+	await updateRecommendations();
 
-	const index = se.index('sounds');
-	await index.deleteAllDocuments();
-	if (sounds.length > 0) {
-		await index.addDocuments(sounds);
-	}
-	await index.updateFilterableAttributes(['accesstype', 'guild']);
-	console.log(await index.getFilterableAttributes());
 	creator.registerCommands(commands.map(v => container.resolve(v as any)));
 	creator.syncCommands();
 })();
