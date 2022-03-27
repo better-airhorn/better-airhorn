@@ -10,6 +10,7 @@ import {
 	UpdateDateColumn,
 } from 'typeorm';
 import { Like } from './Like';
+
 let meili: any = null;
 export function setMeiliSearch(meiliInstance: any) {
 	meili = meiliInstance;
@@ -33,7 +34,7 @@ export class SoundCommand extends BaseEntity {
 	public accessType!: AccessType;
 
 	/**
-	 * duration of the mp3 file in ms
+	 * duration of the file in ms
 	 */
 	@Column('integer')
 	public duration!: number;
@@ -62,6 +63,13 @@ export class SoundCommand extends BaseEntity {
 		{ lazy: true, onDelete: 'CASCADE' },
 	)
 	public likes!: Promise<Like[]>;
+
+	@OneToMany(
+		() => Like,
+		like => like.soundCommand,
+		{ lazy: true, onDelete: 'CASCADE' },
+	)
+	public dislikes!: Promise<Like[]>;
 
 	@AfterInsert()
 	public async insertInIndex() {

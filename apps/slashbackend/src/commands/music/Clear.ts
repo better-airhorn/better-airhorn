@@ -7,7 +7,7 @@ export class ClearCommand extends SlashCommand {
 	public constructor(creator: SlashCreator, private readonly voice: VoiceService) {
 		super(creator, {
 			name: 'clear',
-			description: 'clear to the next sound',
+			description: 'clear the queue',
 		});
 	}
 

@@ -1,5 +1,11 @@
 import { GuildSetting } from '@better-airhorn/entities';
-import { entersState, joinVoiceChannel, VoiceConnectionStatus } from '@discordjs/voice';
+import {
+	entersState,
+	joinVoiceChannel,
+	VoiceConnection,
+	VoiceConnectionState,
+	VoiceConnectionStatus,
+} from '@discordjs/voice';
 import { VoiceChannel } from 'discord.js';
 import { getConnection } from 'typeorm';
 import { EventEmitter } from 'typeorm/platform/PlatformTools';
@@ -69,6 +75,7 @@ export type Complete<T> = {
 	[P in keyof Required<T>]: Pick<T, P> extends Required<Pick<T, P>> ? T[P] : T[P];
 };
 
+const connections = new Map<string, VoiceConnection>();
 export async function connectToChannel(channel: VoiceChannel) {
 	const connection = joinVoiceChannel({
 		channelId: channel.id,
@@ -78,9 +85,20 @@ export async function connectToChannel(channel: VoiceChannel) {
 
 	try {
 		await entersState(connection, VoiceConnectionStatus.Ready, 30e3);
+		connections.set(channel.id, connection);
+
+		connection.on(VoiceConnectionStatus.Destroyed, (_oldState: VoiceConnectionState, newState) => {
+			if (newState.status === VoiceConnectionStatus.Destroyed) {
+				connections.delete(channel.id);
+			}
+		});
 		return connection;
 	} catch (error) {
 		connection.destroy();
 		throw error;
 	}
+}
+
+export function getVoiceConnection(channelId: string) {
+	return connections.get(channelId);
 }

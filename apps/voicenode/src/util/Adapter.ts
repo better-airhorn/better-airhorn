@@ -21,7 +21,7 @@ function trackClient(client: Client) {
 			adapters.get(payload.guild_id)?.onVoiceStateUpdate(payload);
 		}
 	});
-	/*	client.on(Constants.Events.SHARD_DISCONNECT, (_, shardID) => {
+	client.on(Constants.Events.SHARD_DISCONNECT, (_, shardID) => {
 		const guilds = trackedShards.get(shardID);
 		if (guilds) {
 			for (const guildID of guilds.values()) {
@@ -29,7 +29,7 @@ function trackClient(client: Client) {
 			}
 		}
 		trackedShards.delete(shardID);
-	});*/
+	});
 }
 
 function trackGuild(guild: Guild) {

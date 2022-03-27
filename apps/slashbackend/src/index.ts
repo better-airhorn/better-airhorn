@@ -1,15 +1,16 @@
 import {
 	BotListVote,
+	Dislike,
 	Guild as GuildEntity,
 	GuildSetting,
 	Like,
+	setMeiliSearch,
 	SoundCommand,
 	Statistic,
 	Usage,
 } from '@better-airhorn/entities';
 import Raccoon from '@better-airhorn/raccoon';
 import { json } from 'body-parser';
-import 'dotenv/config';
 import { createServer } from 'http';
 import MeiliSearch from 'meilisearch';
 import restana from 'restana';
@@ -35,7 +36,7 @@ console.log(Config.credentials);
 		logging: Config.logging.level === 'debug',
 		logger: new TypeORMLogger(),
 		synchronize: true,
-		entities: [GuildSetting, Like, Statistic, SoundCommand, Usage, GuildEntity, BotListVote],
+		entities: [GuildSetting, Like, Dislike, Statistic, SoundCommand, Usage, GuildEntity, BotListVote],
 	});
 	await ensureDatabaseExtensions(['pg_trgm']);
 
@@ -59,24 +60,33 @@ console.log(Config.credentials);
 	creator.withServer(new RestanaServer(webserver, { alreadyListening: true }));
 	creator.on('debug', console.log);
 	creator.on('commandError', (cmd, err) => {
-		log.error(cmd, err);
+		log.error(cmd.commandName, err);
 	});
 
 	webserver.getServer().listen(8080, () => {
 		log.info('web server listening on', 8080);
 	});
 	webserver.get('/', (req, res) => {
-		res.send('this is the better-airhorn slash-command api');
+		webserver.getServer().getConnections((err, count) => {
+			if (err) {
+				return res.send(500);
+			}
+			res.send(`this is the better-airhorn slash-command api, currently there are ${count} open connections`);
+		});
 	});
-	const se = new MeiliSearch({
-		host: Config.credentials.meili.url,
-		apiKey: Config.credentials.meili.apiKey,
+
+	// register all services
+	container.register<MeiliSearch>(MeiliSearch, {
+		useValue: new MeiliSearch({
+			host: Config.credentials.meili.url,
+			apiKey: Config.credentials.meili.apiKey,
+		}),
 	});
-	container.register<MeiliSearch>(MeiliSearch, { useValue: se });
 	container.register<VoiceService>(VoiceService, { useValue: new VoiceService() });
 	container.register<Raccoon>(Raccoon, {
 		useValue: new Raccoon({ redisUrl: Config.credentials.redis, className: 'sounds' }),
 	});
+	setMeiliSearch(container.resolve(MeiliSearch));
 
 	// running init functions
 	await updateSearchIndex();

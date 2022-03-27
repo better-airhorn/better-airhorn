@@ -9,11 +9,14 @@ COPY ./tsconfig.json .
 COPY ./apps/voicenode ./apps/voicenode
 COPY ./packages/entities ./packages/entities
 COPY ./packages/structures ./packages/structures
+COPY ./packages/audio ./packages/audio
 
 RUN yarn workspace @better-airhorn/entities install --production --frozen-lockfile
 RUN yarn workspace @better-airhorn/entities tsc
 RUN yarn workspace @better-airhorn/structures install --production --frozen-lockfile
 RUN yarn workspace @better-airhorn/structures tsc
+RUN yarn workspace @better-airhorn/audio install --production --frozen-lockfile
+RUN yarn workspace @better-airhorn/audio tsc
 
 RUN yarn workspace voicenode install --production --frozen-lockfile
 RUN yarn workspace voicenode tsc

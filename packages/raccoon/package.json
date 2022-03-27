@@ -17,14 +17,14 @@
     "tsc": "tsc"
   },
   "dependencies": {
-    "ioredis": "^4.14.1",
+    "ioredis": "4.28.3",
     "lodash": "^4.17.15",
     "p-all": "^2.1.0",
     "p-map": "^3.0.0",
-    "@types/ioredis": "^4.14.3",
+    "@types/ioredis": "4.28.10",
     "@types/jest": "^24.0.25",
     "@types/lodash": "^4.14.149",
-    "@types/node": "^12.12.21"
+    "@types/node": "^16.7.5"
   },
   "main": "./dist/index.js",
   "types": "dist/index.d.ts",

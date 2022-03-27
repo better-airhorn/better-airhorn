@@ -1,5 +1,5 @@
 {
-    "name": "@better-airhorn/voteserver",
+    "name": "voteserver",
     "version": "1.0.0",
     "description": "receives votes from various bot lists",
     "main": "src/index.ts",
@@ -10,11 +10,12 @@
     "dependencies": {
         "@better-airhorn/entities": "0.0.4",
         "@types/body-parser": "1.19.2",
-        "@types/dotenv": "8.2.0",
+        "@types/bunyan": "1.8.8",
+        "@types/ioredis": "4.28.10",
         "body-parser": "1.19.1",
         "bunyan": "1.8.15",
-        "dotenv": "11.0.0",
         "ioredis": "4.28.3",
+        "pg": "8.7.3",
         "restana": "4.9.2",
         "typeorm": "0.2.41"
     },
@@ -22,10 +23,7 @@
         "build": "tsc",
         "test": "exit 0",
         "start": "tsc && node ./dist/index.js",
-        "start:debug": "tsc && node --inspect-brk=55555 ./dist/index.js"
-    },
-    "devDependencies": {
-        "@types/body-parser": "^1.19.0",
-        "@types/dotenv": "^8.2.0"
+        "start:debug": "tsc && node --inspect-brk=55555 ./dist/index.js",
+        "run:prod": "node dist/index.js | bunyan"
     }
 }

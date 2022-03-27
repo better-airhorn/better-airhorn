@@ -13,6 +13,7 @@
         "run:prod": "node dist/index.js | bunyan"
     },
     "dependencies": {
+        "@better-airhorn/audio": "0.0.5",
         "@better-airhorn/entities": "0.0.4",
         "@better-airhorn/structures": "0.0.1",
         "@discordjs/voice": "0.7.5",
@@ -20,15 +21,16 @@
         "@types/bunyan": "1.8.8",
         "@types/minio": "7.0.11",
         "@types/node": "^16.7.5",
-        "await-lock": "2.1.0",
+        "@types/node-fetch": "2.6.1",
+        "await-lock": "https://github.com/better-airhorn/await-lock",
         "body-parser": "1.19.1",
         "bunyan": "1.8.15",
+        "pg": "8.7.3",
         "discord-api-types": "^0.26.1",
         "discord.js": "12.5.1",
-        "dotenv": "^10.0.0",
         "minio": "7.0.26",
         "restana": "4.9.2",
-        "rxjs": "^7.3.0",
+        "rxjs": "7.3.0",
         "tsyringe": "4.6.0",
         "typeorm": "0.2.41",
         "zlib-sync": "0.1.7"

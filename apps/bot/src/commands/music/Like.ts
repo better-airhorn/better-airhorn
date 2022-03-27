@@ -21,7 +21,10 @@ export class LikeCommand extends CommandBase {
 	public async exec(message: Message, args: string[]): Promise<any> {
 		const sound = await this.soundService.getSoundCommand({ message, name: args[0], autoSelect: false });
 		if (!sound) return;
-
+		const like = await Like.findOne({ where: { userId: message.author.id, soundCommandId: sound.id } });
+		if (like) {
+			return message.success('you already liked this sound');
+		}
 		await new Like({ soundCommand: sound, user: message.author.id }).save();
 		this.log.debug(`new like for ${sound.name} by ${message.author.tag}(${message.author.id})`);
 		return message.success(

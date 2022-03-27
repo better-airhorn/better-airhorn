@@ -29,10 +29,7 @@ export async function updateRecommendations() {
 	const log = getSubLogger('RecommendationsIndex');
 	log.info('updating index');
 	const raccoon = container.resolve(Raccoon);
-	// ! remove limit here
-	const likes: { Like_user: string; Like_soundCommandId: number }[] = (
-		await Like.createQueryBuilder().getRawMany()
-	).slice(0, 2000);
+	const likes: { Like_user: string; Like_soundCommandId: number }[] = await Like.createQueryBuilder().getRawMany();
 	const userMap = new Map<string, string[]>();
 	for (const like of likes) {
 		if (userMap.has(like.Like_user)) {
@@ -45,7 +42,9 @@ export async function updateRecommendations() {
 	let lastPercentage = 0;
 	for (const [userId, dbLikes] of userMap.entries()) {
 		const racLikes = await raccoon.allLikedFor(userId);
-		const isSync = dbLikes.every(v => racLikes.includes(v)) && !racLikes.some(v => !dbLikes.includes(v));
+		dbLikes.sort();
+		racLikes.sort();
+		const isSync = racLikes.length === dbLikes.length && racLikes.every((v, i) => v === dbLikes[i]);
 		if (!isSync) {
 			log.debug(`${userId} is not in sync`);
 			await Promise.all(racLikes.map(v => raccoon.unliked(userId, v)));

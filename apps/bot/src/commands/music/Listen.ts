@@ -86,7 +86,6 @@ export class ListenCommand extends CommandBase {
 			if (inputStream) {
 				const oldDestroy = inputStream.destroy;
 				// overwrite the destroy method so d.js cant destroy the stream
-				// @ts-expect-error
 				inputStream.destroy = () => null;
 				// destroy the dispatcher, hopefully keeping the old stream alive
 				connection.dispatcher.destroy();

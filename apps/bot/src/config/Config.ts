@@ -56,10 +56,11 @@ export const Config = {
 
 		discord: {
 			token: process.env.DISCORD_TOKEN!,
+			applicationId: process.env.DISCORD_APP_ID!,
 		},
 
 		minio: {
-			accessKey: process.env.MINIO_ROOT_USER!,
+			accessKey: process.env.MINIO_ACCESS_KEY!,
 			secretKey: process.env.MINIO_ROOT_PASSWORD!,
 			url: process.env.MINIO_URL?.split(':')[0]!,
 			port: parseInt(process.env.MINIO_URL?.split(':')[1] ?? '8500', 10),

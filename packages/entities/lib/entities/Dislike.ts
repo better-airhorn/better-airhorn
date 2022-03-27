@@ -1,9 +1,9 @@
 import { BaseEntity, Column, CreateDateColumn, Entity, ManyToOne, PrimaryGeneratedColumn, Unique } from 'typeorm';
 import { SoundCommand } from './SoundCommand';
 
-@Entity('likes')
+@Entity('dislikes')
 @Unique(['user', 'soundCommand'])
-export class Like extends BaseEntity {
+export class Dislike extends BaseEntity {
 	@PrimaryGeneratedColumn()
 	public readonly id!: number;
 
@@ -12,7 +12,7 @@ export class Like extends BaseEntity {
 
 	@ManyToOne(
 		() => SoundCommand,
-		command => command.likes,
+		command => command.dislikes,
 		{ onDelete: 'CASCADE' },
 	)
 	public soundCommand!: SoundCommand;

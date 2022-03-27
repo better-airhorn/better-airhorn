@@ -24,6 +24,7 @@ export class DeleteCommand extends SlashCommand {
 	public async autocomplete(ctx: AutocompleteContext) {
 		const commands = await SoundCommand.find({
 			where: { name: Like(`%${ctx.options[ctx.focused]}%`), user: ctx.user.id },
+			take: 10,
 		});
 		return commands.map(command => ({ name: command.name, value: command.name }));
 	}

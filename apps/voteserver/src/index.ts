@@ -1,5 +1,4 @@
 import { BotListVote } from '@better-airhorn/entities';
-import 'dotenv/config';
 import { createConnection } from 'typeorm';
 import { Config } from './Config';
 import { logger } from './util/Logger';

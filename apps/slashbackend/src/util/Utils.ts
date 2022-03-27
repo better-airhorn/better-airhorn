@@ -37,6 +37,10 @@ export function humanFileSize(size: number): string {
 	return `${Number((size / Math.pow(1024, i)).toFixed(2))} ${['B', 'kB', 'MB', 'GB'][i]}`;
 }
 
+export function msToMinutes(ms: number): string {
+	return ms > 0 ? `${Math.floor(ms / 60000)}m ${Math.floor(ms / 1000) % 60}s` : '0m 0s';
+}
+
 export async function ensureDatabaseExtensions(extensions: string[]): Promise<void> {
 	const installedExtensions: string[] = await (
 		await getConnection().query('SELECT extname FROM pg_extension WHERE extname = ANY ($1)', [extensions])

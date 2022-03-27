@@ -1,4 +1,4 @@
-import { AccessType, Like, SoundCommand } from '@better-airhorn/entities';
+import { AccessType, Like, SoundCommand, Dislike } from '@better-airhorn/entities';
 import Raccoon from '@better-airhorn/raccoon';
 import MeiliSearch from 'meilisearch';
 import {
@@ -13,6 +13,7 @@ import {
 } from 'slash-create';
 import { injectable } from 'tsyringe';
 import { QueueEventType, VoiceService } from '../../services/VoiceService';
+import { getSubLogger } from '../../util/Logger';
 import { wrapInCodeBlock } from '../../util/Utils';
 
 @injectable()
@@ -27,7 +28,7 @@ export class PlayCommand extends SlashCommand {
 			name: 'play',
 			description: 'play a sound',
 			throttling: {
-				duration: 5000,
+				duration: 5,
 				usages: 5,
 			},
 			options: [
@@ -74,6 +75,10 @@ export class PlayCommand extends SlashCommand {
 
 	public async run(ctx: CommandContext) {
 		await ctx.defer();
+		const { isConnected } = await this.voice.getUser(ctx.guildID!, ctx.user.id);
+		if (!isConnected) {
+			return ctx.send('You are not connected to a voice channel');
+		}
 		const sound = await SoundCommand.findOne({ where: { name: ctx.options.sound } });
 		if (!sound)
 			return ctx.send(`could not find command with name ${wrapInCodeBlock(ctx.options.sound, { inline: true })}`, {
@@ -108,11 +113,20 @@ export class PlayCommand extends SlashCommand {
 					components: [
 						{
 							type: ComponentType.BUTTON,
-							style: ButtonStyle.PRIMARY,
-							label: 'this sound',
+							style: ButtonStyle.SUCCESS,
+							label: '',
 							custom_id: 'like_button',
 							emoji: {
 								name: '❤',
+							},
+						},
+						{
+							type: ComponentType.BUTTON,
+							style: ButtonStyle.DESTRUCTIVE,
+							label: '',
+							custom_id: 'dislike_button',
+							emoji: {
+								name: '👎',
 							},
 						},
 					],
@@ -120,10 +134,48 @@ export class PlayCommand extends SlashCommand {
 			],
 		});
 
+		const log = getSubLogger('rating_buttons');
+		// let users (dis)like the sound
 		ctx.registerComponent('like_button', async btnCtx => {
-			const like = new Like({ soundCommand: sound, user: btnCtx.user.id });
-			await like.save();
-			await btnCtx.sendFollowUp({ content: `liked ${wrapInCodeBlock(sound.name, { inline: true })}`, ephemeral: true });
+			try {
+				await btnCtx.defer(true);
+				const alreadyLiked = await Like.findOne({ where: { soundCommand: sound.id, user: ctx.user.id } });
+				const alreadyDisliked = await Dislike.findOne({ where: { soundCommand: sound.id, user: ctx.user.id } });
+				if (alreadyLiked || alreadyDisliked) {
+					await btnCtx.send(`You already ${alreadyDisliked ? 'disliked' : 'liked'} this sound`, { ephemeral: true });
+					return;
+				}
+				const like = new Like({ soundCommand: sound, user: btnCtx.user.id });
+				await like.save();
+				await btnCtx.sendFollowUp({
+					content: `liked ${wrapInCodeBlock(sound.name, { inline: true })}`,
+					ephemeral: true,
+				});
+				await this.recommendations.liked(btnCtx.user.id, sound.id.toString());
+			} catch (e) {
+				log.error(e);
+			}
+		});
+
+		ctx.registerComponent('dislike_button', async btnCtx => {
+			try {
+				await btnCtx.defer(true);
+				const alreadyLiked = await Like.findOne({ where: { soundCommand: sound.id, user: ctx.user.id } });
+				const alreadyDisliked = await Dislike.findOne({ where: { soundCommand: sound.id, user: ctx.user.id } });
+				if (alreadyLiked || alreadyDisliked) {
+					await btnCtx.send(`You already ${alreadyDisliked ? 'disliked' : 'liked'} this sound`, { ephemeral: true });
+					return;
+				}
+				const dislike = new Dislike({ soundCommand: sound, user: btnCtx.user.id });
+				await dislike.save();
+				await btnCtx.sendFollowUp({
+					content: `disliked ${wrapInCodeBlock(sound.name, { inline: true })}`,
+					ephemeral: true,
+				});
+				await this.recommendations.disliked(btnCtx.user.id, sound.id.toString());
+			} catch (e) {
+				log.error(e);
+			}
 		});
 	}
 }

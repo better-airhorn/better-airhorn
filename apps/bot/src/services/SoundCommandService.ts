@@ -11,7 +11,6 @@ import {
 	User,
 	VoiceChannel,
 	VoiceConnection,
-	VoiceState,
 } from 'discord.js';
 import { Readable, Stream } from 'stream';
 import { getRepository } from 'typeorm';
@@ -270,15 +269,5 @@ export class SoundCommandService implements OnReady {
 		if (!attachment) return;
 
 		handleUploadAudioFile({ attachment, message }).catch(e => this.log.error(e));
-	}
-
-	@Event('voiceStateUpdate')
-	public onVoiceStateUpdate(oldState: VoiceState, newState: VoiceState) {
-		const channel = newState.channel ?? oldState.channel;
-		if (!channel) return;
-		const { id } = this.client.user!;
-		if (channel.members.some(m => m.id === id) && channel.members.filter(m => m.id !== id && !m.user.bot).size < 1) {
-			channel.leave();
-		}
 	}
 }

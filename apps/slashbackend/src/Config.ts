@@ -7,9 +7,9 @@ export const Config = {
 			topgg: process.env.SECRETS_TOPGG!,
 		},
 		discord: {
-			appId: process.env.APP_ID!,
-			publicKey: process.env.PUBLIC_KEY!,
-			token: process.env.TOKEN!,
+			appId: process.env.DISCORD_APP_ID!,
+			publicKey: process.env.DISCORD_PUBLIC_KEY!,
+			token: process.env.DISCORD_TOKEN!,
 		},
 		meili: {
 			url: 'http://meili:7700',
