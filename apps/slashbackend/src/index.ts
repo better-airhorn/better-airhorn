@@ -58,7 +58,7 @@ console.log(Config.credentials);
 	container.register(SlashCreator, { useValue: creator });
 
 	creator.withServer(new RestanaServer(webserver, { alreadyListening: true }));
-	creator.on('debug', console.log);
+	creator.on('debug', message => log.debug(message));
 	creator.on('commandError', (cmd, err) => {
 		log.error(cmd.commandName, err);
 	});

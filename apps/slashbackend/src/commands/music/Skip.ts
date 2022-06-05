@@ -13,7 +13,7 @@ export class SkipCommand extends SlashCommand {
 
 	public async run(ctx: CommandContext) {
 		await ctx.defer();
-		const skipped = await this.voice.skip(ctx.guildID!);
+		const skipped = (await this.voice.skip(ctx.guildID!)).unwrapOr(false);
 		await ctx.send(skipped ? 'skipped sound' : 'there was nothing to skip');
 	}
 }

@@ -28,6 +28,7 @@
         "restana": "4.9.2",
         "rxjs": "7.3.0",
         "slash-create": "^5.2.1",
+        "ts-results": "^3.3.0",
         "tsyringe": "4.6.0",
         "typeorm": "0.2.41"
     },

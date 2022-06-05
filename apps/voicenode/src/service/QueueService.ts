@@ -1,29 +1,8 @@
+import { QueueEvent, QueueEventType, QueueObject } from '@better-airhorn/structures';
 import AwaitLock from 'await-lock';
 import { randomBytes } from 'crypto';
 import { ReplaySubject } from 'rxjs';
 import { getSubLogger } from '../util/Logger';
-
-export interface QueueObject {
-	guildId: string;
-	userId: string;
-	sound: number;
-	transactionId: string;
-}
-
-export enum QueueEventType {
-	SKIP,
-	STARTING_SOUND,
-	FINISHED_SOUND,
-	ADD,
-	CLEAR,
-}
-
-export interface QueueEvent {
-	id: number;
-	guildId: string;
-	transactionId?: string;
-	type: QueueEventType;
-}
 
 export interface QueueCallback {
 	(obj: QueueObject, queueLength: number, ac: AbortController): Promise<void>;

@@ -13,7 +13,7 @@ export class LeaveCommand extends SlashCommand {
 
 	public async run(ctx: CommandContext) {
 		await ctx.defer();
-		await this.voice.leave(ctx.guildID!);
+		(await this.voice.leave(ctx.guildID!)).unwrap();
 		await ctx.send('left voice channel!');
 	}
 }

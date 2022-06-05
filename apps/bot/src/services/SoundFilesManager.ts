@@ -1,7 +1,6 @@
 import { Service } from '@better-airhorn/shori';
 import { BucketItemStat, UploadedObjectInfo } from 'minio';
 import { Readable } from 'stream';
-import { FileCachingService } from './FileCachingService';
 import { MinIOService } from './MinIOService';
 
 /**
@@ -13,24 +12,19 @@ import { MinIOService } from './MinIOService';
  */
 @Service()
 export class SoundFilesManager {
-	public constructor(private readonly fileCache: FileCachingService, private readonly minIO: MinIOService) {}
+	public constructor(private readonly minIO: MinIOService) {}
 
 	public async get(id: number | string): Promise<Readable> {
-		try {
-			return await this.fileCache.get(id.toString());
-		} catch (e) {
-			const stream = await this.minIO.get(id.toString());
-			this.fileCache.set(id.toString(), stream).catch(() => null);
-			return stream;
-		}
+		const stream = await this.minIO.get(id.toString());
+		return stream;
 	}
 
 	public set(id: number, stream: Readable): Promise<UploadedObjectInfo> {
 		return this.minIO.add(id.toString(), stream);
 	}
 
-	public delete(id: number): Promise<[void, void]> {
-		return Promise.all([this.minIO.delete(id.toString()), this.fileCache.delete(id.toString())]);
+	public delete(id: number): Promise<void[]> {
+		return Promise.all([this.minIO.delete(id.toString())]);
 	}
 
 	public stat(id: number): Promise<BucketItemStat> {

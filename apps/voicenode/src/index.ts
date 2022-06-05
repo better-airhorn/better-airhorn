@@ -1,4 +1,5 @@
 import { Dislike, GuildSetting, SoundCommand, Like } from '@better-airhorn/entities';
+import { QueueEvent } from '@better-airhorn/structures';
 import { AudioPlayerStatus, createAudioPlayer, createAudioResource, entersState, StreamType } from '@discordjs/voice';
 import { json, text } from 'body-parser';
 import { Client, Intents, VoiceChannel } from 'discord.js';
@@ -10,7 +11,7 @@ import { filter, takeUntil } from 'rxjs/operators';
 import { createConnection } from 'typeorm';
 import { Config } from './Config';
 import { addRoutes } from './Routes';
-import { QueueEvent, QueueService } from './service/QueueService';
+import { QueueService } from './service/QueueService';
 import { getSubLogger, TypeORMLogger } from './util/Logger';
 import { connectToChannel, getVoiceConnection } from './util/Utils';
 
@@ -53,9 +54,10 @@ const queue = new QueueService(async (obj, queueLength, ac) => {
 	const resource = createAudioResource(stream, { inputType: StreamType.OggOpus });
 	player.play(resource);
 	await entersState(player, AudioPlayerStatus.Playing, 5e3);
-	// if this throws, the ac signal triggered
+	// wait for the player to enter idle (finished playing) or until it throws an error (the AbortController fired)
 	await entersState(player, AudioPlayerStatus.Idle, ac.signal).catch(() => null);
-	if (queueLength === 0 && (await GuildSetting.findOne({ where: { guild: obj.guildId } }))?.leaveAfterPlay) {
+	const guildSettings = (await GuildSetting.findOne({ where: { guildId: obj.guildId } })) ?? GuildSetting.create();
+	if (queueLength === 0 && guildSettings.leaveAfterPlay) {
 		connection.destroy();
 	}
 });

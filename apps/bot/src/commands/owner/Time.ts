@@ -21,7 +21,7 @@ export class TimeCommand extends CommandBase {
 		const handler = container.resolve(MessageHandler);
 		const settings = await GuildSetting.findOne(message.guild!.id);
 		message.content = `${settings!.prefix} ${cmd.name} ${args.join(' ')}`;
-		let hrDiff: [number, number] = process.hrtime();
+		let hrDiff = process.hrtime();
 		await handler.onMessage(message);
 		hrDiff = process.hrtime(hrDiff);
 		return message.neutral(

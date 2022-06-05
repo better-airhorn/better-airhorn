@@ -1,17 +1,13 @@
 import { SoundCommand, AccessType } from '@better-airhorn/entities';
-import MeiliSearch from 'meilisearch';
 import { AutocompleteContext, CommandContext, CommandOptionType, SlashCommand, SlashCreator } from 'slash-create';
 import { injectable } from 'tsyringe';
+import { Like } from 'typeorm';
 import { VoiceService } from '../../services/VoiceService';
 import { humanFileSize, msToMinutes, wrapInCodeBlock } from '../../util/Utils';
 
 @injectable()
 export class InfoCommand extends SlashCommand {
-	public constructor(
-		creator: SlashCreator,
-		private readonly search: MeiliSearch,
-		private readonly voice: VoiceService,
-	) {
+	public constructor(creator: SlashCreator, private readonly voice: VoiceService) {
 		super(creator, {
 			name: 'info',
 			description: 'shows info about a sound',
@@ -28,17 +24,11 @@ export class InfoCommand extends SlashCommand {
 	}
 
 	public async autocomplete(ctx: AutocompleteContext) {
-		const searchText = ctx.options[ctx.focused];
-		const searchResults = await this.search
-			.index('sounds')
-			.search(searchText, {
-				limit: 10,
-			})
-			.catch(e => {
-				console.error(e);
-				throw e;
-			});
-		return searchResults.hits.map(hit => ({ name: hit.name, value: hit.name }));
+		const commands = await SoundCommand.find({
+			where: { name: Like(`%${ctx.options[ctx.focused]}%`), user: ctx.user.id },
+			take: 10,
+		});
+		return commands.map(command => ({ name: command.name, value: command.name }));
 	}
 
 	public async run(ctx: CommandContext) {
@@ -56,7 +46,7 @@ export class InfoCommand extends SlashCommand {
     Access: ${sound.accessType === AccessType.ONLY_GUILD ? 'Specific Guild Only' : 'Everyone'}
     Size: ${humanFileSize(sound.size)}
     Length: ${msToMinutes(sound.duration)}
-    Uploader: ${(await this.voice.getUser(sound.guild, sound.user)).tag}
+    Uploader: ${(await this.voice.getUser(sound.user)).unwrapOr({ tag: 'Unknown User' }).tag}
     Uses: ${sound.uses}
     Likes: ${(await sound.likes).length}
     `,

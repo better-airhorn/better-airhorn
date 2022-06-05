@@ -1,31 +1,10 @@
+import { QueueEvent, QueueEventType, QueueObject, RouteError } from '@better-airhorn/structures';
 import EventSource from 'eventsource';
+import { Err, Ok, Result } from 'ts-results';
 import fetch, { RequestInfo, RequestInit, Response } from 'node-fetch';
 import { Config } from '../Config';
-import { createResponseError } from '../util/Errors';
 import { getSubLogger } from '../util/Logger';
 import { timeout } from '../util/Utils';
-
-export interface QueueObject {
-	guildId: string;
-	userId: string;
-	sound: number;
-	transactionId?: string;
-}
-
-export enum QueueEventType {
-	SKIP,
-	STARTING_SOUND,
-	FINISHED_SOUND,
-	ADD,
-	CLEAR,
-}
-
-export interface QueueEvent {
-	id: number;
-	guildId: string;
-	transactionId?: string;
-	type: QueueEventType;
-}
 
 export class VoiceService {
 	private readonly eventSource: EventSource;
@@ -61,60 +40,89 @@ export class VoiceService {
 		});
 	}
 
-	public async add(body: QueueObject): Promise<{ length: number; body: QueueObject }> {
+	private async createErr<T>(req: Response): Promise<Err<string> | Err<T>> {
+		try {
+			return Err(await req.json());
+		} catch {
+			try {
+				return Err(await req.text());
+			} catch {
+				return Err(req.statusText);
+			}
+		}
+	}
+
+	public async add(
+		body: Omit<QueueObject, 'transactionId'>,
+	): Promise<Result<{ length: number; body: QueueObject }, RouteError | string>> {
 		const res = await this.send(`guilds/${body.guildId}/queue`, { method: 'POST', body: JSON.stringify(body) });
-		if (!res.ok) throw await createResponseError(res);
-		return (await res.json()) as { length: number; body: QueueObject };
+		if (!res.ok) return this.createErr<RouteError>(res);
+		return Ok(await res.json());
 	}
 
-	public async skip(guildId: string): Promise<boolean> {
+	public async skip(guildId: string): Promise<Result<boolean, RouteError | string>> {
 		const res = await this.send(`guilds/${guildId}/queue/skip`);
-		if (!res.ok) throw await createResponseError(res);
-
-		return (await res.json()).skipped;
+		if (!res.ok) return this.createErr<RouteError>(res);
+		return Ok(await res.json());
 	}
 
-	public async clear(guildId: string): Promise<void> {
+	public async clear(guildId: string): Promise<Result<void, RouteError | string>> {
 		const res = await this.send(`guilds/${guildId}/queue/skip`);
-		if (!res.ok) throw await createResponseError(res);
+		if (!res.ok) return this.createErr<RouteError>(res);
+		return Ok.EMPTY;
 	}
 
-	public async leave(guildId: string): Promise<void> {
+	public async leave(guildId: string): Promise<Result<void, RouteError | string>> {
 		const res = await this.send(`guilds/${guildId}/leave`);
-		if (!res.ok) throw await createResponseError(res);
+		if (!res.ok) return this.createErr<RouteError>(res);
+		return Ok.EMPTY;
 	}
 
-	public async getUser(guild: string, user: string): Promise<{ tag: string; isConnected: boolean }> {
+	public async getMember(
+		guild: string,
+		user: string,
+	): Promise<Result<{ tag: string; isConnected: boolean }, RouteError | string>> {
 		const res = await this.send(`guilds/${guild}/members/${user}`);
-		if (!res.ok) throw await createResponseError(res);
-		return res.json();
+		if (!res.ok) return this.createErr<RouteError>(res);
+		return Ok(await res.json());
 	}
 
-	public async importUrl(ctx: { objectName: string; url: string }): Promise<string> {
+	public async getUser(user: string): Promise<Result<{ tag: string; name: string }, RouteError | string>> {
+		const res = await this.send(`users/${user}`);
+		if (!res.ok) return this.createErr<RouteError>(res);
+		return Ok(await res.json());
+	}
+
+	public async importUrl(ctx: {
+		objectName: string;
+		url: string;
+	}): Promise<Result<QueueObject['transactionId'], RouteError | string>> {
 		const res = await this.send(`objects/${ctx.objectName}`, {
 			method: 'POST',
 			body: ctx.url,
 			headers: { 'Content-Type': 'text/plain' },
 		});
-		if (!res.ok) throw await createResponseError(res);
-		return res.text();
+		if (!res.ok) return this.createErr<RouteError>(res);
+		return Ok(await res.text());
 	}
 
-	public async getStatus(task: string): Promise<{ status: 'error' | 'success' | 'waiting'; duration: number }> {
+	public async getStatus(
+		task: string,
+	): Promise<Result<{ status: 'error' | 'success' | 'waiting'; duration: number }, RouteError | string>> {
 		const res = await this.send(`objects/status/${task}`);
-		if (!res.ok) throw await createResponseError(res);
-		return (await res.json()) as { status: 'error' | 'success' | 'waiting'; duration: number };
+		if (!res.ok) return this.createErr<RouteError>(res);
+		return Ok(await res.json());
 	}
 
 	public async waitForImport(ctx: {
 		objectName: string;
 		url: string;
 	}): Promise<{ status: 'error' | 'success' | 'waiting'; duration: number }> {
-		const code = await this.importUrl(ctx);
+		const code = (await this.importUrl(ctx)).unwrap();
 		await timeout(500);
-		let status = await this.getStatus(code);
+		let status = (await this.getStatus(code)).unwrap();
 		if (status.status === 'waiting') {
-			while ((status = await this.getStatus(code))) {
+			while ((status = (await this.getStatus(code)).unwrap())) {
 				await timeout(500);
 			}
 		}

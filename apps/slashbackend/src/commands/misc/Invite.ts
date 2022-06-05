@@ -4,6 +4,7 @@ import { Config } from '../../Config';
 
 @injectable()
 export class InviteCommand extends SlashCommand {
+	public static inviteString = `https://discord.com/api/oauth2/authorize?client_id=${Config.credentials.discord.appId}&permissions=274881431616&scope=bot%20applications.commands`;
 	public constructor(creator: SlashCreator) {
 		super(creator, {
 			name: 'invite',
@@ -12,7 +13,6 @@ export class InviteCommand extends SlashCommand {
 	}
 
 	public async run(ctx: CommandContext) {
-		const inviteString = `https://discord.com/api/oauth2/authorize?client_id=${Config.credentials.discord.appId}&permissions=274881431616&scope=bot%20applications.commands`;
 		await ctx.send(`Thanks for inviting me!`, {
 			components: [
 				{
@@ -22,7 +22,7 @@ export class InviteCommand extends SlashCommand {
 							type: ComponentType.BUTTON,
 							style: ButtonStyle.LINK,
 							label: 'Invite me',
-							url: inviteString,
+							url: InviteCommand.inviteString,
 						},
 					],
 				},

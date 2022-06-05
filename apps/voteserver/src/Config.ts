@@ -4,7 +4,7 @@ export const Config = {
 		postgres: `postgresql://postgres:${process.env.POSTGRES_PASSWORD}@postgres:5432/postgres`,
 		redis: `redis://:${process.env.REDIS_PASSWORD}@redis:6379`,
 		secrets: {
-			topgg: process.env.SECRETS_TOPGG!,
+			topgg: process.env.BOTLISTS_DBL_SECRET!,
 		},
 	},
 	logging: {

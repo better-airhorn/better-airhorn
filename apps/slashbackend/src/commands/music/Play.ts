@@ -1,5 +1,6 @@
 import { AccessType, Like, SoundCommand, Dislike } from '@better-airhorn/entities';
 import Raccoon from '@better-airhorn/raccoon';
+import { QueueEventType, RouteError, RouteErrorCode } from '@better-airhorn/structures';
 import MeiliSearch from 'meilisearch';
 import {
 	AutocompleteContext,
@@ -11,13 +12,16 @@ import {
 	SlashCommand,
 	SlashCreator,
 } from 'slash-create';
+import { Err, Ok, Result } from 'ts-results';
 import { injectable } from 'tsyringe';
-import { QueueEventType, VoiceService } from '../../services/VoiceService';
+import { VoiceService } from '../../services/VoiceService';
 import { getSubLogger } from '../../util/Logger';
 import { wrapInCodeBlock } from '../../util/Utils';
+import { InviteCommand } from '../misc/Invite';
 
 @injectable()
 export class PlayCommand extends SlashCommand {
+	private readonly log = getSubLogger(PlayCommand.name);
 	public constructor(
 		creator: SlashCreator,
 		private readonly search: MeiliSearch,
@@ -75,36 +79,45 @@ export class PlayCommand extends SlashCommand {
 
 	public async run(ctx: CommandContext) {
 		await ctx.defer();
-		const { isConnected } = await this.voice.getUser(ctx.guildID!, ctx.user.id);
+
+		const memberResult = await this.handleErrorResult(ctx, await this.voice.getMember(ctx.guildID!, ctx.user.id));
+		// something went wrong but has been handled already
+		if (memberResult.err) return;
+		const { isConnected } = memberResult.val;
 		if (!isConnected) {
 			return ctx.send('You are not connected to a voice channel');
 		}
 		const sound = await SoundCommand.findOne({ where: { name: ctx.options.sound } });
 		if (!sound)
-			return ctx.send(`could not find command with name ${wrapInCodeBlock(ctx.options.sound, { inline: true })}`, {
+			return ctx.send(`could not find sound with name ${wrapInCodeBlock(ctx.options.sound, { inline: true })}`, {
 				ephemeral: true,
 			});
-		let res;
-		try {
-			res = await this.voice.add({ guildId: ctx.guildID!, sound: sound.id, userId: ctx.user.id });
-		} catch (e) {
-			await ctx.send('Could not play sound, are you in a voice channel?');
-			return;
-		}
+
+		const playResult = await this.handleErrorResult(
+			ctx,
+			await this.voice.add({ guildId: ctx.guildID!, sound: sound.id, userId: ctx.user.id }),
+		);
+		// something went wrong but has been handled already
+		if (playResult.err) return;
+
+		const {
+			length: queueLength,
+			body: { transactionId },
+		} = playResult.val;
 		const msg = (await ctx.send(
-			res.length === 0
+			queueLength === 0
 				? `now playing ${wrapInCodeBlock(sound.name, { inline: true })}`
-				: `queued ${wrapInCodeBlock(sound.name, { inline: true })}. position ${res.length} in Queue`,
+				: `queued ${wrapInCodeBlock(sound.name, { inline: true })}. position ${queueLength} in Queue`,
 		)) as Message;
 
 		// sound is in queue, waiting for it to finish
-		if (res.length !== 0) {
-			await this.voice.awaitEvent(res.body.transactionId!, QueueEventType.STARTING_SOUND);
+		if (queueLength !== 0) {
+			await this.voice.awaitEvent(transactionId!, QueueEventType.STARTING_SOUND);
 			await msg.edit(`now playing ${wrapInCodeBlock(sound.name, { inline: true })}`);
 		}
 
 		// wait for sound to finish
-		await this.voice.awaitEvent(res.body.transactionId!, QueueEventType.FINISHED_SOUND);
+		await this.voice.awaitEvent(transactionId!, QueueEventType.FINISHED_SOUND);
 		await msg.edit({
 			content: `finished playing ${wrapInCodeBlock(sound.name, { inline: true })}`,
 			components: [
@@ -177,5 +190,34 @@ export class PlayCommand extends SlashCommand {
 				log.error(e);
 			}
 		});
+	}
+
+	private async handleErrorResult<T>(
+		ctx: CommandContext,
+		result: Result<T, string | RouteError>,
+	): Promise<Result<T, void>> {
+		if (result.err) {
+			if (result instanceof RouteError) {
+				if (result.code === RouteErrorCode.INVALID_GUILD_ID) {
+					await ctx.send(`Could not find this Server, are you sure the Better Airhorn *Bot* is on this server?
+            [Try inviting it again.](${InviteCommand.inviteString})`);
+				}
+				if (result.code === RouteErrorCode.INVALID_USER_ID) {
+					this.log.warn('could not fetch member', result);
+					await ctx.send(`That's weird... I can't seem to find you in this server,
+            is Discord messing around or is this a bug?`);
+				}
+				if (result.code === RouteErrorCode.INVALID_CHANNEL_ID) {
+					this.log.warn('could not fetch channel', result);
+					await ctx.send(`That's weird... I can't seem to find your voice channel,
+            is Discord messing around or is this a bug?`);
+				}
+				return Err.EMPTY;
+			}
+			this.log.error('unknown error', result);
+			return Err.EMPTY;
+		}
+
+		return Ok(result.val);
 	}
 }

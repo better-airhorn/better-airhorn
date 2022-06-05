@@ -1,7 +1,8 @@
 import { GuildSetting, Like, Usage } from '@better-airhorn/entities';
 import { Command, CommandBase, Message, UseGuard } from '@better-airhorn/shori';
 import { IPlayJobResponseData } from '@better-airhorn/structures';
-import { MessageReaction, User } from 'discord.js';
+import { MessageEmbed, MessageReaction, User } from 'discord.js';
+import { Config } from '../../config/Config';
 import { ArgsGuard } from '../../guards/ArgsGuard';
 import { HealthCheckGuard } from '../../guards/HealthCheckGuard';
 import { VoiceChannelGuard } from '../../guards/VoiceChannelGuard';
@@ -34,6 +35,15 @@ export class PlayCommand extends CommandBase {
 	@UseGuard(VoiceChannelGuard)
 	@UseGuard(HealthCheckGuard)
 	public async exec(message: Message, args: string[]): Promise<any> {
+		await message.channel.send(
+			new MessageEmbed().setColor('#B33A3A')
+				.setDescription(`Please stop playing sounds with this command, use slash commands.
+        Playing sounds with this might create very unexpected behavior when mixed with slash commands.
+        [some information on slash commands](https://wiki.chilo.space/en/slash-commands)
+        [if slash commands do not show up for this server, invite me again](https://discord.com/oauth2/authorize?client_id=${this.client.user?.id}&permissions=274881431616&scope=bot%20applications.commands&guild_id=${message.guild?.id})
+
+        If you need help join my [support server](${Config.misc.supportServerUrl})`),
+		);
 		const { guild, author, member } = message;
 		if (!member!.voice?.channelID) {
 			return message.error(this.i18n.t().commands.generalKeys.needToBeInVoiceChannel);

@@ -33,7 +33,7 @@ export class DeleteCommand extends SlashCommand {
 		await ctx.defer();
 		const command = await SoundCommand.findOne({ where: { name: ctx.options.sound, user: ctx.user.id } });
 		if (!command) {
-			await ctx.send(`no sound named ${ctx.options.sound}`);
+			await ctx.send(`found no sound named ${ctx.options.sound}`);
 			return;
 		}
 		await command.remove();

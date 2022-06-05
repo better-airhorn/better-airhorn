@@ -63,12 +63,6 @@ if (isMissing) throw new Error(`missing env variables, see logs`);
 				intents: Config.client.intents,
 			},
 			shardCount: await Util.fetchRecommendedShards(Config.credentials.discord.token, 1000),
-			presence: {
-				status: 'idle',
-				activity: {
-					name: 'Shard Starting',
-				},
-			},
 			messageCacheLifetime: 120,
 			messageSweepInterval: 60,
 			messageCacheMaxSize: 20,
@@ -76,33 +70,65 @@ if (isMissing) throw new Error(`missing env variables, see logs`);
 	);
 
 	client.on('debug', (log: string) => logger.debug(log));
+
 	const messageHandler = resolveSingleton<MessageHandler>(MessageHandler);
 	const guildSet = new Set<string>();
+	const getDeadline = () => {
+		const date = process.env.NORMAL_COMMANDS_DEADLINE ?? '1655393400000';
+		return new Date(parseInt(date, 10));
+	};
+	const getUnixDeadline = () => {
+		return getDeadline().getTime() / 1000;
+	};
+	const getTimeLeft = () => {
+		const deadline = getDeadline();
+		return deadline.getTime() - Date.now();
+	};
+
 	messageHandler.on('success', async (command, res, message) => {
 		if (!message.guild) return;
 		const { guild } = message;
+		const timeLeft = getTimeLeft();
+		const daysLeft = timeLeft / (1000 * 3600 * 24);
+
+		if (daysLeft < 4) {
+			await message.channel.send(
+				new MessageEmbed().setColor('#B33A3A').setDescription(`!!! USE SLASH COMMANDS !!!
+          Running commands this way will stop working <t:${getUnixDeadline()}:R>.
+          [some information on slash commands](https://wiki.chilo.space/en/slash-commands)
+          [if slash commands do not show up for this server, invite me again](https://discord.com/oauth2/authorize?client_id=${
+						client.user?.id
+					}&permissions=274881431616&scope=bot%20applications.commands&guild_id=${guild.id})
+
+          If you need help join my [support server](${Config.misc.supportServerUrl})`),
+			);
+			return;
+		}
 		if (guildSet.has(guild.id)) return;
 		guildSet.add(guild.id);
 		const hasSlashCommands = await hasGuildCommand(guild.id);
 		if (hasSlashCommands) {
 			await message.channel.send(
 				new MessageEmbed()
-					.setDescription(`running commands this way will stop working <t:1651269600:R>, use [slash commands](https://support.discord.com/hc/de/articles/1500000368501-Slash-Commands-FAQ)!
+					.setDescription(`running commands this way will stop working <t:${getUnixDeadline()}:R>, use [slash commands](https://wiki.chilo.space/en/slash-commands)!
       If you need help join my [support server](${Config.misc.supportServerUrl})`),
 			);
 		} else {
 			setTimeout(() => {
 				guildSet.delete(guild.id);
-				// 4 hours
-			}, 4 * 60 * 60 * 1000);
+				// 3 hours
+			}, 3 * 60 * 60 * 1000);
 			const embed = new MessageEmbed()
 				.setColor('#B33A3A')
 				.setTitle('Slash Commands')
 				.setDescription(
-					`The bot on this Server does not have slash commands enabled.
-         Its important to re-invite this bot, **otherwise it will stop working <t:1651269600:R>**
-         [CLICK ME](https://discord.com/oauth2/authorize?client_id=${client.user?.id}&permissions=274881431616&scope=bot%20applications.commands&guild_id=${guild.id})
-         If you want to know more about slash commands and why you have to do this [read more here](https://wiki.chilo.space/en/slash-commands).
+					`This bot doesn't have the permission to use Slash Commands on this server.
+         Its important to re-invite this bot, **otherwise it will stop working <t:${getUnixDeadline()}:R>**
+         [CLICK ME](https://discord.com/oauth2/authorize?client_id=${
+						client.user?.id
+					}&permissions=274881431616&scope=bot%20applications.commands&guild_id=${guild.id})
+         If you want to know more about slash commands and why you have to do this: [read more here](https://wiki.chilo.space/en/slash-commands).
+         If you need help join my [support server](${Config.misc.supportServerUrl})
          *please notify the server owner if they haven't seen this*`,
 				);
 			await message.channel.send(embed);

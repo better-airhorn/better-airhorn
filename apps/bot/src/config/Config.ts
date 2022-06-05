@@ -61,9 +61,9 @@ export const Config = {
 
 		minio: {
 			accessKey: process.env.MINIO_ACCESS_KEY!,
-			secretKey: process.env.MINIO_ROOT_PASSWORD!,
-			url: process.env.MINIO_URL?.split(':')[0]!,
-			port: parseInt(process.env.MINIO_URL?.split(':')[1] ?? '8500', 10),
+			secretKey: process.env.MINIO_SECRET_KEY!,
+			url: 'minio',
+			port: 9000,
 		},
 		loki: {
 			url: process.env.LOKI_URL!,

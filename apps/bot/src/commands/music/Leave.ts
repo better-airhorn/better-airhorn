@@ -1,5 +1,4 @@
-import { Command, CommandBase, Message, UseGuard } from '@better-airhorn/shori';
-import { ArgsGuard } from '../../guards/ArgsGuard';
+import { Command, CommandBase, Message } from '@better-airhorn/shori';
 
 @Command('leave', {
 	channel: 'guild',
@@ -11,7 +10,6 @@ export class LeaveCommand extends CommandBase {
 		super();
 	}
 
-	@UseGuard(new ArgsGuard(1))
 	public async exec(message: Message): Promise<any> {
 		message.guild?.voice?.channel?.leave();
 		if (message.reactable) return message.react('👍').catch(() => null);

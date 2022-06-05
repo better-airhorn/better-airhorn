@@ -1,20 +1,28 @@
 import { Client, VoiceChannel } from 'discord.js';
 import { Protocol, Service } from 'restana';
-import { QueueObject, QueueService } from './service/QueueService';
+import { QueueService } from './service/QueueService';
 import { Client as MinIo } from 'minio';
 import fetch from 'node-fetch';
 import { convertToOGG } from '@better-airhorn/audio';
 import { Readable } from 'stream';
+import { QueueObject, RouteError, RouteErrorCode } from '@better-airhorn/structures';
 
 export function addRoutes(service: Service<Protocol.HTTP>, queue: QueueService, client: Client, minio: MinIo) {
 	service.post('/guilds/:guild/queue/', async (req, res) => {
 		if (!req.params.guild) return res.send(400);
 		const body = (req.body as any) as QueueObject;
+
 		const guild = client.guilds.cache.get(body.guildId);
-		if (!guild) return res.send('guild not found', 404);
-		const member = await guild.members.fetch(body.userId);
+		if (!guild)
+			return res.send({ code: RouteErrorCode.INVALID_GUILD_ID, message: 'guild not found' } as RouteError, 404);
+
+		const member = await guild.members.fetch(body.userId).catch(() => null);
+		if (!member)
+			return res.send({ code: RouteErrorCode.INVALID_USER_ID, message: 'user not found' } as RouteError, 404);
+
 		const channel = member.voice.channel as VoiceChannel;
-		if (!channel) return res.send('user is not in a channel', 404);
+		if (!channel)
+			return res.send({ code: RouteErrorCode.INVALID_CHANNEL_ID, message: 'channel not found' } as RouteError, 404);
 
 		const newObject = queue.add(body);
 		res.send({ body: newObject, length: queue.length(req.params.guild) }, 201);
@@ -45,16 +53,28 @@ export function addRoutes(service: Service<Protocol.HTTP>, queue: QueueService, 
 
 		const guild = client.guilds.cache.get(req.params.guild);
 		if (!guild) {
-			const user = await client.users.fetch(req.params.user);
-			return res.send({ tag: user.tag, isConnected: false });
+			return res.send({ code: RouteErrorCode.INVALID_GUILD_ID, message: 'guild not found' } as RouteError, 404);
 		}
 
 		const member = await client.guilds.cache.get(req.params.guild)?.members.fetch(req.params.user);
-		if (!member) return res.send('user not found', 404);
+		if (!member)
+			return res.send({ code: RouteErrorCode.INVALID_USER_ID, message: 'member not found' } as RouteError, 404);
 
 		res.send({
 			tag: member.user.tag,
 			isConnected: member.voice.channel?.guild.id === req.params.guild,
+		});
+	});
+
+	service.get('/users/:user', async (req, res) => {
+		if (!req.params.user) return res.send(400);
+
+		const user = await client.users.fetch(req.params.user).catch(() => null);
+		if (!user) return res.send({ code: RouteErrorCode.INVALID_USER_ID, message: 'user not found' } as RouteError, 404);
+
+		res.send({
+			tag: user.tag,
+			name: user.username,
 		});
 	});
 
