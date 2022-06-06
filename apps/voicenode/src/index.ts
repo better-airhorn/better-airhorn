@@ -55,8 +55,8 @@ const queue = new QueueService(async (obj, queueLength, ac) => {
 	player.play(resource);
 	await entersState(player, AudioPlayerStatus.Playing, 5e3);
 	// wait for the player to enter idle (finished playing) or until it throws an error (the AbortController fired)
-	await entersState(player, AudioPlayerStatus.Idle, ac.signal).catch(() => null);
-	const guildSettings = (await GuildSetting.findOne({ where: { guildId: obj.guildId } })) ?? GuildSetting.create();
+	await entersState(player, AudioPlayerStatus.Idle, ac.signal).catch(() => player.stop());
+	const guildSettings = (await GuildSetting.findOne({ where: { guild: obj.guildId } })) ?? GuildSetting.create();
 	if (queueLength === 0 && guildSettings.leaveAfterPlay) {
 		connection.destroy();
 	}

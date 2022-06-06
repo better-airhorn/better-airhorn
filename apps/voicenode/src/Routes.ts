@@ -6,6 +6,7 @@ import fetch from 'node-fetch';
 import { convertToOGG } from '@better-airhorn/audio';
 import { Readable } from 'stream';
 import { QueueObject, RouteError, RouteErrorCode } from '@better-airhorn/structures';
+import { Config } from './Config';
 
 export function addRoutes(service: Service<Protocol.HTTP>, queue: QueueService, client: Client, minio: MinIo) {
 	service.post('/guilds/:guild/queue/', async (req, res) => {
@@ -103,7 +104,7 @@ export function addRoutes(service: Service<Protocol.HTTP>, queue: QueueService, 
 			conversionQueue.set(taskId, { status: 'error' });
 			return;
 		}
-		await minio.putObject('better-airhorn-audio-files', req.params.name, stream);
+		await minio.putObject(Config.credentials.minio.bucketName, req.params.name, stream);
 		conversionQueue.set(taskId, { status: 'success', res: { duration: await duration } });
 	});
 
