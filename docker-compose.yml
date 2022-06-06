@@ -14,7 +14,6 @@ services:
       - meili
     ports:
       - "9999:8080"
-      - "9229:9229"  
     networks:
       - databases
       - backend
@@ -88,7 +87,7 @@ services:
       NORMAL_COMMANDS_DEADLINE: ${NORMAL_COMMANDS_DEADLINE}
 
   redis:
-    image: "redis:alpine"
+    image: redis:7.0.0-alpine
     volumes:
       - databases:/data
     networks:
@@ -101,7 +100,7 @@ services:
     command: redis-server --requirepass ${REDIS_PASSWORD}
     
   postgres:
-    image: "postgres:alpine"
+    image: postgres:14-alpine
     volumes:
       - databases:/var/lib/postgres
     networks:
@@ -115,7 +114,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
 
   minio:
-    image: minio/minio
+    image: quay.io/minio/minio:RELEASE.2022-06-03T01-40-53Z
     command: server /data --console-address :9001
     volumes:
       - minio:/data
@@ -132,7 +131,7 @@ services:
       - minio
 
   meili:
-    image: getmeili/meilisearch
+    image: getmeili/meilisearch:v0.27.1
     user: "root"
     environment:
     

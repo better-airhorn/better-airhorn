@@ -21,17 +21,7 @@ import './services/events/LoggingEvents';
 import { services } from './services/services';
 import { isDev } from './utils/isEnvironment';
 import { logger, TypeORMLogger } from './utils/Logger';
-import { ensureDatabaseExtensions, parseEnvExample } from './utils/Utils';
-
-const matches = parseEnvExample(readFileSync(join(__dirname, '../env.example')).toString());
-let isMissing = false;
-for (const key of matches) {
-	if (!(key in process.env) || process.env[key]?.length === 0) {
-		isMissing = true;
-		logger.warn(`missing env variable: ${key}`);
-	}
-}
-if (isMissing) throw new Error(`missing env variables, see logs`);
+import { ensureDatabaseExtensions } from './utils/Utils';
 
 (async (): Promise<void> => {
 	await createConnection({
