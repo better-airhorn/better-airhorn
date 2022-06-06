@@ -23,10 +23,10 @@ const minio = new MinIo({
 	useSSL: false,
 });
 minio
-	.bucketExists('better-airhorn-audio-files')
+	.bucketExists(Config.credentials.minio.bucketName)
 	.then(exists => {
 		if (!exists)
-			minio.makeBucket('better-airhorn-audio-files', 'us-east-1').catch(e => {
+			minio.makeBucket(Config.credentials.minio.bucketName, 'us-east-1').catch(e => {
 				throw e;
 			});
 	})
@@ -50,7 +50,7 @@ const queue = new QueueService(async (obj, queueLength, ac) => {
 	const connection = await connectToChannel(channel);
 	const player = createAudioPlayer();
 	connection.subscribe(player);
-	const stream = await minio.getObject('better-airhorn-audio-files', obj.sound.toString());
+	const stream = await minio.getObject(Config.credentials.minio.bucketName, obj.sound.toString());
 	const resource = createAudioResource(stream, { inputType: StreamType.OggOpus });
 	player.play(resource);
 	await entersState(player, AudioPlayerStatus.Playing, 5e3);
