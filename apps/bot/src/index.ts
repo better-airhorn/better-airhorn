@@ -10,8 +10,6 @@ import {
 import { MessageHandler, resolveSingleton } from '@better-airhorn/shori';
 import { MessageEmbed, Util } from 'discord.js';
 import 'dotenv/config';
-import { readFileSync } from 'fs';
-import { join } from 'path';
 import 'reflect-metadata';
 import { createConnection } from 'typeorm';
 import { BAClient } from './client/BAClient';
