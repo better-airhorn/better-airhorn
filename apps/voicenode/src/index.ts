@@ -97,7 +97,7 @@ service.use(text());
 service.use(json());
 
 service.use((req, res, next) => {
-	if (req.headers.authorization !== 'verysicher') {
+	if (req.headers.authorization !== Config.credentials.accessKey) {
 		res.send(401);
 		return;
 	}

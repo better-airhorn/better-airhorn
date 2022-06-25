@@ -17,22 +17,24 @@
         "@better-airhorn/entities": "0.0.4",
         "@better-airhorn/structures": "0.0.1",
         "@discordjs/voice": "0.7.5",
-        "@types/body-parser": "1.19.2",
-        "@types/bunyan": "1.8.8",
-        "@types/minio": "7.0.11",
-        "@types/node": "^16.7.5",
-        "@types/node-fetch": "2.6.1",
         "await-lock": "https://github.com/better-airhorn/await-lock",
         "body-parser": "1.19.1",
         "bunyan": "1.8.15",
-        "pg": "8.7.3",
         "discord-api-types": "^0.26.1",
-        "discord.js": "12.5.1",
+        "discord.js": "git+https://github.com/better-airhorn/discord.js-12.5.1.git",
         "minio": "7.0.26",
+        "pg": "8.7.3",
         "restana": "4.9.2",
         "rxjs": "7.3.0",
         "tsyringe": "4.6.0",
         "typeorm": "0.2.41",
         "zlib-sync": "0.1.7"
+    },
+    "devDependencies": {
+        "@types/body-parser": "1.19.2",
+        "@types/bunyan": "1.8.8",
+        "@types/minio": "7.0.11",
+        "@types/node": "^16.7.5",
+        "@types/node-fetch": "2.6.1"
     }
 }

@@ -96,6 +96,7 @@ import { ensureDatabaseExtensions } from './utils/Utils';
 		guildSet.add(guild.id);
 		const hasSlashCommands = await hasGuildCommand(guild.id);
 		if (hasSlashCommands) {
+			if (command.name === 'play') return;
 			await message.channel.send(
 				new MessageEmbed()
 					.setDescription(`running commands this way will stop working <t:${getUnixDeadline()}:R>, use [slash commands](https://wiki.chilo.space/en/slash-commands)!

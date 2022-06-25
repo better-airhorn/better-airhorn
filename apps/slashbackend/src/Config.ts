@@ -17,7 +17,7 @@ export const Config = {
 		},
 		voicenode: {
 			url: 'http://voicenode:8888',
-			secret: 'verysicher',
+			secret: process.env.VOICENODE_ACCESS_KEY!,
 		},
 	},
 	logging: {

@@ -3,6 +3,7 @@ export const Config = {
 		discord: {
 			token: process.env.DISCORD_TOKEN!,
 		},
+		accessKey: process.env.VOICENODE_ACCESS_KEY!,
 		postgres: `postgresql://postgres:${process.env.POSTGRES_PASSWORD}@postgres:5432/postgres`,
 		minio: {
 			url: 'minio',

@@ -7,14 +7,14 @@
         "Clemens E (https://github.com/Clemens-E)"
     ],
     "dependencies": {
-        "discord.js": "12.5.1",
+        "@types/minimist": "^1.2.0",
+        "@types/node": "^16.7.5",
+        "@types/ws": "^7.2.7",
+        "discord.js": "git+https://github.com/better-airhorn/discord.js-12.5.1.git",
         "minimist": "^1.2.5",
         "reflect-metadata": "^0.1.13",
         "rxjs": "7.3.0",
-        "tsyringe": "4.6.0",
-        "@types/minimist": "^1.2.0",
-        "@types/node": "^16.7.5",
-        "@types/ws": "^7.2.7"
+        "tsyringe": "4.6.0"
     },
     "devDependencies": {
         "barrelsby": "^2.2.0"

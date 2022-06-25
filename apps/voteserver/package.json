@@ -9,15 +9,17 @@
     "private": true,
     "dependencies": {
         "@better-airhorn/entities": "0.0.4",
-        "@types/body-parser": "1.19.2",
-        "@types/bunyan": "1.8.8",
-        "@types/ioredis": "4.28.10",
         "body-parser": "1.19.1",
         "bunyan": "1.8.15",
         "ioredis": "4.28.3",
         "pg": "8.7.3",
         "restana": "4.9.2",
         "typeorm": "0.2.41"
+    },
+    "devDependencies": {
+        "@types/body-parser": "1.19.2",
+        "@types/bunyan": "1.8.8",
+        "@types/ioredis": "4.28.10"
     },
     "scripts": {
         "build": "tsc",
