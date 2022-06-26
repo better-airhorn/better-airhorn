@@ -26,8 +26,6 @@ services:
       DISCORD_APP_ID: ${DISCORD_APP_ID}
       DISCORD_PUBLIC_KEY: ${DISCORD_PUBLIC_KEY}
       DISCORD_TOKEN: ${DISCORD_TOKEN}
-    logging:
-      driver: local
 
   voicenode:
     build:
@@ -48,8 +46,6 @@ services:
       DISCORD_TOKEN: ${DISCORD_TOKEN}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       MINIO_BUCKETNAME: ${MINIO_BUCKETNAME}
-    logging:
-      driver: local
 
   voteserver:
     build:
@@ -66,8 +62,6 @@ services:
     environment:
       REDIS_PASSWORD: ${REDIS_PASSWORD}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-    logging:
-      driver: local
 
   bot:
     build:
@@ -92,8 +86,6 @@ services:
       DISCORD_TOKEN: ${DISCORD_TOKEN}
       NORMAL_COMMANDS_DEADLINE: ${NORMAL_COMMANDS_DEADLINE}
       MINIO_BUCKETNAME: ${MINIO_BUCKETNAME}
-    logging:
-      driver: local
 
   redis:
     image: redis:7.0.0-alpine
@@ -105,9 +97,9 @@ services:
       - "6379"
     # ! REMOVE
     ports:
-      - "6379:6379"    
+      - "6379:6379"
     command: redis-server --requirepass ${REDIS_PASSWORD}
-    
+
   postgres:
     image: postgres:14-alpine
     volumes:
@@ -118,7 +110,7 @@ services:
       - "5432"
     # ! REMOVE
     ports:
-      - "5431:5432"  
+      - "5431:5432"
     environment:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
 
@@ -135,7 +127,7 @@ services:
     # ! REMOVE
     ports:
       - "9000:9000"
-      - "9001:9001"  
+      - "9001:9001"
     networks:
       - minio
 
@@ -143,7 +135,6 @@ services:
     image: getmeili/meilisearch:v0.27.1
     user: "root"
     environment:
-    
       MEILI_MASTER_KEY: ${MEILI_MASTER_KEY}
     expose:
       - "7700"
@@ -152,7 +143,7 @@ services:
     volumes:
       - meili:/home/meili/data.ms
     ports:
-      - "7700:7700"  
+      - "7700:7700"
 
 networks:
   databases:

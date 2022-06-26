@@ -15,6 +15,7 @@ import { createServer } from 'http';
 import MeiliSearch from 'meilisearch';
 import restana from 'restana';
 import { SlashCreator } from 'slash-create';
+import { setTimeout } from 'timers/promises';
 import { container } from 'tsyringe';
 import { createConnection } from 'typeorm';
 import { commands } from './commands/commands';
@@ -26,7 +27,6 @@ import { RestanaServer } from './util/RestanaServer';
 import { ensureDatabaseExtensions } from './util/Utils';
 
 const log = getSubLogger('http');
-console.log(Config.credentials);
 // eslint-disable-next-line @typescript-eslint/no-floating-promises
 (async (): Promise<void> => {
 	await createConnection({
@@ -90,7 +90,10 @@ console.log(Config.credentials);
 
 	// running init functions
 	await updateSearchIndex();
-	await updateRecommendations();
+	updateRecommendations().catch(err => {
+		log.error('failed to update recommendations', err);
+	});
+	await setTimeout(2000);
 
 	creator.registerCommands(commands.map(v => container.resolve(v as any)));
 	creator.syncCommands();
