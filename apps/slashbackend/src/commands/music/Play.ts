@@ -55,7 +55,7 @@ export class PlayCommand extends SlashCommand {
 				recommendations = recommendations.concat(await this.recommendations.bestRated(10 - recommendations.length));
 			}
 			if (recommendations.length > 4)
-				return (await Promise.all(recommendations.map(id => SoundCommand.findOne({ where: { id } }))))
+				return (await SoundCommand.findByIds(recommendations))
 					.filter(v => Boolean(v))
 					.filter(
 						v =>
