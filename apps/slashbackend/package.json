@@ -9,7 +9,8 @@
     "scripts": {
         "run:watch": "tsnd --respawn --debug src/index.ts | bunyan",
         "run:prod": "node --inspect=0.0.0.0 dist/index.js | bunyan",
-        "build": "tsc"
+        "build": "tsc",
+        "test": "exit 0"
     },
     "dependencies": {
         "@better-airhorn/entities": "0.0.4",

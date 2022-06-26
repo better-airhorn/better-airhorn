@@ -10,7 +10,8 @@
     "scripts": {
         "run:watch": "tsnd --respawn --debug src/index.ts | bunyan",
         "build": "tsc",
-        "run:prod": "node dist/index.js | bunyan"
+        "run:prod": "node dist/index.js | bunyan",
+        "test": "exit 0"
     },
     "dependencies": {
         "@better-airhorn/audio": "0.0.5",
