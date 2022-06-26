@@ -19,7 +19,7 @@
         "bunyan": "1.8.15",
         "eventsource": "1.1.0",
         "meilisearch": "0.24.0",
-        "node-fetch": "^2.6.1",
+        "node-fetch": "^2.6.7",
         "pg": "8.7.3",
         "restana": "4.9.2",
         "rxjs": "7.3.0",
