@@ -35,5 +35,5 @@ COPY --from=BUILD_IMAGE /app/apps/bot/dist ./dist
 COPY --from=BUILD_IMAGE /app/apps/bot/package.json .
 COPY --from=BUILD_IMAGE /app/packages ./packages
 COPY --from=BUILD_IMAGE /app/node_modules ./node_modules
-COPY --from=BUILD_IMAGE /app/localization ./files
+COPY --from=BUILD_IMAGE /app/localization/files ./files
 CMD ["yarn", "run:prod"]
