@@ -13,7 +13,7 @@
         "@better-airhorn/entities": "0.0.4",
         "@better-airhorn/shori": "0.0.3",
         "@better-airhorn/structures": "0.0.1",
-        "@discordjs/opus": "^0.3.2",
+        "@discordjs/opus": "^0.8.0",
         "@rocka/mp3-duration": "^2.0.0",
         "await-lock": "https://github.com/better-airhorn/await-lock",
         "blapi": "^2.1.0",
