@@ -69,3 +69,7 @@ export function isTimeOver(oldTime: number, timeout: number): boolean {
 export type Complete<T> = {
 	[P in keyof Required<T>]: Pick<T, P> extends Required<Pick<T, P>> ? T[P] : T[P];
 };
+
+export function isYoutubeLink(link: string): boolean {
+	return /(?:https?:\/\/)?(?:www\.)?youtu\.?be(?:\.com)?\/?.*(?:watch|embed)?(?:.*v=|v\/|\/)([\w\-_]+)\&?/.test(link);
+}

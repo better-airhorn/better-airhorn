@@ -30,6 +30,10 @@ service.get('/', async (req, res) => {
 	res.send(`storing ${count} total votes, ${voteCount} where in the last 24 hours`);
 });
 
+service.get('/docker-up', (req, res) => {
+	return res.send(200);
+});
+
 service.post('/votes/topgg', Guards.topgg, async (req, res) => {
 	const body = req.body as { [key: string]: any };
 	if (!body || typeof body !== 'object') return res.send(400);

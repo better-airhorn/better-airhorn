@@ -18,7 +18,7 @@ export async function getGuildSettings(guild: string): Promise<GuildSetting> {
 	return GuildSetting.findOneOrFail(guild).then(
 		(settings: GuildSetting) => settings,
 		async () => {
-			const newSettings = new GuildSetting({ guild, prefix: '' });
+			const newSettings = new GuildSetting({ guild, prefix: '$' });
 			await newSettings.save();
 			return newSettings;
 		},

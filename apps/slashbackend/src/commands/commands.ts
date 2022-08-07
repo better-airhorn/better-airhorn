@@ -5,6 +5,7 @@ import { ClearCommand } from './music/Clear';
 import { DeleteCommand } from './music/Delete';
 import { InfoCommand } from './music/Info';
 import { LeaveCommand } from './music/Leave';
+import { ListCommand } from './music/List';
 import { PlayCommand } from './music/Play';
 import { SkipCommand } from './music/Skip';
 import { UploadCommand } from './music/Upload';
@@ -20,4 +21,5 @@ export const commands = [
 	LeaveCommand,
 	UploadCommand,
 	InfoCommand,
+	ListCommand,
 ];

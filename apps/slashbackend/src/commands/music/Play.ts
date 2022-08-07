@@ -16,7 +16,7 @@ import { Err, Ok, Result } from 'ts-results';
 import { injectable } from 'tsyringe';
 import { VoiceService } from '../../services/VoiceService';
 import { getSubLogger } from '../../util/Logger';
-import { wrapInCodeBlock } from '../../util/Utils';
+import { isYoutubeLink, wrapInCodeBlock } from '../../util/Utils';
 import { InviteCommand } from '../misc/Invite';
 
 @injectable()
@@ -86,6 +86,12 @@ export class PlayCommand extends SlashCommand {
 		const { isConnected } = memberResult.val;
 		if (!isConnected) {
 			return ctx.send('You are not connected to a voice channel');
+		}
+
+		if (isYoutubeLink(ctx.options.sound)) {
+			return ctx.send(
+				"I'm not your average Music Bot, I can only play previously uploaded sound files and I'm meant to be used like a soundboard.\nFor that reason, I'm unable to play from Youtube directly",
+			);
 		}
 		const sound = await SoundCommand.findOne({ where: { name: ctx.options.sound } });
 		if (!sound)

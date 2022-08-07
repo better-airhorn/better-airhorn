@@ -16,8 +16,6 @@ RUN yarn workspace @better-airhorn/entities install --frozen-lockfile
 RUN yarn workspace @better-airhorn/entities run build
 RUN yarn workspace @better-airhorn/structures install --frozen-lockfile
 RUN yarn workspace @better-airhorn/structures tsc
-RUN yarn workspace @better-airhorn/shori install --frozen-lockfile
-RUN yarn workspace @better-airhorn/shori tsc
 RUN yarn workspace @better-airhorn/audio install --frozen-lockfile
 RUN yarn workspace @better-airhorn/audio tsc
 

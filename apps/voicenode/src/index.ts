@@ -8,7 +8,7 @@ import { Client as MinIo } from 'minio';
 import restana from 'restana';
 import { fromEvent } from 'rxjs';
 import { filter, takeUntil } from 'rxjs/operators';
-import { createConnection } from 'typeorm';
+import { createConnection, getConnection } from 'typeorm';
 import { Config } from './Config';
 import { addRoutes } from './Routes';
 import { QueueService } from './service/QueueService';
@@ -35,7 +35,7 @@ minio
 	});
 const client = new Client({
 	shards: 'auto',
-	ws: { intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_VOICE_STATES] },
+	intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_VOICE_STATES],
 });
 // eslint-disable-next-line @typescript-eslint/no-floating-promises
 client.login(Config.credentials.discord.token);
@@ -95,6 +95,18 @@ http.listen(8888);
 
 service.use(text());
 service.use(json());
+
+service.get('/docker-up', (req, res) => {
+	res.send(200);
+});
+
+service.get('/health', (req, res) => {
+	try {
+		client.ws.shards.each(shard => shard.status === 1) && getConnection().isConnected ? res.send(200) : res.send(500);
+	} catch {
+		res.send(500);
+	}
+});
 
 service.use((req, res, next) => {
 	if (req.headers.authorization !== Config.credentials.accessKey) {

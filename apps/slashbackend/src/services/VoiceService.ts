@@ -17,6 +17,10 @@ export class VoiceService {
 		this.eventSource.addEventListener('open', () => this.log.info('Connected to voice node'));
 	}
 
+	public get isConnected() {
+		return this.eventSource.readyState === EventSource.OPEN;
+	}
+
 	public awaitEvent(transactionId: string, type: QueueEventType): Promise<void> {
 		return new Promise(resolve => {
 			const func = (message: MessageEvent) => {

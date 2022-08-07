@@ -17,7 +17,7 @@ import restana from 'restana';
 import { SlashCreator } from 'slash-create';
 import { setTimeout } from 'timers/promises';
 import { container } from 'tsyringe';
-import { createConnection } from 'typeorm';
+import { createConnection, getConnection } from 'typeorm';
 import { commands } from './commands/commands';
 import { Config } from './Config';
 import { VoiceService } from './services/VoiceService';
@@ -66,6 +66,7 @@ const log = getSubLogger('http');
 	webserver.getServer().listen(8080, () => {
 		log.info('web server listening on', 8080);
 	});
+
 	webserver.get('/', (req, res) => {
 		webserver.getServer().getConnections((err, count) => {
 			if (err) {
@@ -73,6 +74,20 @@ const log = getSubLogger('http');
 			}
 			res.send(`this is the better-airhorn slash-command api, currently there are ${count} open connections`);
 		});
+	});
+
+	webserver.get('/docker-up', (req, res) => {
+		return res.send(200);
+	});
+
+	webserver.get('/health', async (req, res) => {
+		getConnection().isConnected &&
+		container.resolve<VoiceService>(VoiceService).isConnected &&
+		(await fetch(`${Config.credentials.voicenode.url}/health`)
+			.then(r => r.ok)
+			.catch(() => false))
+			? res.send(200)
+			: res.send(500);
 	});
 
 	// register all services

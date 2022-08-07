@@ -33,10 +33,10 @@ function trackClient(client: Client) {
 }
 
 function trackGuild(guild: Guild) {
-	let guilds = trackedShards.get(guild.shardID);
+	let guilds = trackedShards.get(guild.shardId);
 	if (!guilds) {
 		guilds = new Set();
-		trackedShards.set(guild.shardID, guilds);
+		trackedShards.set(guild.shardId, guilds);
 	}
 	guilds.add(guild.id);
 }

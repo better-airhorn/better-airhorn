@@ -7,6 +7,7 @@ import { convertToOGG } from '@better-airhorn/audio';
 import { Readable } from 'stream';
 import { QueueObject, RouteError, RouteErrorCode } from '@better-airhorn/structures';
 import { Config } from './Config';
+import { getVoiceConnection } from './util/Utils';
 
 export function addRoutes(service: Service<Protocol.HTTP>, queue: QueueService, client: Client, minio: MinIo) {
 	service.post('/guilds/:guild/queue/', async (req, res) => {
@@ -39,14 +40,19 @@ export function addRoutes(service: Service<Protocol.HTTP>, queue: QueueService, 
 		if (!req.params.guild) return res.send(400);
 
 		queue.clear(req.params.guild, true);
-		res.send(200);
+		res.send(204);
 	});
 
 	service.get('/guilds/:guild/leave/', (req, res) => {
 		if (!req.params.guild) return res.send(400);
+		const guild = client.guilds.cache.get(req.params.guild);
+		if (!guild || !guild.me?.voice.channel) return res.send(404);
+		const connection = getVoiceConnection(guild.me.voice!.channel.id);
 
-		client.guilds.cache.get(req.params.guild)?.me?.voice.channel?.leave();
-		res.send(200);
+		if (!connection) return res.send(204);
+
+		connection.destroy();
+		res.send(204);
 	});
 
 	service.get('/guilds/:guild/members/:user', async (req, res) => {
