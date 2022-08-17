@@ -4,15 +4,43 @@ import {
 	AutocompleteContext,
 	ButtonStyle,
 	CommandContext,
-	CommandOptionType,
 	ComponentType,
+	MessageOptions,
 	SlashCommand,
 	SlashCreator,
 } from 'slash-create';
 import { injectable } from 'tsyringe';
-import { Like, ObjectLiteral } from 'typeorm';
+import { ObjectLiteral } from 'typeorm';
 import { wrapInCodeBlock } from '../../util/Utils';
 import ms from 'ms';
+
+const components: () => MessageOptions = () => ({
+	components: [
+		{
+			type: ComponentType.ACTION_ROW,
+			components: [
+				{
+					type: ComponentType.BUTTON,
+					style: ButtonStyle.SECONDARY,
+					label: '',
+					custom_id: 'list_backward_button',
+					emoji: {
+						name: '◀',
+					},
+				},
+				{
+					type: ComponentType.BUTTON,
+					style: ButtonStyle.SECONDARY,
+					label: '',
+					custom_id: 'list_forward_button',
+					emoji: {
+						name: '▶',
+					},
+				},
+			],
+		},
+	],
+});
 
 @injectable()
 export class ListCommand extends SlashCommand {
@@ -22,15 +50,6 @@ export class ListCommand extends SlashCommand {
 		super(creator, {
 			name: 'list',
 			description: 'list all sounds',
-			options: [
-				{
-					type: CommandOptionType.STRING,
-					name: 'search',
-					description: 'Query for a sound!',
-					required: false,
-					autocomplete: true,
-				},
-			],
 		});
 	}
 
@@ -51,9 +70,12 @@ export class ListCommand extends SlashCommand {
 
 	public async run(ctx: CommandContext) {
 		await ctx.defer();
-		const searchText = ctx.options.search;
-		const page = 1;
-		const data = await this.next({ page, filter: searchText ? { name: Like(`${searchText}%`) } : {} });
+		// const searchText = ctx.options.search;
+		let page = 1;
+		let data = await this.next({
+			page,
+			filter: { guild: ctx.guildID },
+		});
 
 		const longestKey = Math.max(...data.map(d => d.likes.toLocaleString().length + d.name.length + 3));
 		// const showedCount = this.pageSize * page - this.pageSize + data.length;
@@ -69,37 +91,61 @@ export class ListCommand extends SlashCommand {
 					.join('\n'),
 				'css',
 			),
-			{
-				components: [
-					{
-						type: ComponentType.ACTION_ROW,
-						components: [
-							{
-								type: ComponentType.BUTTON,
-								style: ButtonStyle.SUCCESS,
-								label: 'button',
-								custom_id: 'list_backward_button',
-								emoji: {
-									name: '◀',
-								},
-							},
-							{
-								type: ComponentType.BUTTON,
-								style: ButtonStyle.SUCCESS,
-								label: 'button',
-								custom_id: 'list_forward_button',
-								emoji: {
-									name: '▶',
-								},
-							},
-						],
-					},
-				],
-			},
+			components(),
 		);
 
-		//	ctx.registerComponent('list_backward_button', async btnCtx => {});
-		//	ctx.registerComponent('list_forward_button', async btnCtx => {});
+		ctx.registerComponent('list_backward_button', async btnCtx => {
+			if (page < 2) {
+				await btnCtx.acknowledge();
+				return;
+			}
+			page--;
+			data = await this.next({
+				page,
+				filter: { guild: ctx.guildID },
+			});
+			await btnCtx.editParent(
+				wrapInCodeBlock(
+					data
+						.map(d => {
+							const string = `[${d.likes}] ${d.name}`;
+							const repeatFor = longestKey - string.length > 0 ? longestKey - string.length : 0;
+							return `${string}${' '.repeat(repeatFor)} (${ms(d.duration)})`;
+						})
+						.join('\n'),
+					'css',
+				),
+				components(),
+			);
+		});
+		ctx.registerComponent('list_forward_button', async btnCtx => {
+			if (data.length === 0) {
+				await btnCtx.acknowledge();
+				return;
+			}
+			data = await this.next({
+				page,
+				filter: { guild: ctx.guildID },
+			});
+			if (data.length === 0) {
+				await btnCtx.acknowledge();
+				return;
+			}
+			page++;
+			await btnCtx.editParent(
+				wrapInCodeBlock(
+					data
+						.map(d => {
+							const string = `[${d.likes}] ${d.name}`;
+							const repeatFor = longestKey - string.length > 0 ? longestKey - string.length : 0;
+							return `${string}${' '.repeat(repeatFor)} (${ms(d.duration)})`;
+						})
+						.join('\n'),
+					'css',
+				),
+				components(),
+			);
+		});
 	}
 
 	private async next(opts: {
@@ -110,7 +156,8 @@ export class ListCommand extends SlashCommand {
 		if (offset < 0) return [];
 
 		return SoundCommand.createQueryBuilder('sound')
-			.where(opts.filter)
+			.where({ accessType: 2, guild: opts.filter.guild })
+			.orWhere({ accessType: 3 })
 			.leftJoin('sound.likes', 'likes')
 			.select('sound.name', 'name')
 			.addSelect('sound.id', 'id')

@@ -27,12 +27,6 @@ A single user can upload up to 500MB of Audio, each Sound itself can be up to 50
 
 Just to put this into perspective, a 2 hours long podcast can be compressed into 90MB, so its safe to say that you wont run out of space soon for all your favorite sounds
 
-### Voice Commands
-Do you also hate typing a command whenever you want to play a sound?
-
-me too, thats why this bot can listen for voice commands, try it out!
-`$listen` and then clearly say `alexa, (short pause) play sad`
-
 ## Contributing
 
 Please follow the [commit message convention](./.github/COMMIT_CONVENTION.md)
