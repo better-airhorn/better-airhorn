@@ -81,13 +81,9 @@ const log = getSubLogger('http');
 	});
 
 	webserver.get('/health', async (req, res) => {
-		getConnection().isConnected &&
-		container.resolve<VoiceService>(VoiceService).isConnected &&
-		(await fetch(`${Config.credentials.voicenode.url}/health`)
-			.then(r => r.ok)
-			.catch(() => false))
-			? res.send(200)
-			: res.send(500);
+		return res.send(
+			getConnection().isConnected && container.resolve<VoiceService>(VoiceService).isConnected ? 200 : 503,
+		);
 	});
 
 	// register all services

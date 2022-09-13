@@ -15,6 +15,8 @@ import { QueueService } from './service/QueueService';
 import { getSubLogger, TypeORMLogger } from './util/Logger';
 import { connectToChannel, getVoiceConnection } from './util/Utils';
 
+const log = getSubLogger('http');
+
 const minio = new MinIo({
 	endPoint: Config.credentials.minio.url,
 	port: Config.credentials.minio.port,
@@ -36,6 +38,10 @@ minio
 const client = new Client({
 	shards: 'auto',
 	intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_VOICE_STATES],
+});
+
+client.on('ready', () => {
+	log.info('connected to discord as', client.user?.tag);
 });
 // eslint-disable-next-line @typescript-eslint/no-floating-promises
 client.login(Config.credentials.discord.token);
@@ -71,7 +77,6 @@ client.on('voiceStateUpdate', (oldState, newState) => {
 	}
 });
 
-const log = getSubLogger('http');
 const http = createServer();
 export const service = restana({
 	server: http,
@@ -102,9 +107,9 @@ service.get('/docker-up', (req, res) => {
 
 service.get('/health', (req, res) => {
 	try {
-		client.ws.shards.each(shard => shard.status === 1) && getConnection().isConnected ? res.send(200) : res.send(500);
+		return res.send(client.ws.shards.each(shard => shard.status === 1) && getConnection().isConnected ? 200 : 503);
 	} catch {
-		res.send(500);
+		res.send(503);
 	}
 });
 
@@ -117,6 +122,13 @@ service.use((req, res, next) => {
 });
 
 service.get('/events', (req, res) => {
+	res.writeHead(200, {
+		'Content-Type': 'text/event-stream',
+		'Cache-Control': 'no-cache',
+		Connection: 'keep-alive',
+	});
+	res.flushHeaders();
+
 	const lastEvent = parseInt(req.headers['Last-Event-ID']?.toString() ?? queue.eventID.toString(), 10);
 	queue.events
 		.pipe(
@@ -127,12 +139,6 @@ service.get('/events', (req, res) => {
 			res.write(`data: ${JSON.stringify(value)}\n\n`);
 			res.write(`id: ${value.id}\n\n`);
 		});
-
-	res.writeHead(200, {
-		'Content-Type': 'text/event-stream',
-		'Cache-Control': 'no-cache',
-		Connection: 'keep-alive',
-	});
 });
 
 addRoutes(service, queue, client, minio);

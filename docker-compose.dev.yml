@@ -12,6 +12,8 @@ services:
       - redis
       - voicenode
       - meili
+    expose:
+      - '8080'  
     ports:
       - '9999:8080'
     networks:
@@ -30,6 +32,28 @@ services:
     restart: always
     healthcheck:
       test: ['CMD', 'curl', 'http://localhost:9999/docker-up']
+
+
+  uptime-proxy:
+    image: ghcr.io/better-airhorn/uptime-proxy:1.0.1
+    ports:
+      - '9991:9999'
+    networks:
+      - databases
+      - backend
+      - meili
+      - minio
+    environment:
+      PORT: 9999
+      monit_postgres: postgres:5432
+      monit_redis: redis:6379
+      monit_minio: http://minio:9000/minio/health/live
+      monit_meili: http://meili:7700/health
+      monit_voicenode: http://voicenode:8888/health
+      monit_slashbackend: http://slashbackend:8080/health
+      monit_voteserver: http://voteserver:7777/health
+
+    restart: on-failure  
 
   voicenode:
     build:
