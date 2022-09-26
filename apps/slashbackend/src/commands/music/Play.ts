@@ -2,6 +2,7 @@ import { AccessType, Like, SoundCommand, Dislike } from '@better-airhorn/entitie
 import Raccoon from '@better-airhorn/raccoon';
 import { QueueEventType, RouteError, RouteErrorCode } from '@better-airhorn/structures';
 import MeiliSearch from 'meilisearch';
+import ms from 'ms';
 import {
 	AutocompleteContext,
 	ButtonStyle,
@@ -123,9 +124,14 @@ export class PlayCommand extends SlashCommand {
 		}
 
 		// wait for sound to finish
-		await this.voice.awaitEvent(transactionId!, QueueEventType.FINISHED_SOUND);
+		let content = 'finished playing';
+		if (ms('10m') > sound.duration) {
+			content = 'currently playing';
+		} else {
+			await this.voice.awaitEvent(transactionId!, QueueEventType.FINISHED_SOUND);
+		}
 		await msg.edit({
-			content: `finished playing ${wrapInCodeBlock(sound.name, { inline: true })}`,
+			content: `${content} ${wrapInCodeBlock(sound.name, { inline: true })}`,
 			components: [
 				{
 					type: ComponentType.ACTION_ROW,

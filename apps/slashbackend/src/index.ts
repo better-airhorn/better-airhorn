@@ -24,6 +24,7 @@ import { VoiceService } from './services/VoiceService';
 import { updateRecommendations, updateSearchIndex } from './startup-tasks';
 import { getSubLogger, TypeORMLogger } from './util/Logger';
 import { RestanaServer } from './util/RestanaServer';
+import { initTracking } from './util/TrackingUtils';
 import { ensureDatabaseExtensions } from './util/Utils';
 
 const log = getSubLogger('http');
@@ -101,6 +102,7 @@ const log = getSubLogger('http');
 
 	// running init functions
 	await updateSearchIndex();
+	await initTracking();
 	updateRecommendations().catch(err => {
 		log.error('failed to update recommendations', err);
 	});

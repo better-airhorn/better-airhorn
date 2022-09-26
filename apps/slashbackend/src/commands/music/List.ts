@@ -99,11 +99,11 @@ export class ListCommand extends SlashCommand {
 				await btnCtx.acknowledge();
 				return;
 			}
-			page--;
 			data = await this.next({
-				page,
+				page: page - 1,
 				filter: { guild: ctx.guildID },
 			});
+			page--;
 			await btnCtx.editParent(
 				wrapInCodeBlock(
 					data
@@ -124,7 +124,7 @@ export class ListCommand extends SlashCommand {
 				return;
 			}
 			data = await this.next({
-				page,
+				page: page + 1,
 				filter: { guild: ctx.guildID },
 			});
 			if (data.length === 0) {

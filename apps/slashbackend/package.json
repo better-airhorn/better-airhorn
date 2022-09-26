@@ -8,7 +8,7 @@
 	"private": true,
 	"scripts": {
 		"run:watch": "tsnd --respawn --debug src/index.ts | bunyan",
-		"run:prod": "node --inspect=0.0.0.0 dist/index.js | bunyan",
+		"run:prod": "node dist/index.js",
 		"build": "tsc",
 		"test": "exit 0"
 	},

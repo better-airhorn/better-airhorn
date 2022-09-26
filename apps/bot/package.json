@@ -49,6 +49,6 @@
 		"test": "exit 0",
 		"start": "tsc && node ./dist/index.js",
 		"start:debug": "tsc && node --inspect-brk=55555 ./dist/index.js",
-		"run:prod": "node dist/index.js | bunyan"
+		"run:prod": "node dist/index.js"
 	}
 }
