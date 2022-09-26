@@ -125,7 +125,7 @@ export class PlayCommand extends SlashCommand {
 
 		// wait for sound to finish
 		let content = 'finished playing';
-		if (ms('10m') > sound.duration) {
+		if (ms('9m') < sound.duration) {
 			content = 'currently playing';
 		} else {
 			await this.voice.awaitEvent(transactionId!, QueueEventType.FINISHED_SOUND);
