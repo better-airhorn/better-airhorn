@@ -120,6 +120,6 @@ export function addRoutes(service: Service<Protocol.HTTP>, queue: QueueService, 
 		const status = conversionQueue.get(id);
 		if (!status) return res.send(404);
 		if (status.status === 'success') setTimeout(() => conversionQueue.delete(id), 1000 * 60 * 5);
-		res.send(status, 200);
+		res.send({ status: status.status, duration: status.res?.duration }, 200);
 	});
 }

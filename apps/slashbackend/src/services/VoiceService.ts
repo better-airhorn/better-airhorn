@@ -124,12 +124,11 @@ export class VoiceService {
 	}): Promise<{ status: 'error' | 'success' | 'waiting'; duration: number }> {
 		const code = (await this.importUrl(ctx)).unwrap();
 		await timeout(500);
-		let status = (await this.getStatus(code)).unwrap();
-		if (status.status === 'waiting') {
-			while ((status = (await this.getStatus(code)).unwrap())) {
-				await timeout(500);
-			}
+		let response = (await this.getStatus(code)).unwrap();
+		while (response.status === 'waiting') {
+			response = (await this.getStatus(code)).unwrap();
+			await timeout(500);
 		}
-		return status;
+		return response;
 	}
 }
