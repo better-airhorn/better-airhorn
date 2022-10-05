@@ -1,16 +1,14 @@
 import { SoundCommand } from '@better-airhorn/entities';
-import MeiliSearch from 'meilisearch';
 import {
-	AutocompleteContext,
 	ButtonStyle,
 	CommandContext,
+	CommandOptionType,
 	ComponentType,
 	MessageOptions,
 	SlashCommand,
 	SlashCreator,
 } from 'slash-create';
 import { injectable } from 'tsyringe';
-import { ObjectLiteral } from 'typeorm';
 import { wrapInCodeBlock } from '../../util/Utils';
 import ms from 'ms';
 
@@ -44,41 +42,45 @@ const components: () => MessageOptions = () => ({
 
 @injectable()
 export class ListCommand extends SlashCommand {
+	// private readonly LOG = getSubLogger(ListCommand.name);
 	private readonly pageSize = 15;
 
-	public constructor(creator: SlashCreator, private readonly search: MeiliSearch) {
+	public constructor(creator: SlashCreator) {
 		super(creator, {
 			name: 'list',
-			description: 'list all sounds',
+			description: 'list specific sounds',
+			options: [
+				{
+					type: CommandOptionType.SUB_COMMAND,
+					name: 'all',
+					description: 'list all sounds',
+				},
+				{
+					type: CommandOptionType.SUB_COMMAND,
+					name: 'server',
+					description: 'list all sounds from this server',
+				},
+				{
+					type: CommandOptionType.SUB_COMMAND,
+					name: 'mine',
+					description: 'list all sounds you own',
+				},
+			],
 		});
-	}
-
-	public async autocomplete(ctx: AutocompleteContext) {
-		const searchText = ctx.options[ctx.focused];
-		const searchResults = await this.search
-			.index('sounds')
-			.search(searchText, {
-				filter: `(accesstype = 2 AND guild = "${ctx.guildID}") OR (accesstype = 3)`,
-				limit: 10,
-			})
-			.catch(e => {
-				console.error(e);
-				throw e;
-			});
-		return { name: searchResults.nbHits, value: searchText };
 	}
 
 	public async run(ctx: CommandContext) {
 		await ctx.defer();
-		// const searchText = ctx.options.search;
+		const subcommand = ctx.subcommands[0] as 'all' | 'server' | 'mine';
+
 		let page = 1;
 		let data = await this.next({
 			page,
-			filter: { guild: ctx.guildID },
+			context: { guild: ctx.guildID!, user: ctx.user.id },
+			subcommand,
 		});
 
 		const longestKey = Math.max(...data.map(d => d.likes.toLocaleString().length + d.name.length + 3));
-		// const showedCount = this.pageSize * page - this.pageSize + data.length;
 
 		await ctx.send(
 			wrapInCodeBlock(
@@ -101,7 +103,8 @@ export class ListCommand extends SlashCommand {
 			}
 			data = await this.next({
 				page: page - 1,
-				filter: { guild: ctx.guildID },
+				context: { guild: ctx.guildID!, user: ctx.user.id },
+				subcommand,
 			});
 			page--;
 			await btnCtx.editParent(
@@ -125,7 +128,8 @@ export class ListCommand extends SlashCommand {
 			}
 			data = await this.next({
 				page: page + 1,
-				filter: { guild: ctx.guildID },
+				context: { guild: ctx.guildID!, user: ctx.user.id },
+				subcommand,
 			});
 			if (data.length === 0) {
 				await btnCtx.acknowledge();
@@ -150,14 +154,13 @@ export class ListCommand extends SlashCommand {
 
 	private async next(opts: {
 		page: number;
-		filter: ObjectLiteral;
+		context: { guild: string; user: string };
+		subcommand: 'all' | 'server' | 'mine';
 	}): Promise<{ id: number; name: string; likes: number; duration: number; size: number }[]> {
 		const offset = (opts.page - 1) * this.pageSize;
 		if (offset < 0) return [];
 
-		return SoundCommand.createQueryBuilder('sound')
-			.where({ accessType: 2, guild: opts.filter.guild })
-			.orWhere({ accessType: 3 })
+		const query = SoundCommand.createQueryBuilder('sound')
 			.leftJoin('sound.likes', 'likes')
 			.select('sound.name', 'name')
 			.addSelect('sound.id', 'id')
@@ -168,11 +171,25 @@ export class ListCommand extends SlashCommand {
 			.orderBy({ likes: 'DESC' })
 			.addOrderBy('uses', 'DESC')
 			.limit(this.pageSize)
-			.offset(offset)
-			.getRawMany()
-			.then(r => {
-				r.forEach(v => (v.likes = parseInt(v.likes, 10)));
-				return r;
-			});
+			.offset(offset);
+
+		switch (opts.subcommand) {
+			case 'all':
+				query.where({ accessType: 2, guild: opts.context.guild });
+				query.orWhere({ accessType: 3 });
+				break;
+			case 'server':
+				query.where({ accessType: 2, guild: opts.context.guild });
+				query.orWhere({ accessType: 3, guild: opts.context.guild });
+				break;
+			case 'mine':
+				query.where({ user: opts.context.user });
+				break;
+		}
+
+		return query.getRawMany().then(r => {
+			r.forEach(v => (v.likes = parseInt(v.likes, 10)));
+			return r;
+		});
 	}
 }

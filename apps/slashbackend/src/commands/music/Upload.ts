@@ -72,6 +72,7 @@ export class UploadCommand extends SlashCommand {
 			if (result.status === 'error') {
 				throw new Error(`couldn't import file ${JSON.stringify(result)}`);
 			}
+			console.log(result);
 			sound.duration = result.duration;
 			await sound.save();
 			return ctx.send(`uploaded ${name}!`);
