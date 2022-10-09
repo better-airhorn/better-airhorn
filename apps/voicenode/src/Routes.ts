@@ -3,7 +3,7 @@ import { Protocol, Service } from 'restana';
 import { QueueService } from './service/QueueService';
 import { Client as MinIo } from 'minio';
 import fetch from 'node-fetch';
-import { convertToOGG } from '@better-airhorn/audio';
+import { convertToOGG, getDuration } from '@better-airhorn/audio';
 import { Readable } from 'stream';
 import { QueueObject, RouteError, RouteErrorCode } from '@better-airhorn/structures';
 import { Config } from './Config';
@@ -121,5 +121,26 @@ export function addRoutes(service: Service<Protocol.HTTP>, queue: QueueService, 
 		if (!status) return res.send(404);
 		if (status.status === 'success') setTimeout(() => conversionQueue.delete(id), 1000 * 60 * 5);
 		res.send({ status: status.status, duration: status.res?.duration }, 200);
+	});
+
+	service.get('objects/:id/size', async (req, res) => {
+		const id = req.params.id;
+		if (!id) return res.send(400);
+		const stat = await minio.statObject(Config.credentials.minio.bucketName, id).catch(() => null);
+		if (stat && stat.size) {
+			res.send({ size: stat.size }, 200);
+		} else {
+			res.send(404);
+		}
+	});
+
+	service.get('objects/:id/duration', async (req, res) => {
+		const id = req.params.id;
+		if (!id) return res.send(400);
+		const stream = await minio.getObject(Config.credentials.minio.bucketName, id).catch(() => null);
+		if (!stream) return res.send(404);
+		const duration = await getDuration(stream).catch(() => null);
+		if (!duration) return res.send(500);
+		res.send(duration, 200);
 	});
 }

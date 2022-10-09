@@ -1,11 +1,14 @@
 import { Like, SoundCommand } from '@better-airhorn/entities';
 import Raccoon from '@better-airhorn/raccoon';
+import Logger from 'bunyan';
 import MeiliSearch from 'meilisearch';
 import { container } from 'tsyringe';
+import { LessThan } from 'typeorm';
+import { VoiceService } from './services/VoiceService';
 import { getSubLogger } from './util/Logger';
 
 export async function updateSearchIndex() {
-	const log = getSubLogger('SearchIndex');
+	const log = getSubLogger(updateSearchIndex.name);
 	log.info('updating index');
 	const se = container.resolve(MeiliSearch);
 	await se.getIndex('sounds').catch(() => se.createIndex('sounds'));
@@ -26,7 +29,7 @@ export async function updateSearchIndex() {
 }
 
 export async function updateRecommendations() {
-	const log = getSubLogger('RecommendationsIndex');
+	const log = getSubLogger(updateRecommendations.name);
 	log.info('updating index');
 	const raccoon = container.resolve(Raccoon);
 	const likes: { Like_user: string; Like_soundCommandId: number }[] = await Like.createQueryBuilder().getRawMany();
@@ -38,8 +41,8 @@ export async function updateRecommendations() {
 			userMap.set(like.Like_user, [like.Like_soundCommandId.toString()]);
 		}
 	}
-	let processed = 0;
-	let lastPercentage = 0;
+
+	const progress = logProgress(log, userMap.size);
 	for (const [userId, dbLikes] of userMap.entries()) {
 		const racLikes = await raccoon.allLikedFor(userId);
 		dbLikes.sort();
@@ -50,13 +53,60 @@ export async function updateRecommendations() {
 			await Promise.all(racLikes.map(v => raccoon.unliked(userId, v)));
 			await Promise.all(dbLikes.map(v => raccoon.liked(userId, v)));
 		}
-		processed++;
-		const percentage = Math.floor((processed / userMap.size) * 100);
-		if (percentage % 10 === 0 && percentage !== lastPercentage) {
-			log.debug(`processed ${percentage}%`);
-			lastPercentage = percentage;
-		}
+		progress();
 	}
 
 	log.info('successfully updated index');
+}
+
+export async function updateSoundSize() {
+	const log = getSubLogger(updateSoundSize.name);
+	const voiceNode = container.resolve(VoiceService);
+	const soundWithoutSize = await SoundCommand.find({ where: { size: LessThan(2) } });
+	const progress = logProgress(log, soundWithoutSize.length, 'size');
+	for (const sound of soundWithoutSize) {
+		const response = await voiceNode.getSize(sound.id.toString());
+		if (response.err) {
+			log.error(response.toString());
+			progress();
+			continue;
+		}
+		sound.size = response.unwrap().size;
+		await sound.save();
+		log.debug(`updated size of ${sound.id} to ${sound.size}`);
+		progress();
+	}
+}
+
+export async function updateDuration() {
+	const log = getSubLogger(updateDuration.name);
+	const voiceNode = container.resolve(VoiceService);
+	const soundWithoutDuration = await SoundCommand.find({ where: { duration: LessThan(1) } });
+	const progress = logProgress(log, soundWithoutDuration.length, 'duration');
+
+	for (const sound of soundWithoutDuration) {
+		const response = await voiceNode.getDuration(sound.id.toString());
+		if (response.err) {
+			log.error(response.toString());
+			progress();
+			continue;
+		}
+		sound.duration = response.unwrap().duration;
+		await sound.save();
+		log.debug(`updated duration of ${sound.id} to ${sound.duration}`);
+		progress();
+	}
+}
+
+function logProgress(log: Logger, total: number, prefix?: string) {
+	let processed = 0;
+	let lastPercentage = 0;
+	return () => {
+		processed++;
+		const percentage = Math.floor((processed / total) * 100);
+		if (percentage % 10 === 0 && percentage !== lastPercentage) {
+			log.debug(`${prefix ? `${prefix} ` : ''}processed ${percentage}%`);
+			lastPercentage = percentage;
+		}
+	};
 }

@@ -97,6 +97,18 @@ export class VoiceService {
 		return Ok(await res.json());
 	}
 
+	public async getSize(id: string): Promise<Result<{ size: number }, RouteError | string>> {
+		const res = await this.send(`objects/${id}/size`);
+		if (!res.ok) return this.createErr<RouteError>(res);
+		return Ok(await res.json());
+	}
+
+	public async getDuration(id: string): Promise<Result<{ duration: number }, RouteError | string>> {
+		const res = await this.send(`objects/${id}/duration`);
+		if (!res.ok) return this.createErr<RouteError>(res);
+		return Ok(await res.json());
+	}
+
 	public async importUrl(ctx: {
 		objectName: string;
 		url: string;

@@ -1,4 +1,4 @@
-import { AccessType, Like, SoundCommand, Dislike } from '@better-airhorn/entities';
+import { AccessType, Like, SoundCommand, Dislike, BotListVote, Usage } from '@better-airhorn/entities';
 import Raccoon from '@better-airhorn/raccoon';
 import { QueueEventType, RouteError, RouteErrorCode } from '@better-airhorn/structures';
 import MeiliSearch from 'meilisearch';
@@ -15,6 +15,7 @@ import {
 } from 'slash-create';
 import { Err, Ok, Result } from 'ts-results';
 import { injectable } from 'tsyringe';
+import { MoreThanOrEqual } from 'typeorm';
 import { VoiceService } from '../../services/VoiceService';
 import { getSubLogger } from '../../util/Logger';
 import { isYoutubeLink, wrapInCodeBlock } from '../../util/Utils';
@@ -80,6 +81,7 @@ export class PlayCommand extends SlashCommand {
 
 	public async run(ctx: CommandContext) {
 		await ctx.defer();
+		if (await processVoteReminder(ctx)) return;
 
 		const memberResult = await this.handleErrorResult(ctx, await this.voice.getMember(ctx.guildID!, ctx.user.id));
 		// something went wrong but has been handled already
@@ -232,4 +234,29 @@ export class PlayCommand extends SlashCommand {
 
 		return Ok(result.val);
 	}
+}
+
+async function processVoteReminder(ctx: CommandContext) {
+	const hours24 = new Date(Date.now() - 24 * 60 * 60 * 1000);
+	const usageCount = await Usage.count({
+		where: { user: ctx.user.id, command: 'play', createdAt: MoreThanOrEqual(hours24) },
+	});
+	if (usageCount <= 20) return false;
+	const voted = await BotListVote.count({ where: { user: ctx.user.id, createdAt: MoreThanOrEqual(hours24) } });
+	if (voted > 0) {
+		return false;
+	}
+
+	await ctx.send({
+		embeds: [
+			{
+				description: `you already used the play command ${usageCount} times today!
+        [Vote for my Bot here](https://top.gg/bot/${ctx.creator.options.applicationID}/vote) to play as much as you want for the next 24 Hours.
+        || Why should you vote?
+        I think its only fair if you use 10 Seconds of your time and vote for a free Service. ||`,
+				color: 0xa8383b,
+			},
+		],
+	});
+	return true;
 }

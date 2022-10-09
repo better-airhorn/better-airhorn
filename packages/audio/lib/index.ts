@@ -164,4 +164,52 @@ function convertPcmTo16khPCM(stream: Readable): Promise<Readable> {
 	});
 }
 
-export = { normalizeAudio, convertToOGG, convertPcmTo16khPCM, HotWordEngine, HotWords };
+async function getDuration(stream: Readable): Promise<{ duration: number }> {
+	return new Promise((res, rej) => {
+		const child = spawn('ffmpeg', [
+			'-f',
+			'ogg',
+			'-i',
+			'pipe:0',
+			'-f',
+			'null',
+			'pipe:1', // output nothing to stdout
+		]);
+		child.once('error', rej);
+		const pipe = pipeline(stream, child.stdin, err => {
+			if (err) rej(err);
+		});
+		let totalTime = -1;
+		child.stderr.once('error', rej);
+		child.on('exit', () => {
+			res({ duration: totalTime });
+		});
+
+		child.stderr.on('data', (b: Buffer) => {
+			// ffmpeg writes the usual output into stderr
+			if (b.toString().includes('pipe:0: Invalid data found when processing input')) {
+				rej(
+					new TypeError(
+						`invalid data found in stream\n\n${b
+							.toString()
+							.split('\n')
+							.slice(-2)
+							.join('\n')}`,
+					),
+				);
+				pipe.destroy();
+				return;
+			}
+			const matches = /time=(\d\d):(\d\d):(\d\d).(\d\d)/.exec(b.toString());
+			// this might not be a chunk that includes the time so just skip it
+			if (!matches) return;
+			// overwrite time with new one
+			totalTime =
+				(parseInt(matches[1], 10) * 3_600_000 + parseInt(matches[2], 10)) * 60_000 +
+				parseInt(matches[3], 10) * 1_000 +
+				parseInt(matches[4], 10);
+		});
+	});
+}
+
+export = { normalizeAudio, convertToOGG, convertPcmTo16khPCM, HotWordEngine, HotWords, getDuration };

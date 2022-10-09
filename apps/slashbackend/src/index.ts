@@ -21,7 +21,7 @@ import { createConnection, getConnection } from 'typeorm';
 import { commands } from './commands/commands';
 import { Config } from './Config';
 import { VoiceService } from './services/VoiceService';
-import { updateRecommendations, updateSearchIndex } from './startup-tasks';
+import { updateDuration, updateRecommendations, updateSearchIndex, updateSoundSize } from './startup-tasks';
 import { getSubLogger, TypeORMLogger } from './util/Logger';
 import { RestanaServer } from './util/RestanaServer';
 import { initTracking } from './util/TrackingUtils';
@@ -105,6 +105,12 @@ const log = getSubLogger('http');
 	await initTracking();
 	updateRecommendations().catch(err => {
 		log.error('failed to update recommendations', err);
+	});
+	updateSoundSize().catch(err => {
+		log.error('failed to update sizes', err);
+	});
+	updateDuration().catch(err => {
+		log.error('failed to update durations', err);
 	});
 	await setTimeout(2000);
 

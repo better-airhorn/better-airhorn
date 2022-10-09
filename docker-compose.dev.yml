@@ -1,4 +1,4 @@
-version: '3.7'
+version: "3.7"
 
 # USE --parallel FOR BUILDING
 
@@ -6,17 +6,17 @@ services:
   slashbackend:
     build:
       context: .
-      dockerfile: 'apps/slashbackend/Dockerfile'
+      dockerfile: "apps/slashbackend/Dockerfile"
     depends_on:
       - postgres
       - redis
       - voicenode
       - meili
     expose:
-      - '8080'  
+      - "8080"
     ports:
-      - '9999:8080'
-      - '9229:9229'
+      - "9999:8080"
+      - "9229:9229"
     networks:
       - databases
       - backend
@@ -32,13 +32,12 @@ services:
       VOICENODE_ACCESS_KEY: ${VOICENODE_ACCESS_KEY}
     restart: always
     healthcheck:
-      test: ['CMD', 'curl', 'http://localhost:9999/docker-up']
-
+      test: ["CMD", "curl", "http://localhost:9999/docker-up"]
 
   uptime-proxy:
     image: ghcr.io/better-airhorn/uptime-proxy:1.0.1
     ports:
-      - '9991:9999'
+      - "9991:9999"
     networks:
       - databases
       - backend
@@ -54,14 +53,14 @@ services:
       monit_slashbackend: http://slashbackend:8080/health
       monit_voteserver: http://voteserver:7777/health
 
-    restart: on-failure  
+    restart: on-failure
 
   voicenode:
     build:
       context: .
-      dockerfile: 'apps/voicenode/Dockerfile'
+      dockerfile: "apps/voicenode/Dockerfile"
     expose:
-      - '8888'
+      - "8888"
     networks:
       - backend
       - minio
@@ -78,14 +77,14 @@ services:
       VOICENODE_ACCESS_KEY: ${VOICENODE_ACCESS_KEY}
     restart: on-failure:50
     healthcheck:
-      test: ['CMD', 'curl', 'http://localhost:8888/docker-up']
+      test: ["CMD", "curl", "http://localhost:8888/docker-up"]
 
   voteserver:
     build:
       context: .
-      dockerfile: 'apps/voteserver/Dockerfile'
+      dockerfile: "apps/voteserver/Dockerfile"
     expose:
-      - '7777'
+      - "7777"
     networks:
       - backend
       - databases
@@ -97,12 +96,12 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     restart: always
     healthcheck:
-      test: ['CMD', 'curl', 'http://localhost:7777/docker-up']
+      test: ["CMD", "curl", "http://localhost:7777/docker-up"]
 
   bot:
     build:
       context: .
-      dockerfile: 'apps/bot/Dockerfile'
+      dockerfile: "apps/bot/Dockerfile"
     networks:
       - databases
     depends_on:
@@ -121,14 +120,14 @@ services:
     networks:
       - databases
     expose:
-      - '6379'
+      - "6379"
     # ! REMOVE
     ports:
-      - '6379:6379'
+      - "6379:6379"
     command: redis-server --requirepass ${REDIS_PASSWORD}
     restart: always
     healthcheck:
-      test: ['CMD', 'redis-cli', '-a', '${REDIS_PASSWORD}', 'ping']
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
 
   postgres:
     image: postgres:14-alpine
@@ -137,15 +136,15 @@ services:
     networks:
       - databases
     expose:
-      - '5432'
+      - "5432"
     # ! REMOVE
     ports:
-      - '5431:5432'
+      - "5431:5432"
     environment:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     restart: always
     healthcheck:
-      test: ['CMD', 'psql', '-U', 'postgres', '-c', 'SELECT 1']
+      test: ["CMD", "psql", "-U", "postgres", "-c", "SELECT 1"]
 
   minio:
     image: quay.io/minio/minio:RELEASE.2022-06-03T01-40-53Z
@@ -156,33 +155,33 @@ services:
       MINIO_ROOT_USER: ${MINIO_ACCESS_KEY}
       MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY}
     expose:
-      - '9000'
+      - "9000"
     # ! REMOVE
     ports:
-      - '9000:9000'
-      - '9001:9001'
+      - "9000:9000"
+      - "9001:9001"
     networks:
       - minio
     restart: always
     healthcheck:
-      test: ['CMD', 'curl', 'http://localhost:9000/health']
+      test: ["CMD", "curl", "http://localhost:9000/health"]
 
   meili:
     image: getmeili/meilisearch:v0.27.1
-    user: 'root'
+    user: "root"
     environment:
       MEILI_MASTER_KEY: ${MEILI_MASTER_KEY}
     expose:
-      - '7700'
+      - "7700"
     networks:
       - meili
     volumes:
       - meili:/home/meili/data.ms
     ports:
-      - '7700:7700'
+      - "7700:7700"
     restart: always
     healthcheck:
-      test: ['CMD', 'curl', 'http://localhost:7700/health']
+      test: ["CMD", "curl", "http://localhost:7700/health"]
 
 networks:
   databases:
