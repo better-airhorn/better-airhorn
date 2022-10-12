@@ -36,7 +36,7 @@ export class SoundCommand extends BaseEntity {
 	/**
 	 * duration of the file in ms
 	 */
-	@Column('integer')
+	@Column('bigint', { default: 0 })
 	public duration!: number;
 
 	/**
