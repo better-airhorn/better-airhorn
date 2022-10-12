@@ -73,7 +73,7 @@ export async function updateSoundSize() {
 		}
 		sound.size = response.unwrap().size;
 		sound.lastUsedAt = new Date(sound.lastUsedAt);
-		await sound.save();
+		await SoundCommand.update({ id: sound.id }, sound);
 		log.debug(`updated size of ${sound.id} to ${sound.size}`);
 		progress();
 	}
@@ -94,7 +94,7 @@ export async function updateDuration() {
 		}
 		sound.duration = response.unwrap().duration;
 		sound.lastUsedAt = new Date(sound.lastUsedAt);
-		await sound.save();
+		await SoundCommand.update({ id: sound.id }, sound);
 		log.debug(`updated duration of ${sound.id} to ${sound.duration}`);
 		progress();
 	}
