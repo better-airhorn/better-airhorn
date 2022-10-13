@@ -15,7 +15,7 @@ import {
 } from 'slash-create';
 import { Err, Ok, Result } from 'ts-results';
 import { injectable } from 'tsyringe';
-import { MoreThanOrEqual } from 'typeorm';
+import { getRepository, MoreThanOrEqual } from 'typeorm';
 import { VoiceService } from '../../services/VoiceService';
 import { getSubLogger } from '../../util/Logger';
 import { isYoutubeLink, wrapInCodeBlock } from '../../util/Utils';
@@ -124,6 +124,10 @@ export class PlayCommand extends SlashCommand {
 			await this.voice.awaitEvent(transactionId!, QueueEventType.STARTING_SOUND);
 			await msg.edit(`now playing ${wrapInCodeBlock(sound.name, { inline: true })}`);
 		}
+
+		// increment uses
+		const usesKey: keyof SoundCommand = 'uses';
+		await getRepository(SoundCommand).increment({ id: sound!.id }, usesKey, 1);
 
 		// wait for sound to finish
 		let content = 'finished playing';
