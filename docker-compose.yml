@@ -93,6 +93,7 @@ services:
     environment:
       REDIS_PASSWORD: ${REDIS_PASSWORD}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      BOTLISTS_DBL_SECRET: ${BOTLISTS_DBL_SECRET}
     restart: always
     logging:
       driver: "gelf"

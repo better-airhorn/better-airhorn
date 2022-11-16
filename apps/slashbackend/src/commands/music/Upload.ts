@@ -1,9 +1,10 @@
 import { AccessType, SoundCommand } from '@better-airhorn/entities';
 import { CommandContext, CommandOptionType, SlashCommand, SlashCreator } from 'slash-create';
 import { injectable } from 'tsyringe';
+import { Config } from '../../Config';
 import { VoiceService } from '../../services/VoiceService';
 import { getSubLogger } from '../../util/Logger';
-import { wrapInCodeBlock } from '../../util/Utils';
+import { humanFileSize, wrapInCodeBlock } from '../../util/Utils';
 @injectable()
 export class UploadCommand extends SlashCommand {
 	private readonly LOG = getSubLogger(this.constructor.name);
@@ -37,7 +38,6 @@ export class UploadCommand extends SlashCommand {
 	private readonly supportedFormats = ['aac', 'ac3', 'flac', 'mp3', 'ogg', 'opus', 'wav', 'wma'];
 	public async run(ctx: CommandContext) {
 		await ctx.defer();
-		console.log(ctx.attachments);
 		const { file: fileId, name, private: isPrivate } = ctx.options as {
 			file: string;
 			name: string;
@@ -57,6 +57,9 @@ export class UploadCommand extends SlashCommand {
 					this.supportedFormats.join(', '),
 				)}`,
 			);
+		}
+		if (file.size > Config.limitations.maxSingleFileSize) {
+			return ctx.send(`that file is too big! (max ${humanFileSize(Config.limitations.maxSingleFileSize)})`);
 		}
 		const sound = SoundCommand.create({
 			accessType: isPrivate ? AccessType.ONLY_GUILD : AccessType.EVERYONE,

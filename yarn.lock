@@ -300,6 +300,11 @@
   resolved "https://registry.yarnpkg.com/@types/eventsource/-/eventsource-1.1.8.tgz#48ae1f3aaf9bb84c713038f354112cc7ceaad519"
   integrity sha512-fJQNt9LijJCZwYvM6O30uLzdpAK9zs52Uc9iUW9M2Zsg0HQM6DLf6QysjC/wuFX+0798B8AppVMvgdO6IftPKQ==
 
+"@types/filesize-parser@^1.5.1":
+  version "1.5.1"
+  resolved "https://registry.yarnpkg.com/@types/filesize-parser/-/filesize-parser-1.5.1.tgz#d1218f48ad160d7b089a555f3984439254196bd7"
+  integrity sha512-kU4V/I/EUARPF3hxTRrZ1ad2P0/9sby1JoRbNcpvMIPqhkVlBqcNc+HutiLl6cS7iCId54Xd6X+BEp5vUgSY6Q==
+
 "@types/ioredis@4.28.10":
   version "4.28.10"
   resolved "https://registry.yarnpkg.com/@types/ioredis/-/ioredis-4.28.10.tgz#40ceb157a4141088d1394bb87c98ed09a75a06ff"
@@ -1781,6 +1786,11 @@ file-entry-cache@^5.0.1:
   integrity sha512-bCg29ictuBaKUwwArK4ouCaqDgLZcysCFLmM/Yn/FDoqndh/9vNuQfXRDvTuXKLxfD/JtZQGKFT8MGcJBK644g==
   dependencies:
     flat-cache "^2.0.1"
+
+filesize-parser@^1.5.0:
+  version "1.5.0"
+  resolved "https://registry.yarnpkg.com/filesize-parser/-/filesize-parser-1.5.0.tgz#97ad66d5b0d7154b2e8b1b4e83f526aed33c62f3"
+  integrity sha512-UTDpJB22VvozK7t31slU9WCAPSdcUWuwD7P7S6LBXswdgzUz+YhoziLOohknFcx0Kq5LWCAj4MEKY9q3zGq47Q==
 
 fill-range@^7.0.1:
   version "7.0.1"
