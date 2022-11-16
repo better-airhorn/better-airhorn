@@ -2,6 +2,7 @@ import { GuildSetting } from '@better-airhorn/entities';
 import { getConnection } from 'typeorm';
 import { EventEmitter } from 'typeorm/platform/PlatformTools';
 import { promisify } from 'util';
+import { Config } from '../Config';
 
 export const timeout = promisify(setTimeout);
 
@@ -72,4 +73,8 @@ export type Complete<T> = {
 
 export function isYoutubeLink(link: string): boolean {
 	return /(?:https?:\/\/)?(?:www\.)?youtu\.?be(?:\.com)?\/?.*(?:watch|embed)?(?:.*v=|v\/|\/)([\w\-_]+)\&?/.test(link);
+}
+
+export function isAdmin(user: string) {
+	return Config.admins.includes(user);
 }
