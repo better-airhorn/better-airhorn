@@ -1,7 +1,8 @@
 import { SoundCommand } from '@better-airhorn/entities';
 import { AutocompleteContext, CommandContext, CommandOptionType, SlashCommand, SlashCreator } from 'slash-create';
 import { injectable } from 'tsyringe';
-import { Like } from 'typeorm';
+import { FindConditions, Like } from 'typeorm';
+import { isAdmin } from '../../util/Utils';
 
 @injectable()
 export class DeleteCommand extends SlashCommand {
@@ -22,8 +23,12 @@ export class DeleteCommand extends SlashCommand {
 	}
 
 	public async autocomplete(ctx: AutocompleteContext) {
+		const query: FindConditions<SoundCommand> = { name: Like(`${ctx.options.sound}%`), user: ctx.user.id };
+		if (isAdmin(ctx.user.id)) {
+			delete query.user;
+		}
 		const commands = await SoundCommand.find({
-			where: { name: Like(`%${ctx.options[ctx.focused]}%`), user: ctx.user.id },
+			where: query,
 			take: 10,
 		});
 		return commands.map(command => ({ name: command.name, value: command.name }));
@@ -31,9 +36,13 @@ export class DeleteCommand extends SlashCommand {
 
 	public async run(ctx: CommandContext) {
 		await ctx.defer();
-		const command = await SoundCommand.findOne({ where: { name: ctx.options.sound, user: ctx.user.id } });
+		const command = await SoundCommand.findOne({ where: { name: ctx.options.sound } });
 		if (!command) {
 			await ctx.send(`found no sound named ${ctx.options.sound}`);
+			return;
+		}
+		if (command.user !== ctx.user.id && !isAdmin(ctx.user.id)) {
+			await ctx.send(`you are not the owner of ${ctx.options.sound}`);
 			return;
 		}
 		await command.remove();
