@@ -189,6 +189,7 @@ export class ListCommand extends SlashCommand {
 
 		return query.getRawMany().then(r => {
 			r.forEach(v => (v.likes = parseInt(v.likes, 10)));
+			r.forEach(v => (v.duration = parseInt(v.duration, 10)));
 			return r;
 		});
 	}

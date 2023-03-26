@@ -18,7 +18,7 @@
 		"@better-airhorn/entities": "0.0.4",
 		"@better-airhorn/structures": "0.0.1",
 		"@discordjs/opus": "^0.8.0",
-		"@discordjs/voice": "0.7.5",
+		"@discordjs/voice": "0.15.0",
 		"await-lock": "https://github.com/better-airhorn/await-lock",
 		"body-parser": "1.19.1",
 		"bufferutil": "^4.0.6",
