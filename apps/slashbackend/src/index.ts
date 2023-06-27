@@ -12,7 +12,7 @@ import {
 import Raccoon from '@better-airhorn/raccoon';
 import { json } from 'body-parser';
 import { createServer } from 'http';
-import MeiliSearch from 'meilisearch';
+import { MeiliSearch } from 'meilisearch';
 import restana from 'restana';
 import { SlashCreator } from 'slash-create';
 import { setTimeout } from 'timers/promises';

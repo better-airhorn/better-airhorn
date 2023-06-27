@@ -1,31 +1,32 @@
 {
-    "name": "voteserver",
-    "version": "1.0.0",
-    "description": "receives votes from various bot lists",
-    "main": "src/index.ts",
-    "repository": "github:better-airhorn/better-airhorn",
-    "author": "Clemens Ertle",
-    "license": "MIT",
-    "private": true,
-    "dependencies": {
-        "@better-airhorn/entities": "0.0.4",
-        "body-parser": "1.19.1",
-        "bunyan": "1.8.15",
-        "ioredis": "4.28.3",
-        "pg": "8.7.3",
-        "restana": "4.9.2",
-        "typeorm": "0.2.41"
-    },
-    "devDependencies": {
-        "@types/body-parser": "1.19.2",
-        "@types/bunyan": "1.8.8",
-        "@types/ioredis": "4.28.10"
-    },
-    "scripts": {
-        "build": "tsc",
-        "test": "exit 0",
-        "start": "tsc && node ./dist/index.js",
-        "start:debug": "tsc && node --inspect-brk=55555 ./dist/index.js",
-        "run:prod": "node dist/index.js"
-    }
+	"name": "voteserver",
+	"version": "1.0.0",
+	"description": "receives votes from various bot lists",
+	"main": "src/index.ts",
+	"repository": "github:better-airhorn/better-airhorn",
+	"author": "Clemens Ertle",
+	"license": "MIT",
+	"private": true,
+	"dependencies": {
+		"@better-airhorn/entities": "0.0.4",
+		"body-parser": "^1.20.2",
+		"bunyan": "1.8.15",
+		"ioredis": "4.28.3",
+		"pg": "8.7.3",
+		"restana": "4.9.2",
+		"typeorm": "^0.3.17",
+		"tslib": "^2.6.0"
+	},
+	"devDependencies": {
+		"@types/body-parser": "1.19.2",
+		"@types/bunyan": "1.8.8",
+		"@types/ioredis": "4.28.10"
+	},
+	"scripts": {
+		"build": "tsc",
+		"test": "exit 0",
+		"start": "tsc && node ./dist/index.js",
+		"start:debug": "tsc && node --inspect-brk=55555 ./dist/index.js",
+		"run:prod": "node dist/index.js"
+	}
 }

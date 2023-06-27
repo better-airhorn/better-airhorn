@@ -7,8 +7,9 @@
 		"Clemens E (https://github.com/Clemens-E)"
 	],
 	"dependencies": {
-		"tslib": "^2.3.1",
-		"typeorm": "0.2.41"
+		"body-parser": "^1.20.2",
+		"tslib": "^2.6.0",
+		"typeorm": "^0.3.17"
 	},
 	"directories": {
 		"lib": "lib"

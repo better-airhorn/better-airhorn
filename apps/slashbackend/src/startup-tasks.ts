@@ -1,11 +1,12 @@
 import { Like, SoundCommand } from '@better-airhorn/entities';
 import Raccoon from '@better-airhorn/raccoon';
 import Logger from 'bunyan';
-import MeiliSearch from 'meilisearch';
+import { MeiliSearch } from 'meilisearch';
 import { container } from 'tsyringe';
 import { LessThan } from 'typeorm';
 import { VoiceService } from './services/VoiceService';
 import { getSubLogger } from './util/Logger';
+import { timeout } from './util/Utils';
 
 export async function updateSearchIndex() {
 	const log = getSubLogger(updateSearchIndex.name);
@@ -20,16 +21,18 @@ export async function updateSearchIndex() {
 	}));
 
 	const index = se.index('sounds');
-	await index.deleteAllDocuments();
 	if (sounds.length > 0) {
+		await index.deleteAllDocuments();
 		await index.addDocuments(sounds);
+		await index.updateFilterableAttributes(['accesstype', 'guild']);
 	}
-	await index.updateFilterableAttributes(['accesstype', 'guild']);
 	log.info('successfully updated index');
 }
 
 export async function updateRecommendations() {
 	const log = getSubLogger(updateRecommendations.name);
+	// wait 60 minutes
+	await timeout(1000 * 60 * 60);
 	log.info('updating index');
 	const raccoon = container.resolve(Raccoon);
 	const likes: { Like_user: string; Like_soundCommandId: number }[] = await Like.createQueryBuilder().getRawMany();

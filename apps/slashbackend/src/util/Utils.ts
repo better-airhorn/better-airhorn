@@ -7,7 +7,7 @@ import { Config } from '../Config';
 export const timeout = promisify(setTimeout);
 
 export async function getGuildSettings(guild: string): Promise<GuildSetting> {
-	return GuildSetting.findOneOrFail(guild).then(
+	return GuildSetting.findOneOrFail({ where: { guild } }).then(
 		(settings: GuildSetting) => settings,
 		async () => {
 			const newSettings = new GuildSetting({ guild, prefix: '' });

@@ -1,7 +1,7 @@
 import { AccessType, Like, SoundCommand, Dislike, BotListVote, Usage } from '@better-airhorn/entities';
 import Raccoon from '@better-airhorn/raccoon';
 import { QueueEventType, RouteError, RouteErrorCode } from '@better-airhorn/structures';
-import MeiliSearch from 'meilisearch';
+import { MeiliSearch } from 'meilisearch';
 import ms from 'ms';
 import {
 	AutocompleteContext,
@@ -15,7 +15,7 @@ import {
 } from 'slash-create';
 import { Err, Ok, Result } from 'ts-results';
 import { injectable } from 'tsyringe';
-import { getRepository, MoreThanOrEqual } from 'typeorm';
+import { Equal, getRepository, MoreThanOrEqual } from 'typeorm';
 import { VoiceService } from '../../services/VoiceService';
 import { getSubLogger } from '../../util/Logger';
 import { isYoutubeLink, wrapInCodeBlock } from '../../util/Utils';
@@ -170,8 +170,8 @@ export class PlayCommand extends SlashCommand {
 		ctx.registerComponent('like_button', async btnCtx => {
 			try {
 				await btnCtx.defer(true);
-				const alreadyLiked = await Like.findOne({ where: { soundCommand: sound.id, user: ctx.user.id } });
-				const alreadyDisliked = await Dislike.findOne({ where: { soundCommand: sound.id, user: ctx.user.id } });
+				const alreadyLiked = await Like.findOne({ where: { soundCommand: Equal(sound.id), user: ctx.user.id } });
+				const alreadyDisliked = await Dislike.findOne({ where: { soundCommand: Equal(sound.id), user: ctx.user.id } });
 				if (alreadyLiked || alreadyDisliked) {
 					await btnCtx.send(`You already ${alreadyDisliked ? 'disliked' : 'liked'} this sound`, { ephemeral: true });
 					return;
@@ -191,8 +191,8 @@ export class PlayCommand extends SlashCommand {
 		ctx.registerComponent('dislike_button', async btnCtx => {
 			try {
 				await btnCtx.defer(true);
-				const alreadyLiked = await Like.findOne({ where: { soundCommand: sound.id, user: ctx.user.id } });
-				const alreadyDisliked = await Dislike.findOne({ where: { soundCommand: sound.id, user: ctx.user.id } });
+				const alreadyLiked = await Like.findOne({ where: { soundCommand: Equal(sound.id), user: ctx.user.id } });
+				const alreadyDisliked = await Dislike.findOne({ where: { soundCommand: Equal(sound.id), user: ctx.user.id } });
 				if (alreadyLiked || alreadyDisliked) {
 					await btnCtx.send(`You already ${alreadyDisliked ? 'disliked' : 'liked'} this sound`, { ephemeral: true });
 					return;

@@ -10,17 +10,15 @@ COPY ./packages/entities ./packages/entities
 COPY ./packages/structures ./packages/structures
 COPY ./packages/raccoon ./packages/raccoon
 
-RUN yarn workspace @better-airhorn/entities install --frozen-lockfile
-RUN yarn workspace @better-airhorn/entities tsc
-RUN yarn workspace @better-airhorn/structures install --frozen-lockfile
-RUN yarn workspace @better-airhorn/structures tsc
-RUN yarn workspace @better-airhorn/raccoon install --frozen-lockfile
-RUN yarn workspace @better-airhorn/raccoon tsc
-
-RUN yarn workspace slashbackend install --frozen-lockfile
-RUN yarn workspace slashbackend tsc
-
-RUN npm prune --production
+RUN yarn workspace @better-airhorn/entities install --frozen-lockfile \
+    && yarn workspace @better-airhorn/entities tsc \
+    && yarn workspace @better-airhorn/structures install --frozen-lockfile \
+    && yarn workspace @better-airhorn/structures tsc \
+    && yarn workspace @better-airhorn/raccoon install --frozen-lockfile \
+    && yarn workspace @better-airhorn/raccoon tsc \
+    && yarn workspace slashbackend install --frozen-lockfile \
+    && yarn workspace slashbackend tsc \
+    && npm prune --production
 
 # second image used for running
 FROM node:16-alpine

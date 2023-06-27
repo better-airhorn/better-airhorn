@@ -1,7 +1,7 @@
 import { SoundCommand } from '@better-airhorn/entities';
 import { AutocompleteContext, CommandContext, CommandOptionType, SlashCommand, SlashCreator } from 'slash-create';
 import { injectable } from 'tsyringe';
-import { FindConditions, Like } from 'typeorm';
+import { FindOptionsWhere, Like } from 'typeorm';
 import { isAdmin } from '../../util/Utils';
 
 @injectable()
@@ -23,7 +23,7 @@ export class DeleteCommand extends SlashCommand {
 	}
 
 	public async autocomplete(ctx: AutocompleteContext) {
-		const query: FindConditions<SoundCommand> = { name: Like(`${ctx.options.sound}%`), user: ctx.user.id };
+		const query: FindOptionsWhere<SoundCommand> = { name: Like(`${ctx.options.sound}%`), user: ctx.user.id };
 		if (isAdmin(ctx.user.id)) {
 			delete query.user;
 		}
