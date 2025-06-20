@@ -24,7 +24,7 @@ The Bot only stores:
     Discord IDs (such as user IDs, server IDs, and message IDs) as necessary for the operation of the Bot.
     Audio files uploaded by users for use with the Bot.
 
-##2.2 Use of Data
+## 2.2 Use of Data
 
 The stored data is used solely to provide and improve the Bot's functionality. We do not share, sell, or distribute your data to third parties, except as required by law.
 ## 2.3 Data Security
