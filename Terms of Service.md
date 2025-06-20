@@ -2,7 +2,7 @@ Terms of Service
 Introduction
 
 Welcome to Better Airhorn! These Terms of Service ("Terms") govern your access to and use of the Better Airhorn Discord Bot (the "Bot"). By using the Bot, you agree to be bound by these Terms. If you do not agree to these Terms, please do not use the Bot.
-#1. Use of the Bot
+# 1. Use of the Bot
 ## 1.1 Eligibility
 
 To use the Bot, you must be at least 13 years old. By using the Bot, you represent and warrant that you meet this age requirement.
