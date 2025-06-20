@@ -30,7 +30,7 @@ The stored data is used solely to provide and improve the Bot's functionality. W
 ## 2.3 Data Security
 
 We implement reasonable security measures to protect your data from unauthorized access or disclosure. However, no data transmission over the internet or electronic storage is completely secure, and we cannot guarantee the absolute security of your data.
-#3. User Content
+# 3. User Content
 ## 3.1 Responsibility
 
 You are solely responsible for any content you upload or share using the Bot, including audio files. You must ensure that you have all necessary rights to the content and that it does not infringe on any third-party rights or violate any laws.
