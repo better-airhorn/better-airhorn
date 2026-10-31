@@ -1,4 +1,4 @@
-# top.gg listing for Better Airhorn v5
+# top.gg listing for Better Airhorn v5.1
 
 Copy-paste text for https://top.gg/bot/503996428042108928 → Edit. Sound counts are from production on 2026-10-31 (18,797 public sounds).
 
@@ -39,7 +39,10 @@ limit, plays clips several minutes long, and comes with over 18,000 public sound
 - ⬆️ `/upload` takes mp3, wav, ogg, flac, m4a and more. Trim the sound in the upload form. Every sound is
   loudness-normalised, so nothing blasts your ears.
 - 🎛️ `/panel` posts a board of up to 20 buttons in any channel. One click plays the sound, and `/panel repost` brings the board back when chat buries it.
-- 🚪 `/entrance` plays your sound when you join a voice channel.
+- 🚪 `/entrance` plays your sounds when you join or leave a voice channel, or go live.
+- 🎯 `/quiz` plays sounds in voice, and the first to pick the right name scores.
+- 📅 `/wrapped` shows your server's year in sounds: most played, top players, busiest day. Or just yours.
+- 🏠 `/config` sets house rules: who can play, quiet hours, a length cap, server sounds only, blocked sounds.
 - 💾 Right-click a voice message or audio file and pick **Apps → Save as sound**.
 - ⭐ `/export` cuts a sound to Discord's limits and adds it to your server's built-in soundboard.
 - 📤 `/share` posts a sound as a file, also in DMs once you add the app to your account.

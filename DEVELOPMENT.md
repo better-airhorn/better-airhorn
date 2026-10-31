@@ -15,10 +15,11 @@ A bun workspace. Packages are imported as TypeScript source; there is no build s
 | --------------------- | ------------------------------------------------------------------------------------------------------------------------ |
 | `apps/slashbackend`   | Discord HTTP interactions (commands, buttons, forms), command sync, top.gg vote webhook, runs the migrations. Port 8080. |
 | `apps/voicenode`      | Discord gateway, voice playback and queues, sound files (`<id>.ogg`), soundboard export, top.gg server count. Port 8888. |
-| `packages/entities`   | TypeORM entities, `createDataSource`, migrations.                                                                        |
+| `packages/entities`   | TypeORM entities, `createDataSource`, migrations, and the house rules (`lib/house-rules.ts`).                            |
 | `packages/structures` | The slashbackend ↔ voicenode HTTP contract and `createLogger`.                                                           |
 | `packages/audio`      | ffmpeg/ffprobe helpers used by voicenode ([README](./packages/audio/README.md)).                                         |
 | `scripts/`            | One-off operational scripts (`migrate-minio.ts` for the v4 → v5 upgrade).                                                |
+| `monitoring/`         | The Grafana statistics dashboard as code, and a local test stack for it ([README](./monitoring/README.md)).              |
 
 ## Commands
 
@@ -111,7 +112,10 @@ there next to its request and response types.
 - Errors are a non-2xx status with a `{ code, message }` body, `code` being a `VoiceErrorCode`. voicenode maps codes
   to statuses (`statusFor` in `apps/voicenode/src/http.ts`); slashbackend maps them to user-facing text
   (`voiceErrorMessages` in `apps/slashbackend/src/voicenode.ts`). Both are `Record<VoiceErrorCode, …>`, so a new code
-  does not typecheck until both have an entry.
+  does not typecheck until both have an entry. `HOUSE_RULE` and `MISSING_PERMISSIONS` are the exceptions: voicenode
+  writes their `message` for the member (which rule, or which permissions are missing in which channel), and
+  slashbackend shows it as is.
+- `POST /guilds/:guild/queue` takes a `source` (`command`, `panel`, `button` or `quiz`) for the plays log.
 - Playback is asynchronous: `POST /guilds/:guild/queue` returns a transaction id, which slashbackend long-polls with
   `GET /transactions/:id?until=playing|done` to update the play card. voicenode keeps finished transactions for
   30 minutes.
@@ -119,6 +123,59 @@ there next to its request and response types.
 To add a route: types and doc comment in `packages/structures`, the handler wrapped in `guard` in
 `apps/voicenode/src/http.ts`, the client method in `apps/slashbackend/src/voicenode.ts`, and a test in
 `apps/voicenode/test/http.test.ts`.
+
+## The plays log
+
+The `plays` table has one row per playback that actually started: sound, server, member, `source` and time. voicenode
+writes it in `recordPlay` (`apps/voicenode/src/voice.ts`) once the audio player reports playing, together with the
+sound's play count; a database error there is only logged, so playback never waits on it. Sounds that fail or are
+skipped before they start leave no row.
+
+| `source`   | Started by                                                   |
+| ---------- | ------------------------------------------------------------ |
+| `command`  | `/play`, `/random`                                           |
+| `panel`    | a panel button                                               |
+| `button`   | Play again, the `/list` picker, the Play button after upload |
+| `quiz`     | a `/quiz` round                                              |
+| `entrance` | a join sound                                                 |
+| `exit`     | a leave sound                                                |
+| `stream`   | a Go Live sound                                              |
+
+slashbackend sends the first four with the enqueue request; voicenode sets the last three itself from voice state
+changes. `/wrapped` and the Grafana dashboard read the log. For time before its first row they count `/play` (and,
+in Grafana, `/random`) from `usages` instead, so nothing is counted twice. Deleting a sound deletes its plays
+(`ON DELETE CASCADE`), which the Privacy Policy relies on.
+
+## House rules
+
+[`packages/entities/lib/house-rules.ts`](./packages/entities/lib/house-rules.ts) is the one place for rule logic and
+wording, used by both apps:
+
+- `brokenHouseRule` returns the first rule that stops a sound for a member (blocked, play role, quiet hours, server
+  sounds only, length cap, checked in that order), or null.
+- `houseRuleMessage` is the sentence the member reads; `describeHouseRules` gives the lines on the `/config` card.
+- `inQuietHours`, `parseClock` and `formatClock` handle quiet hours in the server's IANA time zone, including windows
+  past midnight.
+
+voicenode checks the rules on every enqueue and answers `403 HOUSE_RULE` with the member-facing sentence; join,
+leave and Go Live sounds that break a rule are skipped. `/quiz` filters its sound pool with the same function. The
+settings are columns on `GuildSetting`; blocked sounds are the `BlockedSound` entity. A new rule needs a column, a
+case in `brokenHouseRule`, `houseRuleMessage` and `describeHouseRules`, a control in `configCard`
+(`apps/slashbackend/src/ui.ts`), and a test in `packages/entities/test/house-rules.test.ts`.
+
+## Hints on play cards
+
+[`apps/slashbackend/src/hints.ts`](./apps/slashbackend/src/hints.ts) holds the extra line under public play cards.
+It is pure; `cardHint` in `play.ts` looks up the facts and passes the clock and randomness.
+
+- What's new: `release` and `whatsNewLine`. Each server sees the line once per release; `claimRelease` stores the
+  release in `GuildSetting.announcedVersion` atomically, so two cards at once can't both show it. Change both
+  constants for the next release.
+- Tips: `pickTip` picks one that fits the server and member (no panel yet, no `/entrance` sound of any kind, no quiz in 30 days), and
+  `/wrapped` from 1 December to 7 January. `tipDue` allows one per server every 3 hours, on a quarter of the cards.
+  The 3-hour cooldown is kept in memory, so a restart resets it.
+
+The bot's status line rotation in `apps/voicenode/src/status.ts` advertises the newer commands the same way.
 
 ## Adding a command
 
@@ -172,6 +229,14 @@ docker compose -f docker-compose.dev.yml exec slashbackend bun -e "const { creat
 
 It prints `schema matches`, or the statements TypeORM would run to make the database match the entities. It never
 applies anything.
+
+## The statistics dashboard
+
+The Grafana dashboard is a JSON file in `monitoring/grafana/dashboards/`, with the SQL of every panel in it.
+[monitoring/README.md](./monitoring/README.md) explains how to change a panel and how to test it locally: a separate
+compose project with Postgres on port 55432 and the production `grafana` service, fake data from
+`monitoring/test/seed.sql`, and `bun monitoring/test/check-panels.ts`, which runs every panel's query and exits 1 if
+one fails. Run it after changing a panel or a table the dashboard reads.
 
 ## Logging
 

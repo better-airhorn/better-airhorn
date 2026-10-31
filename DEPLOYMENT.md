@@ -10,6 +10,8 @@ Production runs as one Docker Compose stack (`docker-compose.yml`) on a single h
 | `pgbackups`    | Dumps both databases every 5 hours to `${BACKUP_ROOT}/postgres`; see [Backups](#backups) for retention.                                                                                           |
 | `uptime-proxy` | Health monitors for postgres, voicenode and slashbackend.                                                                                                                                         |
 | `metabase`     | Statistics on `127.0.0.1:3388` (reach it through an SSH tunnel or the reverse proxy).                                                                                                             |
+| `grafana`      | Statistics dashboard on `127.0.0.1:3389`, provisioned from `monitoring/` on every start; reads the bot database as the read-only `grafana_ro` role. See [Grafana](#grafana).                      |
+| `soundsbackup` | Mirrors the sound files to `${BACKUP_ROOT}/sounds` every 24 hours; see [Sounds mirror](#sounds-mirror).                                                                                           |
 
 Host folders:
 
@@ -22,7 +24,9 @@ Host folders:
 | `${BACKUP_ROOT}/sounds`   | sounds mirror (`soundsbackup`) | created by the container          |
 
 `DATA_ROOT` defaults to `./data` and `BACKUP_ROOT` to `./backups`, next to the compose file. On a server, set both to absolute paths in the env file, with the backups on a different disk.
-Every variable is documented in [`.env.example`](./.env.example).
+Every variable is documented in [`.env.example`](./.env.example). `GRAFANA_ADMIN_PASSWORD` and `GRAFANA_DB_PASSWORD`
+are required: without them every `docker compose` command for this file stops with an error, not only the ones for
+Grafana.
 
 ```sh
 docker compose --env-file ./env/better-airhorn.env up -d --build
@@ -53,6 +57,73 @@ docker compose --env-file ./env/better-airhorn.env logs soundsbackup
 `--delete` makes sounds deleted in the bot leave the mirror on the next run. A run is skipped when the sounds folder
 is empty (e.g. the data disk is not mounted), so a missing source never wipes the mirror. To recover a deleted
 sound, copy it out of the mirror before the next run.
+
+## Grafana
+
+The dashboard and its data source live in [`monitoring/`](./monitoring/README.md); Grafana keeps no data volume and
+needs no backup. To set it up on a new host (`$ENV` is the env file):
+
+1. Put two long random values in the env file: `GRAFANA_ADMIN_PASSWORD` (the `admin` login) and
+   `GRAFANA_DB_PASSWORD` (the database role).
+2. Create the read-only role with [`monitoring/grafana-readonly-role.sql`](./monitoring/grafana-readonly-role.sql).
+   Its sessions are read-only, stop after 15 seconds, and at most 5 run at a time. It can read tables that later
+   migrations create, but not the Metabase `setting` table in the bot database. Running it again only resets the
+   password.
+
+   ```sh
+   docker compose --env-file $ENV exec -T postgres psql -U postgres -d postgres -v ON_ERROR_STOP=1 \
+     -v password="$(grep '^GRAFANA_DB_PASSWORD=' $ENV | cut -d= -f2-)" < monitoring/grafana-readonly-role.sql
+   ```
+
+3. `docker compose --env-file $ENV up -d grafana`
+
+Grafana listens on `127.0.0.1:3389` on the host only. From your machine, open an SSH tunnel and browse to
+http://localhost:3389, then log in as `admin` with `GRAFANA_ADMIN_PASSWORD`:
+
+```sh
+ssh -N -L 3389:127.0.0.1:3389 <user>@<server>
+```
+
+Anonymous access and sign-up are off. Metabase keeps running next to it on `127.0.0.1:3388`.
+
+---
+
+## Upgrading to v5.1
+
+v5.1 adds the plays log, leave and Go Live sounds, house rules and blocked sounds, and the `grafana` service. The
+`PlaysAndHouseRules` migration creates the `plays` and `blocked_sounds` tables, adds a `kind` column to
+`entrance_sounds` (existing entrance sounds become join sounds), adds the house-rule columns to `guild_settings` and
+indexes `usages."createdAt"`. New tables start empty and new columns are nullable or have a constant default, so no
+table is rewritten; the migration takes seconds.
+
+Same assumptions as the v4 → v5 runbook below (`ENV=./env/better-airhorn.env`, run in the deployment directory).
+
+1. Back up the database while v5.0 still runs, and check the dump landed in `$BACKUP_ROOT/postgres/last/`:
+
+   ```sh
+   docker compose --env-file $ENV exec pgbackups /backup.sh
+   ```
+
+2. Pull v5.1: `git pull` on the `v5` branch.
+3. Add `GRAFANA_ADMIN_PASSWORD` and `GRAFANA_DB_PASSWORD` to the env file (see [Grafana](#grafana)). The new compose
+   file refuses every command until both are set.
+4. Build: `docker compose --env-file $ENV build`.
+5. Start slashbackend first, so it runs the migration before voicenode writes to the new tables:
+
+   ```sh
+   docker compose --env-file $ENV up -d slashbackend
+   docker compose --env-file $ENV logs -f slashbackend   # wait for the migration and the listening message
+   ```
+
+6. Run the [schema check](#schema-check); it should print `schema matches`.
+7. Create the Grafana role (step 2 of [Grafana](#grafana)), then start the rest:
+   `docker compose --env-file $ENV up -d` and `docker compose --env-file $ENV ps` (everything `healthy` or running).
+8. Check in a server: `/config` shows the house rules section, a played sound adds a row to `plays`
+   (`docker compose --env-file $ENV exec postgres psql -U postgres -c 'select count(*) from plays'`), and Grafana
+   loads its dashboard.
+
+To go back to v5.0, stop the stack and restore the dump from step 1. v5.0 can't run on the migrated schema: its
+`/entrance set` fails on the new `entrance_sounds` key.
 
 ---
 
@@ -221,7 +292,7 @@ Then the external routes:
 
 ### Schema check
 
-Compares the live database with the v5 entities, to catch hand-made changes in production that a clean v4 schema
+Compares the live database with the entities of the running version, to catch hand-made changes in production that a clean v4 schema
 does not have. It only reads; nothing is applied.
 
 ```sh
