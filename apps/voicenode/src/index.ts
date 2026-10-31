@@ -5,6 +5,7 @@ import { ActivityType, Client, Events, GatewayIntentBits } from 'discord.js';
 import { mkdir } from 'node:fs/promises';
 import { loadConfig } from './env';
 import { createServer } from './http';
+import { statusLines } from './status';
 import { createVoice } from './voice';
 
 const log = createLogger('voicenode');
@@ -26,18 +27,11 @@ const dataSource = createDataSource(config.databaseUrl, { migrationsRun: false }
 const client = new Client({ shards: 'auto', intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates] });
 const voice = createVoice(client, config.soundsDir);
 
-/** custom status lines shown under the bot's name, rotated so members discover the newer commands */
-const statusLines = [
-	'New: pin a soundboard with /panel',
-	'New: entrance sounds with /entrance',
-	'New: /export a sound to your server soundboard',
-	'New: right-click a voice message to save it as a sound',
-	'Upload your own sounds with /upload',
-];
 let statusIndex = 0;
 function rotateStatus() {
 	if (!client.isReady()) return;
-	const state = statusLines[statusIndex++ % statusLines.length];
+	const lines = statusLines();
+	const state = lines[statusIndex++ % lines.length];
 	client.user.setPresence({ activities: [{ type: ActivityType.Custom, name: 'status', state }] });
 }
 

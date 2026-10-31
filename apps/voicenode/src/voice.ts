@@ -1,4 +1,16 @@
-import { EntranceSound, GuildSetting, isPlayable, SoundCommand } from '@better-airhorn/entities';
+import {
+	BlockedSound,
+	brokenHouseRule,
+	EntranceSound,
+	GuildSetting,
+	houseRuleMessage,
+	isPlayable,
+	noHouseRules,
+	Play,
+	SoundCommand,
+	type EntranceKind,
+	type PlaySource,
+} from '@better-airhorn/entities';
 import { createLogger, VoiceErrorCode, type EnqueueResponse } from '@better-airhorn/structures';
 import {
 	AudioPlayerStatus,
@@ -15,15 +27,63 @@ import {
 } from '@discordjs/voice';
 import { PermissionFlagsBits, type Client, type VoiceBasedChannel, type VoiceState } from 'discord.js';
 import { createReadStream } from 'node:fs';
+import { In } from 'typeorm';
 import { PlaybackQueue, VoiceFailure, type QueueItem } from './queue';
 import { soundPath } from './sounds';
 
 const log = createLogger('voice');
 
-/** entrance sounds longer than this are not played */
+/** join, leave and Go Live sounds longer than this are not played */
 export const ENTRANCE_SOUND_MAX_MS = 10_000;
-/** a member's entrance sound plays at most once per guild in this window */
+/** each of a member's join, leave and Go Live sounds plays at most once per guild in this window */
 export const ENTRANCE_SOUND_COOLDOWN_MS = 60_000;
+
+/** plays log source of each personal voice sound */
+const entranceSource: Record<EntranceKind, PlaySource> = { join: 'entrance', leave: 'exit', stream: 'stream' };
+
+export interface VoiceEvent {
+	kind: EntranceKind;
+	/** where the sound plays: the channel left for 'leave', the current channel otherwise */
+	channelId: string;
+}
+
+type VoiceSnapshot = Pick<VoiceState, 'channelId' | 'streaming'>;
+
+/**
+ * The personal sounds one voice state change of a member triggers. Moving between channels is a
+ * leave of the old one and a join of the new one; a leave only counts while someone is still there to hear it.
+ */
+export function voiceEvents(old: VoiceSnapshot, next: VoiceSnapshot, othersInOldChannel: boolean): VoiceEvent[] {
+	const events: VoiceEvent[] = [];
+	if (old.channelId && old.channelId !== next.channelId && othersInOldChannel) {
+		events.push({ kind: 'leave', channelId: old.channelId });
+	}
+	if (next.channelId && next.channelId !== old.channelId) events.push({ kind: 'join', channelId: next.channelId });
+	if (next.channelId && next.streaming && !old.streaming) events.push({ kind: 'stream', channelId: next.channelId });
+	return events;
+}
+
+async function logged(failure: string, write: () => Promise<unknown>): Promise<void> {
+	try {
+		await write();
+	} catch (err) {
+		log.warn(failure, err);
+	}
+}
+
+/** counts the use and adds the plays log row; a database error is only logged so playback never depends on it */
+export function recordPlay({ soundId, guildId, userId, source }: QueueItem): Promise<unknown> {
+	return Promise.all([
+		logged(`could not count use of sound ${soundId}`, () =>
+			SoundCommand.update(soundId, { uses: () => 'uses + 1', lastUsedAt: () => 'now()' }),
+		),
+		logged(`could not log play of sound ${soundId}`, () =>
+			Play.insert({ soundId, guild: guildId, user: userId, source }),
+		),
+	]);
+}
+
+const isHuman = (state: VoiceState) => !(state.member?.user.bot ?? false);
 
 const PLAYING_TIMEOUT_MS = 5_000;
 const CONNECT_TIMEOUT_MS = 20_000;
@@ -101,9 +161,20 @@ export function createVoice(client: Client, soundsDir: string) {
 	async function play(item: QueueItem, signal: AbortSignal, started: () => void): Promise<void> {
 		const guild = client.guilds.cache.get(item.guildId);
 		if (!guild) throw new VoiceFailure(VoiceErrorCode.GUILD_NOT_FOUND, 'the bot is not in this guild');
-		const channel = guild.voiceStates.cache.get(item.userId)?.channel;
-		if (!channel) throw new VoiceFailure(VoiceErrorCode.NOT_IN_VOICE, 'the member left voice before the sound started');
+		const channel = item.channelId
+			? guild.channels.cache.get(item.channelId)
+			: guild.voiceStates.cache.get(item.userId)?.channel;
+		if (!channel?.isVoiceBased()) {
+			throw new VoiceFailure(
+				VoiceErrorCode.NOT_IN_VOICE,
+				item.channelId ? 'the voice channel no longer exists' : 'the member left voice before the sound started',
+			);
+		}
 		if (!canPlayIn(channel)) throw new VoiceFailure(VoiceErrorCode.MISSING_PERMISSIONS, 'cannot speak in this channel');
+		// a leave sound waits in the queue; by the time it starts, everyone may have left that channel too
+		if (item.channelId && !channel.members.some(m => !m.user.bot)) {
+			throw new VoiceFailure(VoiceErrorCode.NOT_IN_VOICE, 'nobody is left in that voice channel');
+		}
 		const path = soundPath(soundsDir, item.soundId);
 		if (!(await Bun.file(path).exists())) throw new VoiceFailure(VoiceErrorCode.SOUND_NOT_FOUND, 'sound file missing');
 
@@ -120,9 +191,7 @@ export function createVoice(client: Client, soundsDir: string) {
 			throw new VoiceFailure(VoiceErrorCode.INTERNAL, 'playback did not start in time');
 		}
 		started();
-		SoundCommand.update(item.soundId, { uses: () => 'uses + 1', lastUsedAt: () => 'now()' }).catch(err =>
-			log.warn(`could not count use of sound ${item.soundId}`, err),
-		);
+		void recordPlay(item);
 
 		let error: Error | undefined;
 		await new Promise<void>(resolve => {
@@ -142,15 +211,24 @@ export function createVoice(client: Client, soundsDir: string) {
 	}
 
 	/** validates an enqueue request against Discord and the database, then queues it */
-	async function enqueue(guildId: string, userId: string, soundId: number): Promise<EnqueueResponse> {
+	async function enqueue(
+		guildId: string,
+		userId: string,
+		soundId: number,
+		source: PlaySource,
+	): Promise<EnqueueResponse> {
 		const guild = client.guilds.cache.get(guildId);
 		if (!guild) throw new VoiceFailure(VoiceErrorCode.GUILD_NOT_FOUND, 'the bot is not in this guild');
 		const member = await guild.members.fetch(userId).catch(() => null);
 		if (!member) throw new VoiceFailure(VoiceErrorCode.MEMBER_NOT_FOUND, 'member not found');
 		const channel = member.voice.channel;
 		if (!channel) throw new VoiceFailure(VoiceErrorCode.NOT_IN_VOICE, 'the member is not in a voice channel');
+		const [sound, setting, blocked] = await Promise.all([
+			SoundCommand.findOneBy({ id: soundId }),
+			GuildSetting.findOneBy({ guild: guildId }),
+			BlockedSound.existsBy({ guild: guildId, soundId }),
+		]);
 		// a sound the member may not play is reported as missing so private sounds do not leak
-		const sound = await SoundCommand.findOneBy({ id: soundId });
 		if (
 			!sound ||
 			!isPlayable(sound, { user: userId, guild: guildId }) ||
@@ -158,10 +236,13 @@ export function createVoice(client: Client, soundsDir: string) {
 		) {
 			throw new VoiceFailure(VoiceErrorCode.SOUND_NOT_FOUND, 'sound not found');
 		}
+		const rules = setting ?? noHouseRules;
+		const rule = brokenHouseRule(rules, sound, { guild: guildId, roles: [...member.roles.cache.keys()], blocked });
+		if (rule) throw new VoiceFailure(VoiceErrorCode.HOUSE_RULE, houseRuleMessage(rule, rules), rule);
 		if (!canPlayIn(channel)) {
 			throw new VoiceFailure(VoiceErrorCode.MISSING_PERMISSIONS, 'the bot cannot connect or speak in that channel');
 		}
-		return queue.enqueue({ guildId, userId, soundId });
+		return queue.enqueue({ guildId, userId, soundId, source });
 	}
 
 	/** clears the queue and disconnects; false when the bot was not connected */
@@ -182,32 +263,64 @@ export function createVoice(client: Client, soundsDir: string) {
 		const { guild } = next;
 		const botChannelId = getVoiceConnection(guild.id)?.joinConfig.channelId;
 		// a member missing from the cache counts as human, so an incomplete cache never makes the bot leave
-		const humans = guild.voiceStates.cache.filter(s => s.channelId === botChannelId && !(s.member?.user.bot ?? false));
+		const humans = guild.voiceStates.cache.filter(s => s.channelId === botChannelId && isHuman(s));
 		if (botChannelId && humans.size === 0) {
 			log.debug(`alone in ${botChannelId}, leaving`);
 			leave(guild.id);
 		}
 
 		const member = next.member;
-		const channel = next.channel;
-		if (!member || member.user.bot || !channel || channel.id === old.channelId || !canPlayIn(channel)) return;
-		const key = `${guild.id}:${member.id}`;
+		if (!member || member.user.bot) return;
+		const othersInOldChannel =
+			old.channelId !== null &&
+			guild.voiceStates.cache.some(s => s.channelId === old.channelId && s.id !== member.id && isHuman(s));
 		const now = Date.now();
-		if (now - (lastEntrance.get(key) ?? 0) < ENTRANCE_SOUND_COOLDOWN_MS) return;
-		// claimed before the lookups so rapid channel hops cannot slip past the cooldown
-		lastEntrance.set(key, now);
+		const events = voiceEvents(old, next, othersInOldChannel).filter(({ kind, channelId }) => {
+			const channel = guild.channels.cache.get(channelId);
+			const key = `${guild.id}:${member.id}:${kind}`;
+			if (!channel?.isVoiceBased() || !canPlayIn(channel)) return false;
+			if (now - (lastEntrance.get(key) ?? 0) < ENTRANCE_SOUND_COOLDOWN_MS) return false;
+			// claimed before the lookups so rapid channel hops cannot slip past the cooldown
+			lastEntrance.set(key, now);
+			return true;
+		});
+		if (events.length === 0) return;
 
-		const [setting, entrance] = await Promise.all([
+		const [setting, entrances] = await Promise.all([
 			GuildSetting.findOneBy({ guild: guild.id }),
-			EntranceSound.findOne({ where: { guild: guild.id, user: member.id }, relations: { sound: true } }),
+			EntranceSound.find({
+				where: { guild: guild.id, user: member.id, kind: In(events.map(e => e.kind)) },
+				relations: { sound: true },
+			}),
 		]);
-		const sound = entrance?.sound;
-		if (setting?.entranceSounds === false || !sound) return;
-		if (!isPlayable(sound, { user: member.id, guild: guild.id }) || sound.duration > ENTRANCE_SOUND_MAX_MS) return;
-		queue.enqueue({ guildId: guild.id, userId: member.id, soundId: sound.id });
+		if (setting?.entranceSounds === false) return;
+		for (const { kind, channelId } of events) {
+			const sound = entrances.find(e => e.kind === kind)?.sound;
+			if (
+				!sound ||
+				!isPlayable(sound, { user: member.id, guild: guild.id }) ||
+				sound.duration > ENTRANCE_SOUND_MAX_MS
+			) {
+				continue;
+			}
+			const blocked = await BlockedSound.existsBy({ guild: guild.id, soundId: sound.id });
+			const roles = [...member.roles.cache.keys()];
+			const rule = brokenHouseRule(setting ?? noHouseRules, sound, { guild: guild.id, roles, blocked });
+			if (rule) {
+				log.debug(`${kind} sound ${sound.id} of ${member.id} in ${guild.id} not played: ${rule}`);
+				continue;
+			}
+			queue.enqueue({
+				guildId: guild.id,
+				userId: member.id,
+				soundId: sound.id,
+				source: entranceSource[kind],
+				channelId,
+			});
+		}
 	}
 
-	/** drops expired transactions and entrance cooldowns */
+	/** drops expired transactions and join, leave and Go Live cooldowns */
 	function sweep(now = Date.now()): void {
 		queue.sweep(now);
 		for (const [key, at] of lastEntrance) if (now - at >= ENTRANCE_SOUND_COOLDOWN_MS) lastEntrance.delete(key);

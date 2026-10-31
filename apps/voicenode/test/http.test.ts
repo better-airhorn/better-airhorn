@@ -30,9 +30,12 @@ const server = createServer(
 		isDatabaseReady: () => true,
 		voice: {
 			queue,
-			enqueue: async (guildId, userId, soundId) => {
+			enqueue: async (guildId, userId, soundId, source) => {
 				if (guildId === '000000000000000000') throw new VoiceFailure(VoiceErrorCode.GUILD_NOT_FOUND, 'nope');
-				return queue.enqueue({ guildId, userId, soundId });
+				if (guildId === '111111111111111111') {
+					throw new VoiceFailure(VoiceErrorCode.HOUSE_RULE, 'This sound is blocked on this server.', 'blocked');
+				}
+				return queue.enqueue({ guildId, userId, soundId, source });
 			},
 			leave: () => false,
 		},
@@ -74,26 +77,45 @@ describe('http', () => {
 	});
 
 	test('validates input', async () => {
-		const res = await call('POST', `/guilds/${guild}/queue`, { userId: 'x', soundId: 1 });
+		const res = await call('POST', `/guilds/${guild}/queue`, { userId: 'x', soundId: 1, source: 'command' });
 		expect(res.status).toBe(400);
 		expect(await res.json()).toMatchObject({ code: VoiceErrorCode.INVALID_INPUT });
-		expect((await call('POST', `/guilds/${guild}/queue`, { userId: user, soundId: -1 })).status).toBe(400);
+		expect(
+			(await call('POST', `/guilds/${guild}/queue`, { userId: user, soundId: -1, source: 'command' })).status,
+		).toBe(400);
+		for (const source of [undefined, 'entrance', 'nope', 1]) {
+			const bad = await call('POST', `/guilds/${guild}/queue`, { userId: user, soundId: 1, source });
+			expect(bad.status).toBe(400);
+			expect((await bad.json()).code).toBe(VoiceErrorCode.INVALID_INPUT);
+		}
 		expect((await call('GET', '/sounds/../file')).status).toBe(404);
 		expect((await call('GET', '/sounds/abc/meta')).status).toBe(400);
 	});
 
 	test('maps errors from enqueue to their status', async () => {
-		const res = await call('POST', '/guilds/000000000000000000/queue', { userId: user, soundId: 1 });
+		const res = await call('POST', '/guilds/000000000000000000/queue', { userId: user, soundId: 1, source: 'panel' });
 		expect(res.status).toBe(404);
 		expect(await res.json()).toEqual({ code: VoiceErrorCode.GUILD_NOT_FOUND, message: 'nope' });
 	});
 
+	test('a broken house rule is 403 and names the rule', async () => {
+		const res = await call('POST', '/guilds/111111111111111111/queue', { userId: user, soundId: 1, source: 'button' });
+		expect(res.status).toBe(403);
+		expect(await res.json()).toEqual({
+			code: VoiceErrorCode.HOUSE_RULE,
+			message: 'This sound is blocked on this server.',
+			rule: 'blocked',
+		});
+	});
+
 	test('enqueue, long poll, skip and clear', async () => {
-		const first = await call('POST', `/guilds/${guild}/queue`, { userId: user, soundId: 1 });
+		const first = await call('POST', `/guilds/${guild}/queue`, { userId: user, soundId: 1, source: 'command' });
 		expect(first.status).toBe(201);
 		const { transactionId, position } = await first.json();
 		expect(position).toBe(0);
-		const second = await (await call('POST', `/guilds/${guild}/queue`, { userId: user, soundId: 2 })).json();
+		const second = await (
+			await call('POST', `/guilds/${guild}/queue`, { userId: user, soundId: 2, source: 'quiz' })
+		).json();
 		expect(second.position).toBe(1);
 
 		const playing = await call('GET', `/transactions/${transactionId}?until=playing&timeoutMs=1000`);

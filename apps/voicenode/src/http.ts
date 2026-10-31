@@ -3,6 +3,7 @@ import {
 	createLogger,
 	nativeSoundboardLimits,
 	VoiceErrorCode,
+	type EnqueueRequest,
 	type MemberResponse,
 	type SkipResponse,
 	type SoundboardExportResponse,
@@ -38,15 +39,23 @@ const statusFor: Record<VoiceErrorCode, number> = {
 	[VoiceErrorCode.IMPORT_FAILED]: 422,
 	[VoiceErrorCode.SOUNDBOARD_FULL]: 409,
 	[VoiceErrorCode.INVALID_INPUT]: 400,
+	[VoiceErrorCode.HOUSE_RULE]: 403,
 	[VoiceErrorCode.INTERNAL]: 500,
 };
 
 const DEFAULT_POLL_MS = 25_000;
 const MAX_POLL_MS = 120_000;
 
-const fail = (code: VoiceErrorCode, message: string, status = statusFor[code]) =>
-	Response.json({ code, message } satisfies VoiceError, { status });
+const fail = (error: VoiceError, status = statusFor[error.code]) => Response.json(error, { status });
 const invalid = (message: string) => new VoiceFailure(VoiceErrorCode.INVALID_INPUT, message);
+
+const enqueueSources: readonly EnqueueRequest['source'][] = ['command', 'panel', 'button', 'quiz'];
+
+function source(value: unknown): EnqueueRequest['source'] {
+	const found = enqueueSources.find(s => s === value);
+	if (!found) throw invalid(`source must be one of ${enqueueSources.join(', ')}`);
+	return found;
+}
 
 const isSnowflake = (v: unknown): v is string => typeof v === 'string' && /^\d{17,20}$/.test(v);
 const isMs = (v: unknown): v is number => typeof v === 'number' && Number.isInteger(v) && v >= 0;
@@ -83,14 +92,16 @@ export function createServer(deps: AppDeps, port: number) {
 		(handler: Handler): Handler =>
 		async req => {
 			if (!timingSafeEqual(digest(req.headers.get('authorization') ?? ''), expectedKey)) {
-				return fail(VoiceErrorCode.INVALID_INPUT, 'missing or wrong authorization header', 401);
+				return fail({ code: VoiceErrorCode.INVALID_INPUT, message: 'missing or wrong authorization header' }, 401);
 			}
 			try {
 				return await handler(req);
 			} catch (err) {
-				if (err instanceof VoiceFailure) return fail(err.code, err.message);
+				if (err instanceof VoiceFailure) {
+					return fail({ code: err.code, message: err.message, ...(err.rule && { rule: err.rule }) });
+				}
 				log.error(`${req.method} ${new URL(req.url).pathname} failed`, err);
-				return fail(VoiceErrorCode.INTERNAL, 'internal error');
+				return fail({ code: VoiceErrorCode.INTERNAL, message: 'internal error' });
 			}
 		};
 
@@ -120,6 +131,7 @@ export function createServer(deps: AppDeps, port: number) {
 						snowflake(req.params.guild, 'guild'),
 						snowflake(data.userId, 'userId'),
 						soundId(data.soundId),
+						source(data.source),
 					);
 					return Response.json(res, { status: 201 });
 				}),
@@ -261,6 +273,6 @@ export function createServer(deps: AppDeps, port: number) {
 				}),
 			},
 		},
-		fetch: () => fail(VoiceErrorCode.INVALID_INPUT, 'not found', 404),
+		fetch: () => fail({ code: VoiceErrorCode.INVALID_INPUT, message: 'not found' }, 404),
 	});
 }

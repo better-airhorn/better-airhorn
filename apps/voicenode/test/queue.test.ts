@@ -14,7 +14,7 @@ function manualPlayer() {
 	return { runs, play };
 }
 
-const item = (soundId: number, guildId = 'g1'): QueueItem => ({ guildId, userId: 'u1', soundId });
+const item = (soundId: number, guildId = 'g1'): QueueItem => ({ guildId, userId: 'u1', soundId, source: 'command' });
 const tick = () => new Promise(resolve => setTimeout(resolve, 0));
 
 describe('PlaybackQueue', () => {

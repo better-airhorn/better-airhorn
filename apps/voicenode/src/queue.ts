@@ -1,3 +1,4 @@
+import type { HouseRule, PlaySource } from '@better-airhorn/entities';
 import {
 	createLogger,
 	terminalStates,
@@ -13,6 +14,8 @@ export class VoiceFailure extends Error {
 	public constructor(
 		public readonly code: VoiceErrorCode,
 		message: string,
+		/** set with HOUSE_RULE */
+		public readonly rule?: HouseRule,
 	) {
 		super(message);
 	}
@@ -20,8 +23,12 @@ export class VoiceFailure extends Error {
 
 export interface QueueItem {
 	guildId: string;
+	/** the member the sound is played for */
 	userId: string;
 	soundId: number;
+	source: PlaySource;
+	/** channel to play in; the member's current voice channel when unset */
+	channelId?: string;
 }
 
 /**
