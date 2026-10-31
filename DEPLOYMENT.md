@@ -13,13 +13,13 @@ Production runs as one Docker Compose stack (`docker-compose.yml`) on a single h
 
 Host folders:
 
-| Path                      | Content                              | Owner                             |
-| ------------------------- | ------------------------------------ | --------------------------------- |
-| `${DATA_ROOT}/pgsql17`    | PostgreSQL 17 data                   | set by the postgres image         |
-| `${DATA_ROOT}/sounds`     | sound files, `<id>.ogg`              | `1000:1000` (the `bun` user)      |
-| `${DATA_ROOT}/stats`      | metabase                             | unchanged                         |
-| `${BACKUP_ROOT}/postgres` | pgbackups dumps                      | `999:999` (postgres in pgbackups) |
-| `${BACKUP_ROOT}/sounds`   | sounds mirror (host cron, see below) | `1000:1000`                       |
+| Path                      | Content                        | Owner                             |
+| ------------------------- | ------------------------------ | --------------------------------- |
+| `${DATA_ROOT}/pgsql17`    | PostgreSQL 17 data             | set by the postgres image         |
+| `${DATA_ROOT}/sounds`     | sound files, `<id>.ogg`        | `1000:1000` (the `bun` user)      |
+| `${DATA_ROOT}/stats`      | metabase                       | unchanged                         |
+| `${BACKUP_ROOT}/postgres` | pgbackups dumps                | `999:999` (postgres in pgbackups) |
+| `${BACKUP_ROOT}/sounds`   | sounds mirror (`soundsbackup`) | created by the container          |
 
 `DATA_ROOT` defaults to `/srv/better-airhorn`, `BACKUP_ROOT` to `/mnt/backup/better-airhorn`.
 Every variable is documented in [`.env.example`](./.env.example).
@@ -30,10 +30,10 @@ docker compose --env-file ./env/better-airhorn.env up -d --build
 
 ## Backups
 
-| What                   | How                                        | Kept                                              |
-| ---------------------- | ------------------------------------------ | ------------------------------------------------- |
-| `postgres`, `metabase` | `pgbackups`, every 5 hours                 | 7 days of dumps, plus 4 weekly and 6 monthly ones |
-| sound files            | host cron, nightly `rsync --delete` mirror | a deleted sound leaves the mirror on the next run |
+| What                   | How                                           | Kept                                              |
+| ---------------------- | --------------------------------------------- | ------------------------------------------------- |
+| `postgres`, `metabase` | `pgbackups`, every 5 hours                    | 7 days of dumps, plus 4 weekly and 6 monthly ones |
+| sound files            | `soundsbackup`, daily `rsync --delete` mirror | a deleted sound leaves the mirror on the next run |
 
 pgbackups (`BACKUP_KEEP_DAYS=7`, `BACKUP_KEEP_WEEKS=4`, `BACKUP_KEEP_MONTHS=6`) removes a monthly dump once it is
 188 days old, checked on every 5-hour run, so every dump is gone at most **189 days** after it was taken. The
@@ -42,16 +42,17 @@ Changing the retention, keeping extra copies, or skipping `--delete` breaks that
 
 ### Sounds mirror
 
-Sound files are written once and never modified, so a mirror is enough. Add a host cron job, e.g.
-`/etc/cron.d/better-airhorn-sounds`:
+Sound files are written once and never modified, so a mirror is enough. The `soundsbackup` service in the compose
+stack mirrors the sounds folder (mounted read-only) to `${BACKUP_ROOT}/sounds` when it starts and then every 24
+hours; nothing is installed or scheduled on the host. Each run logs one line:
 
-```cron
-30 4 * * * clemens [ -n "$(ls -A /srv/better-airhorn/sounds)" ] && rsync -a --delete /srv/better-airhorn/sounds/ /mnt/backup/better-airhorn/sounds/
+```sh
+docker compose --env-file ./env/better-airhorn.env logs soundsbackup
 ```
 
-`--delete` makes sounds deleted in the bot leave the mirror on the next run. The `ls -A` guard skips the run when
-the sounds folder is empty (e.g. the data disk is not mounted), so a missing source never wipes the mirror. To
-recover a deleted sound, copy it out of the mirror before 04:30 the next night.
+`--delete` makes sounds deleted in the bot leave the mirror on the next run. A run is skipped when the sounds folder
+is empty (e.g. the data disk is not mounted), so a missing source never wipes the mirror. To recover a deleted
+sound, copy it out of the mirror before the next run.
 
 ---
 
@@ -216,7 +217,7 @@ Then the external routes:
       dumps for `postgres` and `metabase` to `$BACKUP_ROOT/postgres/last/`, and `docker compose ps` shows
       `pgbackups` as `healthy` (its healthcheck fails when the last scheduled backup failed).
 - [ ] uptime-proxy reports all three monitors up.
-- [ ] Sounds cron is installed (see [Sounds mirror](#sounds-mirror)); run it once by hand.
+- [ ] `docker compose --env-file $ENV logs soundsbackup` shows a "mirrored … sound files" line (see [Sounds mirror](#sounds-mirror)).
 
 ### Schema check
 
