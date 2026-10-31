@@ -10,3 +10,5 @@ env/
 .idea/
 .DS_Store
 .data/
+/data/
+/backups/

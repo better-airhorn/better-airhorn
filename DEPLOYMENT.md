@@ -21,7 +21,7 @@ Host folders:
 | `${BACKUP_ROOT}/postgres` | pgbackups dumps                | `999:999` (postgres in pgbackups) |
 | `${BACKUP_ROOT}/sounds`   | sounds mirror (`soundsbackup`) | created by the container          |
 
-`DATA_ROOT` defaults to `/srv/better-airhorn`, `BACKUP_ROOT` to `/mnt/backup/better-airhorn`.
+`DATA_ROOT` defaults to `./data` and `BACKUP_ROOT` to `./backups`, next to the compose file. On a server, set both to absolute paths in the env file, with the backups on a different disk.
 Every variable is documented in [`.env.example`](./.env.example).
 
 ```sh
@@ -63,7 +63,7 @@ Every new folder is created next to the old ones and nothing old is modified, so
 file again".
 
 Commands below assume you are in the deployment directory, `DATA_ROOT=/srv/better-airhorn`,
-`BACKUP_ROOT=/mnt/backup/better-airhorn`, and the env file at `./env/better-airhorn.env`:
+`BACKUP_ROOT=/mnt/backup/better-airhorn` (examples; use your own), and the env file at `./env/better-airhorn.env`:
 
 ```sh
 export DATA_ROOT=/srv/better-airhorn BACKUP_ROOT=/mnt/backup/better-airhorn

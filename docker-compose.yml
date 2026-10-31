@@ -42,7 +42,7 @@ services:
       - databases
       - backend
     volumes:
-      - ${DATA_ROOT:-/srv/better-airhorn}/sounds:/data/sounds
+      - ${DATA_ROOT:-./data}/sounds:/data/sounds
     environment:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       DISCORD_TOKEN: ${DISCORD_TOKEN}
@@ -54,7 +54,7 @@ services:
   postgres:
     image: postgres:17-alpine
     volumes:
-      - ${DATA_ROOT:-/srv/better-airhorn}/pgsql17:/var/lib/postgresql/data
+      - ${DATA_ROOT:-./data}/pgsql17:/var/lib/postgresql/data
     networks:
       - databases
     expose:
@@ -75,8 +75,8 @@ services:
     image: alpine:3.22
     restart: always
     volumes:
-      - ${DATA_ROOT:-/srv/better-airhorn}/sounds:/sounds:ro
-      - ${BACKUP_ROOT:-/mnt/backup/better-airhorn}/sounds:/mirror
+      - ${DATA_ROOT:-./data}/sounds:/sounds:ro
+      - ${BACKUP_ROOT:-./backups}/sounds:/mirror
     command:
       - sh
       - -c
@@ -97,7 +97,7 @@ services:
     restart: always
     user: postgres:postgres
     volumes:
-      - ${BACKUP_ROOT:-/mnt/backup/better-airhorn}/postgres:/backups
+      - ${BACKUP_ROOT:-./backups}/postgres:/backups
     depends_on:
       postgres:
         condition: service_healthy
@@ -149,7 +149,7 @@ services:
     networks:
       - databases
     volumes:
-      - ${DATA_ROOT:-/srv/better-airhorn}/stats:/metabase-data
+      - ${DATA_ROOT:-./data}/stats:/metabase-data
     restart: always
 
 networks:
