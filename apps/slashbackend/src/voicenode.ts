@@ -41,9 +41,11 @@ export const voiceErrorMessages: Record<VoiceErrorCode, string> = {
 	[VoiceErrorCode.INTERNAL]: 'Something went wrong on my side. Please try again in a moment.',
 };
 
+const memberFacingCodes = new Set([VoiceErrorCode.HOUSE_RULE, VoiceErrorCode.MISSING_PERMISSIONS]);
+
 export function voiceErrorMessage(err: VoiceNodeError): string {
-	// voicenode words house-rule refusals for the member, naming the rule
-	if (err.code === VoiceErrorCode.HOUSE_RULE && err.message) return err.message;
+	// voicenode words these for the member: which house rule, or which permissions are missing and where
+	if (memberFacingCodes.has(err.code) && err.message) return err.message;
 	const base = voiceErrorMessages[err.code] ?? voiceErrorMessages[VoiceErrorCode.INTERNAL];
 	return err.code === VoiceErrorCode.INVALID_INPUT ? `${base} ${err.message}` : base;
 }

@@ -91,9 +91,35 @@ const RECONNECT_TIMEOUT_MS = 5_000;
 
 const requiredPermissions = [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.Connect, PermissionFlagsBits.Speak];
 
-function canPlayIn(channel: VoiceBasedChannel): boolean {
+/** names as Discord shows them in the role and channel settings */
+const permissionNames: Record<string, string> = { ViewChannel: 'View Channel', Connect: 'Connect', Speak: 'Speak' };
+
+/** the voice permissions the bot lacks in `channel`, by their Discord names; empty when it can play there */
+export function missingVoicePermissions(channel: VoiceBasedChannel): string[] {
 	const me = channel.guild.members.me;
-	return me !== null && channel.permissionsFor(me).has(requiredPermissions);
+	if (!me) return Object.values(permissionNames);
+	return channel
+		.permissionsFor(me)
+		.missing(requiredPermissions)
+		.map(flag => permissionNames[flag] ?? flag);
+}
+
+const canPlayIn = (channel: VoiceBasedChannel) => missingVoicePermissions(channel).length === 0;
+
+/** the member-facing reason for MISSING_PERMISSIONS, naming each permission and the channel */
+export function missingPermissionsMessage(missing: string[], where: string): string {
+	const list = missing.length > 1 ? `${missing.slice(0, -1).join(', ')} and ${missing.at(-1)}` : missing[0];
+	return `I'm missing the ${list} permission${missing.length > 1 ? 's' : ''} ${where}. Check my role and that channel's permissions.`;
+}
+
+function assertCanPlayIn(channel: VoiceBasedChannel): void {
+	const missing = missingVoicePermissions(channel);
+	if (missing.length) {
+		throw new VoiceFailure(
+			VoiceErrorCode.MISSING_PERMISSIONS,
+			missingPermissionsMessage(missing, `in <#${channel.id}>`),
+		);
+	}
 }
 
 export type Voice = ReturnType<typeof createVoice>;
@@ -170,7 +196,7 @@ export function createVoice(client: Client, soundsDir: string) {
 				item.channelId ? 'the voice channel no longer exists' : 'the member left voice before the sound started',
 			);
 		}
-		if (!canPlayIn(channel)) throw new VoiceFailure(VoiceErrorCode.MISSING_PERMISSIONS, 'cannot speak in this channel');
+		assertCanPlayIn(channel);
 		// a leave sound waits in the queue; by the time it starts, everyone may have left that channel too
 		if (item.channelId && !channel.members.some(m => !m.user.bot)) {
 			throw new VoiceFailure(VoiceErrorCode.NOT_IN_VOICE, 'nobody is left in that voice channel');
@@ -239,9 +265,7 @@ export function createVoice(client: Client, soundsDir: string) {
 		const rules = setting ?? noHouseRules;
 		const rule = brokenHouseRule(rules, sound, { guild: guildId, roles: [...member.roles.cache.keys()], blocked });
 		if (rule) throw new VoiceFailure(VoiceErrorCode.HOUSE_RULE, houseRuleMessage(rule, rules), rule);
-		if (!canPlayIn(channel)) {
-			throw new VoiceFailure(VoiceErrorCode.MISSING_PERMISSIONS, 'the bot cannot connect or speak in that channel');
-		}
+		assertCanPlayIn(channel);
 		return queue.enqueue({ guildId, userId, soundId, source });
 	}
 

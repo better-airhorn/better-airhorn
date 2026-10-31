@@ -6,7 +6,7 @@ import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { VoiceFailure } from '../src/queue';
-import { createVoice, recordPlay, voiceEvents } from '../src/voice';
+import { createVoice, missingPermissionsMessage, recordPlay, voiceEvents } from '../src/voice';
 
 afterEach(() => mock.restore());
 
@@ -70,7 +70,7 @@ describe('enqueue house rules', () => {
 	writeFileSync(join(dir, '5.ogg'), 'x');
 	afterAll(() => rmSync(dir, { recursive: true, force: true }));
 
-	const channel = { guild: { members: { me: {} } }, permissionsFor: () => ({ has: () => true }) };
+	const channel = { guild: { members: { me: {} } }, permissionsFor: () => ({ has: () => true, missing: () => [] }) };
 	const member = { roles: { cache: new Map([[guildId, {}]]) }, voice: { channel } };
 	const client = {
 		guilds: { cache: new Map([[guildId, { members: { fetch: async () => member } }]]) },
@@ -118,5 +118,16 @@ describe('enqueue house rules', () => {
 		const queued = spyOn(voice.queue, 'enqueue').mockReturnValue({ transactionId: 't', position: 0 });
 		expect(await voice.enqueue(guildId, userId, 5, 'quiz')).toEqual({ transactionId: 't', position: 0 });
 		expect(queued).toHaveBeenCalledWith({ guildId, userId, soundId: 5, source: 'quiz' });
+	});
+});
+
+describe('missing permission messages', () => {
+	test('name every missing permission and where', () => {
+		expect(missingPermissionsMessage(['Connect'], 'in <#1>')).toBe(
+			"I'm missing the Connect permission in <#1>. Check my role and that channel's permissions.",
+		);
+		expect(missingPermissionsMessage(['View Channel', 'Connect', 'Speak'], 'in <#1>')).toBe(
+			"I'm missing the View Channel, Connect and Speak permissions in <#1>. Check my role and that channel's permissions.",
+		);
 	});
 });

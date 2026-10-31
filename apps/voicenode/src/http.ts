@@ -16,7 +16,7 @@ import { createHash, timingSafeEqual } from 'node:crypto';
 import { rm } from 'node:fs/promises';
 import { VoiceFailure } from './queue';
 import { importSound, isAllowedUrl, soundPath } from './sounds';
-import type { Voice } from './voice';
+import { missingPermissionsMessage, type Voice } from './voice';
 
 const log = createLogger('http');
 
@@ -261,7 +261,10 @@ export function createServer(deps: AppDeps, port: number) {
 					} catch (err) {
 						if (err instanceof DiscordAPIError) {
 							if (err.code === RESTJSONErrorCodes.MissingPermissions) {
-								throw new VoiceFailure(VoiceErrorCode.MISSING_PERMISSIONS, 'the bot cannot create soundboard sounds');
+								throw new VoiceFailure(
+									VoiceErrorCode.MISSING_PERMISSIONS,
+									missingPermissionsMessage(['Create Expressions'], 'on this server'),
+								);
 							}
 							if (err.code === RESTJSONErrorCodes.MaximumNumberOfSoundboardSoundsReached) {
 								throw new VoiceFailure(VoiceErrorCode.SOUNDBOARD_FULL, 'the soundboard has no free slots');

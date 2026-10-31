@@ -15,7 +15,14 @@ const stub = Bun.serve({
 		return Response.json({
 			transactionId: 'tx',
 			state,
-			...(state === 'failed' ? { error: { code: 'MISSING_PERMISSIONS', message: 'speak' } } : {}),
+			...(state === 'failed'
+				? {
+						error: {
+							code: 'MISSING_PERMISSIONS',
+							message: "I'm missing the Speak permission in <#1>. Check my role and that channel's permissions.",
+						},
+					}
+				: {}),
 		});
 	},
 });
@@ -60,7 +67,7 @@ test('queued sound that ends before it is seen playing', async () => {
 test('failure carries the friendly message', async () => {
 	const [status] = await run({ state: 'playing' }, ['failed']);
 	expect(status?.state).toBe('failed');
-	expect(status?.state === 'failed' && status.reason).toContain('permission');
+	expect(status?.state === 'failed' && status.reason).toContain('Speak permission in <#1>');
 });
 
 test('stops before the interaction token expires', async () => {
