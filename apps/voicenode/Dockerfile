@@ -1,34 +1,30 @@
-FROM node:16 as BUILD_IMAGE
+# syntax=docker/dockerfile:1
+# Build from the repository root: docker build -f apps/voicenode/Dockerfile .
+FROM mwader/static-ffmpeg:8.0.1 AS ffmpeg
 
+FROM oven/bun:1.3.5-slim
+COPY --from=ffmpeg /ffmpeg /ffprobe /usr/local/bin/
 WORKDIR /app
-COPY ./package.json .
-COPY ./yarn.lock .
-COPY ./tsconfig.json .
 
-COPY ./apps/voicenode ./apps/voicenode
-COPY ./packages/entities ./packages/entities
-COPY ./packages/structures ./packages/structures
-COPY ./packages/audio ./packages/audio
+# every workspace manifest is needed for the frozen lockfile check; --filter limits the install to this app
+COPY --parents package.json bun.lock apps/*/package.json packages/*/package.json ./
+RUN --mount=type=cache,target=/root/.bun/install/cache \
+	bun install --frozen-lockfile --production --filter voicenode
 
-RUN yarn workspace @better-airhorn/entities install --frozen-lockfile
-RUN yarn workspace @better-airhorn/entities tsc
-RUN yarn workspace @better-airhorn/structures install --frozen-lockfile
-RUN yarn workspace @better-airhorn/structures tsc
-RUN yarn workspace @better-airhorn/audio install --frozen-lockfile
-RUN yarn workspace @better-airhorn/audio tsc
+# bun reads the root tsconfig for decorator metadata, which TypeORM needs
+COPY tsconfig.json ./
+COPY packages/audio packages/audio
+COPY packages/entities packages/entities
+COPY packages/structures packages/structures
+COPY apps/voicenode apps/voicenode
 
-RUN yarn workspace voicenode install --frozen-lockfile
-RUN yarn workspace voicenode tsc
+RUN mkdir -p /data/sounds && chown bun:bun /data/sounds
+VOLUME /data/sounds
 
-RUN npm prune --production
-
-# second image used for running
-FROM node:16-alpine
-COPY --from=mwader/static-ffmpeg:4.4.1 /ffmpeg /usr/local/bin/
-
-WORKDIR /app/voicenode
-COPY --from=BUILD_IMAGE /app/apps/voicenode/dist ./dist
-COPY --from=BUILD_IMAGE /app/apps/voicenode/package.json .
-COPY --from=BUILD_IMAGE /app/packages ./packages
-COPY --from=BUILD_IMAGE /app/node_modules ./node_modules
-CMD ["yarn", "run:prod"]
+USER bun
+WORKDIR /app/apps/voicenode
+ENV NODE_ENV=production PORT=8888 SOUNDS_DIR=/data/sounds
+EXPOSE 8888
+HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
+	CMD ["bun", "-e", "fetch(`http://localhost:${process.env.PORT}/health`).then(r => process.exit(r.ok ? 0 : 1), () => process.exit(1))"]
+CMD ["bun", "src/index.ts"]

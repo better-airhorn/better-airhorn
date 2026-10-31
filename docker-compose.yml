@@ -1,209 +1,84 @@
-version: "3.7"
-
-# USE --parallel FOR BUILDING
+# Production stack. Run with: docker compose --env-file ./env/better-airhorn.env up -d --build
+# Host folders live under ${DATA_ROOT}; see DEPLOYMENT.md for ownership and the upgrade runbook.
 
 services:
   slashbackend:
     build:
       context: .
-      dockerfile: "apps/slashbackend/Dockerfile"
+      dockerfile: apps/slashbackend/Dockerfile
     depends_on:
-      - postgres
-      - redis
-      - voicenode
-      - meili
+      postgres:
+        condition: service_healthy
     expose:
-      - "8080"
-    ports:
-      - "1212:8080"
+      - '8080'
     networks:
       - databases
       - backend
-      - meili
-      - minio
+      - nexternal
     environment:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      REDIS_PASSWORD: ${REDIS_PASSWORD}
-      MEILI_MASTER_KEY: ${MEILI_MASTER_KEY}
       DISCORD_APP_ID: ${DISCORD_APP_ID}
       DISCORD_PUBLIC_KEY: ${DISCORD_PUBLIC_KEY}
       DISCORD_TOKEN: ${DISCORD_TOKEN}
+      VOICENODE_URL: http://voicenode:8888
       VOICENODE_ACCESS_KEY: ${VOICENODE_ACCESS_KEY}
+      BOTLISTS_DBL_SECRET: ${BOTLISTS_DBL_SECRET}
+      # unset uses the built-in owner ids; an empty value means no admins
+      ADMIN_IDS:
+      LOG_LEVEL: ${LOG_LEVEL:-info}
     restart: always
-    logging:
-      driver: "gelf"
-      options:
-        gelf-address: "tcp://localhost:12201"
-        tag: "slashbackend"
-    healthcheck:
-      test:
-        [
-          "CMD",
-          "curl",
-          "--fail",
-          "--connect-timeout",
-          "1",
-          "http://localhost:9999/docker-up",
-        ]
 
   voicenode:
     build:
       context: .
-      dockerfile: "apps/voicenode/Dockerfile"
-    expose:
-      - "8888"
-    networks:
-      - backend
-      - minio
-      - databases
+      dockerfile: apps/voicenode/Dockerfile
     depends_on:
-      - minio
-      - postgres
-    environment:
-      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
-      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
-      DISCORD_TOKEN: ${DISCORD_TOKEN}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      MINIO_BUCKETNAME: ${MINIO_BUCKETNAME}
-      VOICENODE_ACCESS_KEY: ${VOICENODE_ACCESS_KEY}
-      BOTLISTS_DBL_SECRET: ${BOTLISTS_DBL_SECRET}
-    restart: on-failure:5
-    logging:
-      driver: "gelf"
-      options:
-        gelf-address: "tcp://localhost:12201"
-        tag: "voicenode"
-    healthcheck:
-      test: ["CMD", "curl", "http://localhost:8888/docker-up"]
-
-  voteserver:
-    build:
-      context: .
-      dockerfile: "apps/voteserver/Dockerfile"
+      postgres:
+        condition: service_healthy
     expose:
-      - "7777"
-    ports:
-      - "7777:7777"
+      - '8888'
     networks:
-      - backend
       - databases
-    depends_on:
-      - minio
-      - postgres
-    environment:
-      REDIS_PASSWORD: ${REDIS_PASSWORD}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      BOTLISTS_DBL_SECRET: ${BOTLISTS_DBL_SECRET}
-    restart: always
-    logging:
-      driver: "gelf"
-      options:
-        gelf-address: "tcp://localhost:12201"
-        tag: "voteserver"
-    healthcheck:
-      test:
-        [
-          "CMD",
-          "curl",
-          "--fail",
-          "--connect-timeout",
-          "1",
-          "http://localhost:7777/docker-up",
-        ]
-
-  #bot:
-  #  build:
-  #    context: .
-  #    dockerfile: 'apps/bot/Dockerfile'
-  #  networks:
-  #    - databases
-  #  depends_on:
-  #    - postgres
-  #  environment:
-  #    POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-  #    DISCORD_APP_ID: ${DISCORD_APP_ID}
-  #    DISCORD_TOKEN: ${DISCORD_TOKEN}
-  #    NORMAL_COMMANDS_DEADLINE: ${NORMAL_COMMANDS_DEADLINE}
-  #  restart: on-failure:10
-  #  logging:
-  #    driver: 'gelf'
-  #    options:
-  #      gelf-address: 'tcp://localhost:12201'
-  #      tag: 'bot'
-
-  redis:
-    image: redis:7.0.0-alpine
+      - backend
     volumes:
-      - databases:/data
-    networks:
-      - databases
-    expose:
-      - "6379"
-    command: redis-server --requirepass ${REDIS_PASSWORD}
+      - ${DATA_ROOT:-/srv/better-airhorn}/sounds:/data/sounds
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      DISCORD_TOKEN: ${DISCORD_TOKEN}
+      VOICENODE_ACCESS_KEY: ${VOICENODE_ACCESS_KEY}
+      BOTLISTS_TOPGG: ${BOTLISTS_TOPGG:-}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
     restart: always
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-    logging:
-      driver: "gelf"
-      options:
-        gelf-address: "tcp://localhost:12201"
-        tag: "redis"
 
   postgres:
-    image: postgres:14-alpine
+    image: postgres:17-alpine
     volumes:
-      - pgsql:/var/lib/postgresql/data
+      - ${DATA_ROOT:-/srv/better-airhorn}/pgsql17:/var/lib/postgresql/data
     networks:
       - databases
     expose:
-      - "5432"
+      - '5432'
     environment:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     restart: always
     healthcheck:
-      test: ["CMD", "psql", "-U", "postgres", "-c", "SELECT 1"]
-
-  minio:
-    image: quay.io/minio/minio:RELEASE.2022-06-03T01-40-53Z
-    command: server /data --console-address :9001
-    volumes:
-      - minio:/data
-    environment:
-      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY}
-      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY}
-    expose:
-      - "9000"
-    networks:
-      - minio
-    restart: always
-    healthcheck:
-      test: ["CMD", "curl", "http://localhost:9000/health"]
-
-  meili:
-    image: getmeili/meilisearch:v0.27.1
-    user: "root"
-    environment:
-      MEILI_MASTER_KEY: ${MEILI_MASTER_KEY}
-    expose:
-      - "7700"
-    networks:
-      - meili
-    volumes:
-      - meili:/home/meili/data.ms
-    restart: always
-    healthcheck:
-      test: ["CMD", "curl", "http://localhost:7700/health"]
+      test: ['CMD', 'pg_isready', '-U', 'postgres']
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   ## BACKUPS
+  # sounds are backed up by a host cron job, see DEPLOYMENT.md
 
   pgbackups:
-    image: prodrigestivill/postgres-backup-local
+    image: prodrigestivill/postgres-backup-local:17
     restart: always
     user: postgres:postgres
     volumes:
-      - ../pgbackups:/backups
+      - ${BACKUP_ROOT:-/mnt/backup/better-airhorn}/postgres:/backups
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     environment:
       - POSTGRES_HOST=postgres
       - POSTGRES_DB=postgres metabase
@@ -218,50 +93,26 @@ services:
     networks:
       - databases
 
-  minio-backup:
-    image: leikir/minio-backup-local:RELEASE.2019-01-16T21-44-08Z
-    restart: always
-    volumes:
-      - minio:/data
-      - ../miniobackups:/backups
-    depends_on:
-      - minio
-    environment:
-      - MINIO_DIR=/data
-      - MINIO_BUCKET=${MINIO_BUCKETNAME}
-      - SCHEDULE=@daily
-      - BACKUP_KEEP_DAYS=3
-      - BACKUP_KEEP_WEEKS=3
-      - BACKUP_KEEP_MONTHS=6
-      - HEALTHCHECK_PORT=80
-    networks:
-      - minio
-
   ## STATISTICS
 
   uptime-proxy:
     image: ghcr.io/better-airhorn/uptime-proxy:1.0.1
-    ports:
-      - "7778:9999"
     networks:
       - databases
       - backend
-      - meili
-      - minio
+      - nexternal
     environment:
       PORT: 9999
       monit_postgres: postgres:5432
-      monit_redis: redis:6379
-      monit_minio: http://minio:9000/minio/health/live
-      monit_meili: http://meili:7700/health
       monit_voicenode: http://voicenode:8888/health
       monit_slashbackend: http://slashbackend:8080/health
-      monit_voteserver: http://voteserver:7777
+    restart: always
 
   metabase:
-    image: metabase/metabase
+    # Metabase cannot downgrade its application database: only move this tag forward
+    image: metabase/metabase:v0.65.2.4
     ports:
-      - "3388:3000"
+      - '127.0.0.1:3388:3000'
     environment:
       MB_DB_TYPE: postgres
       MB_DB_DBNAME: metabase
@@ -270,20 +121,17 @@ services:
       MB_DB_PASS: ${POSTGRES_PASSWORD}
       MB_DB_HOST: postgres
       MB_DB_FILE: /metabase-data/metabase.db
+    depends_on:
+      postgres:
+        condition: service_healthy
     networks:
       - databases
     volumes:
-      - stats:/metabase-data
+      - ${DATA_ROOT:-/srv/better-airhorn}/stats:/metabase-data
+    restart: always
 
 networks:
   databases:
   backend:
-  minio:
-  meili:
-
-volumes:
-  databases:
-  meili:
-  minio:
-  pgsql:
-  stats:
+  nexternal:
+    external: true

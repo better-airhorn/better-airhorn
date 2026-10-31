@@ -1,30 +1,23 @@
-FROM node:16-alpine as BUILD_IMAGE
-
+# syntax=docker/dockerfile:1
+# Build from the repository root: docker build -f apps/slashbackend/Dockerfile .
+FROM oven/bun:1.3.5-slim
 WORKDIR /app
-COPY ./package.json .
-COPY ./yarn.lock .
-COPY ./tsconfig.json .
 
-COPY ./apps/slashbackend ./apps/slashbackend
-COPY ./packages/entities ./packages/entities
-COPY ./packages/structures ./packages/structures
-COPY ./packages/raccoon ./packages/raccoon
+# every workspace manifest is needed for the frozen lockfile check; --filter limits the install to this app
+COPY --parents package.json bun.lock apps/*/package.json packages/*/package.json ./
+RUN --mount=type=cache,target=/root/.bun/install/cache \
+	bun install --frozen-lockfile --production --filter slashbackend
 
-RUN yarn workspace @better-airhorn/entities install --frozen-lockfile \
-    && yarn workspace @better-airhorn/entities tsc \
-    && yarn workspace @better-airhorn/structures install --frozen-lockfile \
-    && yarn workspace @better-airhorn/structures tsc \
-    && yarn workspace @better-airhorn/raccoon install --frozen-lockfile \
-    && yarn workspace @better-airhorn/raccoon tsc \
-    && yarn workspace slashbackend install --frozen-lockfile \
-    && yarn workspace slashbackend tsc \
-    && npm prune --production
+# bun reads the root tsconfig for decorator metadata, which TypeORM needs
+COPY tsconfig.json ./
+COPY packages/entities packages/entities
+COPY packages/structures packages/structures
+COPY apps/slashbackend apps/slashbackend
 
-# second image used for running
-FROM node:16-alpine
-WORKDIR /app/slashbackend
-COPY --from=BUILD_IMAGE /app/apps/slashbackend/dist ./dist
-COPY --from=BUILD_IMAGE /app/apps/slashbackend/package.json .
-COPY --from=BUILD_IMAGE /app/packages ./packages
-COPY --from=BUILD_IMAGE /app/node_modules ./node_modules
-CMD ["yarn", "run:prod"]
+USER bun
+WORKDIR /app/apps/slashbackend
+ENV NODE_ENV=production PORT=8080
+EXPOSE 8080
+HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
+	CMD ["bun", "-e", "fetch(`http://localhost:${process.env.PORT}/health`).then(r => process.exit(r.ok ? 0 : 1), () => process.exit(1))"]
+CMD ["bun", "src/index.ts"]
