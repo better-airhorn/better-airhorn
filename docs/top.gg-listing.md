@@ -19,6 +19,8 @@ anything else; irrelevant tags put the bot in front of people who will not invit
 
 ## Long description
 
+top.gg renders HTML, so the styled version in [top.gg-listing.html](./top.gg-listing.html) (feature cards, a comparison table and buttons, inline styles only) is the one to paste. The Markdown below is the plain fallback with the same content.
+
 ```markdown
 # Better Airhorn: a soundboard with no slot limit
 
