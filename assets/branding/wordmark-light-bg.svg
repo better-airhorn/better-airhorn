@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 320" width="1120" height="320">
+  <title>Better Airhorn wordmark (for light backgrounds)</title>
+  <g transform="translate(0 32) scale(0.5)">
+    <mask id="wm">
+      <rect width="512" height="512" fill="#fff"/>
+      <g transform="translate(202 202) scale(0.56) translate(-275 -256)">
+        <rect x="368" y="234" width="68" height="44" rx="16" fill="#000"/>
+        <path d="M164 112 Q 290 214 390 238 V274 Q 290 298 164 400 Z" fill="#000" stroke="#000" stroke-width="16" stroke-linejoin="round"/>
+        <ellipse cx="160" cy="256" rx="46" ry="152" fill="#000"/>
+        <ellipse cx="160" cy="256" rx="24" ry="118" fill="#fff"/>
+      </g>
+    </mask>
+    <g fill="#FF5B2E">
+      <rect x="320" y="96" width="96" height="212" rx="28"/>
+      <rect x="96" y="320" width="212" height="96" rx="28"/>
+      <rect x="320" y="320" width="96" height="96" rx="28"/>
+    </g>
+    <rect x="96" y="96" width="212" height="212" rx="48" fill="#EC3A6B" mask="url(#wm)"/>
+  </g>
+  <text x="250" y="200" font-family="'Segoe UI', system-ui, -apple-system, 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="124" letter-spacing="-3" fill="#1C1726"><tspan font-weight="600">Better</tspan> <tspan font-weight="800" fill="#FF5B2E">Airhorn</tspan></text>
+</svg>

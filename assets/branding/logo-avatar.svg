@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <title>Better Airhorn (avatar)</title>
+  <rect width="512" height="512" fill="#1C1726"/>
+  <g transform="translate(256 256) scale(0.9) translate(-256 -256)">
+    <mask id="a">
+      <rect width="512" height="512" fill="#fff"/>
+      <g transform="translate(202 202) scale(0.56) translate(-275 -256)">
+        <rect x="368" y="234" width="68" height="44" rx="16" fill="#000"/>
+        <path d="M164 112 Q 290 214 390 238 V274 Q 290 298 164 400 Z" fill="#000" stroke="#000" stroke-width="16" stroke-linejoin="round"/>
+        <ellipse cx="160" cy="256" rx="46" ry="152" fill="#000"/>
+        <ellipse cx="160" cy="256" rx="24" ry="118" fill="#fff"/>
+      </g>
+    </mask>
+    <g fill="#FF5B2E">
+      <rect x="320" y="96" width="96" height="212" rx="28"/>
+      <rect x="96" y="320" width="212" height="96" rx="28"/>
+      <rect x="320" y="320" width="96" height="96" rx="28"/>
+    </g>
+    <rect x="96" y="96" width="212" height="212" rx="48" fill="#FFB627" mask="url(#a)"/>
+  </g>
+</svg>
