@@ -1,10 +1,6 @@
 # top.gg listing for Better Airhorn v5
 
-Copy-paste text for https://top.gg/bot/503996428042108928 → Edit. Replace `<N>` with the real count first:
-
-```sql
-SELECT count(*) FROM sound_commands WHERE "accessType" = 3;
-```
+Copy-paste text for https://top.gg/bot/503996428042108928 → Edit. Sound counts are from production on 2026-10-31 (18,797 public sounds).
 
 ## Short description
 
@@ -12,7 +8,7 @@ Pick one (all under 140 characters, so none gets cut off on cards and in search)
 
 1. **No slot limit: upload your own sounds, play long clips, pin button boards and give everyone an entrance sound.**
 2. **Upload sounds, play them in voice, and pin one-click soundboards. Longer clips and more slots than Discord's built-in soundboard.**
-3. **The community soundboard: <N> sounds to play in voice, your own uploads, pinned button panels and entrance sounds.**
+3. **The community soundboard: over 18,000 sounds to play in voice, your own uploads, pinned button panels and entrance sounds.**
 
 Option 1 leads with what Discord's built-in soundboard can't do, which is what most visitors want to know.
 
@@ -27,20 +23,22 @@ anything else; irrelevant tags put the bot in front of people who will not invit
 # Better Airhorn: a soundboard with no slot limit
 
 Discord's built-in soundboard gives a server a handful of slots and 5 seconds per sound. Better Airhorn has no slot
-limit, plays clips several minutes long, and comes with <N> sounds from the community.
+limit, plays clips several minutes long, and comes with over 18,000 public sounds from the community.
 
 ## What you can do
 
 - 🔊 `/play` searches as you type, typos included. With an empty search it suggests sounds based on your likes.
 - ⬆️ `/upload` takes mp3, wav, ogg, flac, m4a and more. Trim the sound in the upload form. Every sound is
   loudness-normalised, so nothing blasts your ears.
-- 🎛️ `/panel` posts a board of up to 20 buttons in any channel. One click plays the sound.
+- 🎛️ `/panel` posts a board of up to 20 buttons in any channel. One click plays the sound, and `/panel repost` brings the board back when chat buries it.
 - 🚪 `/entrance` plays your sound when you join a voice channel.
 - 💾 Right-click a voice message or audio file and pick **Apps → Save as sound**.
 - ⭐ `/export` cuts a sound to Discord's limits and adds it to your server's built-in soundboard.
 - 📤 `/share` posts a sound as a file, also in DMs once you add the app to your account.
 - 🔒 You decide who can play each upload: everyone, one server, or only you.
 - ❤️ Likes rank the sounds, and `/list` shows the top ones.
+
+There is no daily play limit, and voting is never required to play.
 
 ## Getting started
 
@@ -56,8 +54,8 @@ Every user gets 250 MB (10 MB per sound), which is hours of audio. Voting for Be
 ## Privacy
 
 Sounds are stored only to play them back; nothing is sold or shared. Read the
-[Privacy Policy](https://github.com/better-airhorn/better-airhorn/blob/v4/Privacy%20Policy.md) and the
-[Terms of Service](https://github.com/better-airhorn/better-airhorn/blob/v4/Terms%20of%20Service.md).
+[Privacy Policy](https://github.com/better-airhorn/better-airhorn/blob/v5/Privacy%20Policy.md) and the
+[Terms of Service](https://github.com/better-airhorn/better-airhorn/blob/v5/Terms%20of%20Service.md).
 ```
 
 ## Visibility beyond the text
