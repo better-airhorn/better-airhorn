@@ -5,7 +5,6 @@ changed by editing a file and needs no clicking in the UI.
 
 | Path                                             | What it is                                                     |
 | ------------------------------------------------ | -------------------------------------------------------------- |
-| `docker-compose.grafana.yml`                     | the `grafana` service to add to the production stack           |
 | `grafana-readonly-role.sql`                      | creates the `grafana_ro` login that Grafana uses               |
 | `grafana/provisioning/datasources/postgres.yml`  | the Postgres data source (uid `better-airhorn-pg`)             |
 | `grafana/provisioning/dashboards/dashboards.yml` | loads every JSON file in `grafana/dashboards`                  |
@@ -14,25 +13,20 @@ changed by editing a file and needs no clicking in the UI.
 
 ## Deploy
 
-Commands assume the production layout: `~/composes/better-airhorn.yml` and `env/better-airhorn.env`.
+Grafana is the `grafana` service in the repository's `docker-compose.yml`; its volumes point at `./monitoring/grafana`.
+`$ENV` is the env file, as in [DEPLOYMENT.md](../DEPLOYMENT.md).
 
-1. Add two values to the env file: `GRAFANA_ADMIN_PASSWORD` (the `admin` login) and `GRAFANA_DB_PASSWORD` (the
-   database role). Use long random strings.
+1. Add two long random values to the env file: `GRAFANA_ADMIN_PASSWORD` (the `admin` login) and
+   `GRAFANA_DB_PASSWORD` (the database role).
 2. Create the database role. It can only read, its queries stop after 15 seconds, and it can't see the stray
    Metabase `setting` table in the bot database. Running it again only resets the password.
 
    ```sh
-   docker compose -f better-airhorn.yml --env-file env/better-airhorn.env exec -T postgres \
-     psql -U postgres -d postgres -v ON_ERROR_STOP=1 \
-     -v password="$(grep '^GRAFANA_DB_PASSWORD=' env/better-airhorn.env | cut -d= -f2-)" \
-     < monitoring/grafana-readonly-role.sql
+   docker compose --env-file $ENV exec -T postgres psql -U postgres -d postgres -v ON_ERROR_STOP=1 \
+     -v password="$(grep '^GRAFANA_DB_PASSWORD=' $ENV | cut -d= -f2-)" < monitoring/grafana-readonly-role.sql
    ```
 
-   The SQL file must be on the server for this; copy it along with `grafana/` in step 3.
-
-3. Copy this folder's `grafana/` to `~/composes/monitoring/grafana/` (the volume paths are relative to the compose
-   file), and add the `grafana` service from `docker-compose.grafana.yml` under `services:`.
-4. `docker compose -f better-airhorn.yml --env-file env/better-airhorn.env up -d grafana`
+3. `docker compose --env-file $ENV up -d grafana`
 
 Grafana keeps no data volume. The data source and dashboard are provisioned on every start, and the admin password
 comes from the env file each time the container is recreated.
@@ -65,9 +59,8 @@ login is locked for 5 minutes.
 Edits made in the Grafana UI can't be saved over a provisioned dashboard. To keep one, use "Export as JSON" and paste
 it into the file.
 
-Keep queries cheap. `usages` (about 130,000 rows) has no index on `createdAt`, so every query on it reads the whole
-table; that takes about 25 ms today. `plays` has indexes on `(guild, "createdAt")`, `(user, "createdAt")` and
-`soundId`, but none on `"createdAt"` alone.
+Keep queries cheap: filter by `"createdAt"` (indexed on both `usages` and `plays`), and by `guild` or `user` together
+with it on `plays`.
 
 ## Test locally
 

@@ -23,6 +23,11 @@ const stub = Bun.serve({
 					: new Response(null, { status: 204 });
 			case '/guilds/2/queue':
 				return Response.json({ code: 'NOT_IN_VOICE', message: 'member is not in voice' }, { status: 409 });
+			case '/guilds/6/queue':
+				return Response.json(
+					{ code: 'HOUSE_RULE', rule: 'quiet_hours', message: "It's quiet hours on this server (23:00–07:00 (UTC))." },
+					{ status: 403 },
+				);
 			case '/guilds/3/leave':
 				return Response.json({ code: 'NOT_CONNECTED', message: 'not connected' }, { status: 404 });
 			case '/guilds/4/leave':
@@ -53,10 +58,13 @@ const failure = async (p: Promise<unknown>) => {
 
 describe('voicenode client', () => {
 	test('sends the access key and parses success bodies', async () => {
-		expect(await client.enqueue('1', { userId: 'u', soundId: 9 })).toEqual({ transactionId: 'tx', position: 2 });
+		expect(await client.enqueue('1', { userId: 'u', soundId: 9, source: 'panel' })).toEqual({
+			transactionId: 'tx',
+			position: 2,
+		});
 		const last = requests.at(-1)!;
 		expect(last).toMatchObject({ method: 'POST', path: '/guilds/1/queue', auth: 'key' });
-		expect(JSON.parse(last.body)).toEqual({ userId: 'u', soundId: 9 });
+		expect(JSON.parse(last.body)).toEqual({ userId: 'u', soundId: 9, source: 'panel' });
 		expect(await client.clear('1')).toBeUndefined();
 		expect(new Uint8Array(await client.soundFile(9))).toEqual(new Uint8Array([1, 2, 3]));
 	});
@@ -67,11 +75,19 @@ describe('voicenode client', () => {
 	});
 
 	test('maps error bodies to codes', async () => {
-		const notInVoice = await failure(client.enqueue('2', { userId: 'u', soundId: 1 }));
+		const notInVoice = await failure(client.enqueue('2', { userId: 'u', soundId: 1, source: 'command' }));
 		expect(notInVoice).toMatchObject({ code: VoiceErrorCode.NOT_IN_VOICE, status: 409 });
 		expect(voiceErrorMessage(notInVoice)).toBe(voiceErrorMessages.NOT_IN_VOICE);
 
 		expect(await failure(client.leave('3'))).toMatchObject({ code: VoiceErrorCode.NOT_CONNECTED, status: 404 });
+	});
+
+	test('house rules show the message voicenode wrote for the member', async () => {
+		const refused = await failure(client.enqueue('6', { userId: 'u', soundId: 1, source: 'command' }));
+		expect(refused).toMatchObject({ code: VoiceErrorCode.HOUSE_RULE, status: 403 });
+		expect(voiceErrorMessage(refused)).toBe("It's quiet hours on this server (23:00–07:00 (UTC)).");
+		const blank = new VoiceNodeError(VoiceErrorCode.HOUSE_RULE, '', 403);
+		expect(voiceErrorMessage(blank)).toBe(voiceErrorMessages.HOUSE_RULE);
 	});
 
 	test('non-JSON and unknown errors become INTERNAL', async () => {

@@ -19,7 +19,7 @@ services:
 
   grafana:
     extends:
-      file: ../docker-compose.grafana.yml
+      file: ../../docker-compose.yml
       service: grafana
     volumes: !override
       - ../grafana/provisioning/datasources:/etc/grafana/provisioning/datasources:ro

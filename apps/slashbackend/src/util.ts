@@ -1,4 +1,5 @@
 import { createHash, timingSafeEqual } from 'node:crypto';
+import { isValidTimezone, parseClock } from '@better-airhorn/entities';
 import { limits } from './quota';
 
 /** constant-time string comparison; hashing first hides the length of the secret as well */
@@ -68,6 +69,46 @@ export function isSupportedAudio(file: { filename: string; content_type?: string
 		(['audio', 'video'].includes(type.split('/')[0]!) &&
 			(known.includes(subtype) || ['mpeg', 'x-wav', 'x-m4a', 'x-ms-wma', 'x-flac'].includes(subtype)))
 	);
+}
+
+export type Parsed<T> = { ok: true; value: T } | { ok: false; error: string };
+
+export interface QuietHours {
+	quietStart: number | null;
+	quietEnd: number | null;
+	timezone: string;
+}
+
+/** the quiet-hours form: both times empty turns quiet hours off, an empty time zone means UTC */
+export function parseQuietHours(start: string, end: string, timezone: string): Parsed<QuietHours> {
+	const zone = timezone.trim() || 'UTC';
+	if (!isValidTimezone(zone)) {
+		return { ok: false, error: `I don't know the time zone \`${zone.slice(0, 64)}\`. Use a name like Europe/Berlin.` };
+	}
+	const canonical = new Intl.DateTimeFormat('en', { timeZone: zone }).resolvedOptions().timeZone;
+	if (!start.trim() && !end.trim())
+		return { ok: true, value: { quietStart: null, quietEnd: null, timezone: canonical } };
+	if (!start.trim() || !end.trim()) {
+		return { ok: false, error: 'Fill in both start and end, or leave both empty to turn quiet hours off.' };
+	}
+	const [from, to] = [parseClock(start), parseClock(end)];
+	if (from === null || to === null) return { ok: false, error: 'Write the times like 23:00 or 7:30.' };
+	if (from === to) return { ok: false, error: "Start and end can't be the same time." };
+	return { ok: true, value: { quietStart: from, quietEnd: to, timezone: canonical } };
+}
+
+export const maxLengthCapSeconds = 3600;
+
+/** the length-cap form: whole seconds, empty means no cap */
+export function parseLengthCap(input: string): Parsed<number | null> {
+	const trimmed = input.trim();
+	if (!trimmed) return { ok: true, value: null };
+	if (!/^\d{1,5}$/.test(trimmed)) return { ok: false, error: 'Write the cap in whole seconds, like 10.' };
+	const seconds = Number(trimmed);
+	if (seconds < 1 || seconds > maxLengthCapSeconds) {
+		return { ok: false, error: `Pick 1 to ${maxLengthCapSeconds} seconds, or leave it empty for no cap.` };
+	}
+	return { ok: true, value: seconds };
 }
 
 /** seconds typed by the user ("1.5", "1,5", "") as ms; undefined when empty, NaN when invalid */

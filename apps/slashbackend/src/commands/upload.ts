@@ -6,7 +6,6 @@ import {
 	ComponentType,
 	TextInputStyle,
 	type CommandContext,
-	type LabelComponent,
 	type ModalInteractionContext,
 	type ModalOptions,
 	type SlashCreator,
@@ -16,7 +15,7 @@ import { env, voice } from '../env';
 import { buildId } from '../ids';
 import { limits, quotaViolation, type Quota } from '../quota';
 import { replyV2, UserError } from '../respond';
-import { button, colors, container, row, text } from '../ui';
+import { button, colors, container, label, row, text } from '../ui';
 import { formatBytes, formatDuration, isSupportedAudio, md, parseSeconds, voteUrl } from '../util';
 import { Command, guildOf, guildOnly } from './base';
 
@@ -35,13 +34,6 @@ interface AudioFile {
  * a modal has no hidden fields and attachment URLs are too long for a custom_id.
  */
 const pendingImports = new Map<string, AudioFile & { expires: number }>();
-
-const label = (labelText: string, component: LabelComponent['component'], description?: string): LabelComponent => ({
-	type: ComponentType.LABEL,
-	label: labelText,
-	description,
-	component,
-});
 
 function soundModal(customId: string, withFile: boolean, defaultName?: string): ModalOptions {
 	const seconds = (id: string, placeholder: string) =>
@@ -212,7 +204,7 @@ export async function submitSoundModal(ctx: ModalInteractionContext, importKey?:
 				`### ✅ Uploaded ${md(sound.name)}\n-# ${formatDuration(sound.duration)} · ${formatBytes(sound.size)} · ${formatBytes(quota.remainingBytes - sound.size)} storage left`,
 			),
 			row(
-				button(buildId({ kind: 'play', soundId: sound.id }), 'Play', {
+				button(buildId({ kind: 'replay', soundId: sound.id }), 'Play', {
 					emoji: '🔊',
 					style: ButtonStyle.PRIMARY,
 				}),

@@ -37,9 +37,13 @@ export class PlayCommand extends Command {
 	public override async run(ctx: CommandContext) {
 		const guild = guildOf(ctx);
 		const sound = await playableSound(ctx, ctx.options.sound);
-		const settings = await GuildSetting.for(guild);
-		await playSound(ctx, sound, settings.sendMessageAfterPlay === false);
+		await playFromCommand(ctx, guild, sound);
 	}
+}
+
+async function playFromCommand(ctx: CommandContext, guild: string, sound: SoundCommand) {
+	const settings = await GuildSetting.for(guild);
+	await playSound(ctx, sound, 'command', settings.sendMessageAfterPlay ? settings : undefined);
 }
 
 export class RandomCommand extends Command {
@@ -56,8 +60,7 @@ export class RandomCommand extends Command {
 		const guild = guildOf(ctx);
 		const sound = await randomSound(access(ctx));
 		if (!sound) throw new UserError('There are no sounds yet. Upload one with `/upload`.');
-		const settings = await GuildSetting.for(guild);
-		await playSound(ctx, sound, settings.sendMessageAfterPlay === false);
+		await playFromCommand(ctx, guild, sound);
 	}
 }
 

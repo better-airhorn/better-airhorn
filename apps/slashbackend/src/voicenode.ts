@@ -37,10 +37,13 @@ export const voiceErrorMessages: Record<VoiceErrorCode, string> = {
 	[VoiceErrorCode.SOUNDBOARD_FULL]:
 		"This server's soundboard is full. Remove a sound or boost the server for more slots.",
 	[VoiceErrorCode.INVALID_INPUT]: "I couldn't use those options:",
+	[VoiceErrorCode.HOUSE_RULE]: "One of this server's house rules stops that sound.",
 	[VoiceErrorCode.INTERNAL]: 'Something went wrong on my side. Please try again in a moment.',
 };
 
 export function voiceErrorMessage(err: VoiceNodeError): string {
+	// voicenode words house-rule refusals for the member, naming the rule
+	if (err.code === VoiceErrorCode.HOUSE_RULE && err.message) return err.message;
 	const base = voiceErrorMessages[err.code] ?? voiceErrorMessages[VoiceErrorCode.INTERNAL];
 	return err.code === VoiceErrorCode.INVALID_INPUT ? `${base} ${err.message}` : base;
 }

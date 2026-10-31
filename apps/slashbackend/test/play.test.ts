@@ -79,7 +79,7 @@ test('buttons treat a sound the user may not play like a deleted one', async () 
 	const find = spyOn(SoundCommand, 'findOneBy').mockResolvedValue(sound);
 	const ctx = (customID: string) =>
 		({ customID, user: { id: '200000000000000001' }, guildID: '300000000000000001' }) as ComponentContext;
-	for (const id of ['like:3', 'dislike:3', 'play:3']) {
+	for (const id of ['like:3', 'dislike:3', 'play:3', 'replay:3']) {
 		await expect(handleComponent(ctx(id))).rejects.toThrow('That sound does not exist anymore.');
 	}
 	find.mockRestore();

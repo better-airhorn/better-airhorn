@@ -1,8 +1,14 @@
-import { isPlayable, type SoundCommand } from '@better-airhorn/entities';
-import { createLogger, terminalStates, type TransactionResponse } from '@better-airhorn/structures';
+import { isPlayable, type GuildSetting, type SoundCommand } from '@better-airhorn/entities';
+import {
+	createLogger,
+	terminalStates,
+	type EnqueueRequest,
+	type TransactionResponse,
+} from '@better-airhorn/structures';
 import { Message, MessageFlags, type AnyComponent, type MessageInteractionContext } from 'slash-create';
-import { ratingCounts } from './db';
+import { claimRelease, ratingCounts, tipFacts } from './db';
 import { voice } from './env';
+import { needsWhatsNew, pickTip, quizHintWindowMs, release, tipDue, tipLines, whatsNewLine } from './hints';
 import { replyV2, UserError } from './respond';
 import { playCard, type CardData, type PlayStatus } from './ui';
 import { md } from './util';
@@ -11,7 +17,7 @@ import { voiceErrorMessage, VoiceNodeError } from './voicenode';
 const log = createLogger('play');
 
 /** stop editing a little before Discord's 15-minute interaction token expires */
-const editWindowMs = 14 * 60_000;
+export const editWindowMs = 14 * 60_000;
 
 export async function displayName(user: string): Promise<string> {
 	return voice.user(user).then(
@@ -24,17 +30,51 @@ export const soundNotFound = (input: string) =>
 	new UserError(`I couldn't find a sound called **${md(input.slice(0, 64))}** that you can use here.`);
 
 /**
- * Queues `sound` for the interacting user and answers with a play card that follows the
- * playback until it ends.
+ * when each server last got a tip under a play card.
+ * ponytail: in memory, so a restart lets every server get one tip early; a column if that ever matters.
  */
-export async function playSound(ctx: MessageInteractionContext, sound: SoundCommand, ephemeral: boolean) {
+const lastTipAt = new Map<string, number>();
+
+/** the extra line under a public play card, if any: "what's new" once per release, otherwise a rare tip */
+async function cardHint(settings: GuildSetting, user: string): Promise<string | undefined> {
+	if (needsWhatsNew(settings.announcedVersion) && (await claimRelease(settings.guild, release))) return whatsNewLine;
+	const now = Date.now();
+	if (!tipDue(lastTipAt.get(settings.guild), now, Math.random)) return undefined;
+	const tip = pickTip(
+		await tipFacts(settings.guild, user, new Date(now - quizHintWindowMs)),
+		new Date(now),
+		Math.random,
+	);
+	if (!tip) return undefined;
+	lastTipAt.set(settings.guild, now);
+	return tipLines[tip];
+}
+
+/**
+ * Queues `sound` for the interacting user and answers with a play card that follows the
+ * playback until it ends. The card is public when `publicIn` is the server's settings, and only
+ * public cards carry hints.
+ */
+export async function playSound(
+	ctx: MessageInteractionContext,
+	sound: SoundCommand,
+	source: EnqueueRequest['source'],
+	publicIn?: GuildSetting,
+) {
 	if (!ctx.guildID) throw new UserError('Sounds can only be played on a server.');
 	if (!isPlayable(sound, { user: ctx.user.id, guild: ctx.guildID })) throw soundNotFound(sound.name);
+	const ephemeral = !publicIn;
 
 	// voicenode counts the play when playback starts
-	const queued = await voice.enqueue(ctx.guildID, { userId: ctx.user.id, soundId: sound.id });
-	const [uploader, { likes }] = await Promise.all([displayName(sound.user), ratingCounts(sound.id)]);
-	const data: CardData = { sound: { ...sound, uses: sound.uses + 1 }, uploader, likes };
+	const queued = await voice.enqueue(ctx.guildID, { userId: ctx.user.id, soundId: sound.id, source });
+	const [uploader, { likes }, hint] = await Promise.all([
+		displayName(sound.user),
+		ratingCounts(sound.id),
+		publicIn
+			? cardHint(publicIn, ctx.user.id).catch(err => void log.warn('could not pick a card hint', err))
+			: undefined,
+	]);
+	const data: CardData = { sound: { ...sound, uses: sound.uses + 1 }, uploader, likes, hint: hint ?? undefined };
 	const status: PlayStatus =
 		queued.position === 0 ? { state: 'playing' } : { state: 'queued', position: queued.position };
 

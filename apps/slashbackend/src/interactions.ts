@@ -1,9 +1,11 @@
 import { isPlayable, SoundCommand } from '@better-airhorn/entities';
 import { MessageFlags, type ComponentContext, type ModalInteractionContext } from 'slash-create';
 import { access } from './commands/base';
-import { toggleSetting } from './commands/server';
+import { handleRuleComponent, submitRuleModal, toggleSetting } from './commands/config';
+import { answerQuiz } from './commands/quiz';
 import { renderList } from './commands/sounds';
 import { submitSoundModal } from './commands/upload';
+import { postWrapped } from './commands/wrapped';
 import { rate } from './db';
 import { parseId } from './ids';
 import { playSound } from './play';
@@ -38,9 +40,11 @@ export async function handleComponent(ctx: ComponentContext): Promise<void> {
 	const id = parseId(ctx.customID);
 	switch (id?.kind) {
 		case 'play':
-			return playSound(ctx, await existingSound(ctx, id.soundId), true);
+			return playSound(ctx, await existingSound(ctx, id.soundId), 'panel');
+		case 'replay':
+			return playSound(ctx, await existingSound(ctx, id.soundId), 'button');
 		case 'pick':
-			return playSound(ctx, await existingSound(ctx, ctx.values[0]), true);
+			return playSound(ctx, await existingSound(ctx, ctx.values[0]), 'button');
 		case 'like':
 		case 'dislike': {
 			const sound = await existingSound(ctx, id.soundId);
@@ -55,6 +59,12 @@ export async function handleComponent(ctx: ComponentContext): Promise<void> {
 		}
 		case 'config':
 			return toggleSetting(ctx, id.key);
+		case 'rules':
+			return handleRuleComponent(ctx, id.action);
+		case 'quiz':
+			return answerQuiz(ctx, id);
+		case 'wrapped':
+			return postWrapped(ctx, id.scope, id.year);
 		default:
 			throw outdated();
 	}
@@ -67,6 +77,8 @@ export async function handleModal(ctx: ModalInteractionContext): Promise<void> {
 			return submitSoundModal(ctx);
 		case 'import':
 			return submitSoundModal(ctx, id.key);
+		case 'rules':
+			return submitRuleModal(ctx, id.action);
 		default:
 			throw outdated();
 	}

@@ -39,6 +39,7 @@ describe('quota', () => {
 describe('custom ids', () => {
 	const ids: CustomId[] = [
 		{ kind: 'play', soundId: 42 },
+		{ kind: 'replay', soundId: 42 },
 		{ kind: 'like', soundId: 1 },
 		{ kind: 'dislike', soundId: 7 },
 		{ kind: 'list', scope: 'mine', page: 3, ownerId: '196214245770133504' },
@@ -46,6 +47,9 @@ describe('custom ids', () => {
 		{ kind: 'config', key: 'entranceSounds' },
 		{ kind: 'upload' },
 		{ kind: 'import', key: '1234567890123456789' },
+		{ kind: 'rules', action: 'quiet' },
+		{ kind: 'quiz', quiz: '1234567890123456789', round: 9, choice: 3 },
+		{ kind: 'wrapped', scope: 'me', year: 2026 },
 	];
 
 	test.each(ids)('round trip %o', id => {
@@ -68,6 +72,12 @@ describe('custom ids', () => {
 		'import',
 		'pick:1',
 		'like_button',
+		'rules:everything',
+		'quiz:1234567890123456789:0:4',
+		'quiz:notanid:0:1',
+		'quiz:1234567890123456789:0',
+		'wrapped:guild:2026',
+		'wrapped:me:26',
 	])('rejects %p', raw => expect(parseId(raw)).toBeNull());
 });
 

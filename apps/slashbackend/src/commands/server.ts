@@ -1,72 +1,59 @@
-import { AccessType, EntranceSound, GuildSetting, SoundboardPanel, SoundCommand } from '@better-airhorn/entities';
-import { createLogger, nativeSoundboardLimits } from '@better-airhorn/structures';
 import {
-	CommandOptionType,
-	MessageFlags,
-	type AutocompleteContext,
-	type CommandContext,
-	type ComponentContext,
-	type SlashCreator,
-} from 'slash-create';
+	AccessType,
+	EntranceSound,
+	entranceKinds,
+	GuildSetting,
+	SoundboardPanel,
+	SoundCommand,
+	type EntranceKind,
+} from '@better-airhorn/entities';
+import { createLogger, nativeSoundboardLimits } from '@better-airhorn/structures';
+import { CommandOptionType, type AutocompleteContext, type CommandContext, type SlashCreator } from 'slash-create';
 import { In } from 'typeorm';
 import { DiscordApiError, deleteMessage, editMessage, postMessage } from '../discord';
 import { voice } from '../env';
-import type { SettingKey } from '../ids';
 import { limits } from '../quota';
 import { reply, replyV2, UserError } from '../respond';
-import { configCard, notice, panelMessage } from '../ui';
+import { notice, panelMessage } from '../ui';
 import { escapeLike, formatDuration, hasAnyPermission, md, permissions } from '../util';
 import { Command, guildOf, guildOnly, leafOptions, playableSound, soundChoices, soundOption } from './base';
 
 const log = createLogger('server');
 
-const settingValues = (s: GuildSetting): Record<SettingKey, boolean> => ({
-	leaveAfterPlay: s.leaveAfterPlay,
-	sendMessageAfterPlay: s.sendMessageAfterPlay,
-	entranceSounds: s.entranceSounds,
-});
+const entranceEvents: Record<EntranceKind, { choice: string; noun: string; when: string }> = {
+	join: { choice: 'join', noun: 'join sound', when: 'when you join a voice channel here' },
+	leave: { choice: 'leave', noun: 'leave sound', when: 'when you leave a voice channel here' },
+	stream: { choice: 'go live', noun: 'Go Live sound', when: 'when you go live here' },
+};
 
-export class ConfigCommand extends Command {
-	public constructor(creator: SlashCreator) {
-		super(creator, {
-			name: 'config',
-			description: 'Change how I behave on this server',
-			requiredPermissions: ['MANAGE_GUILD'],
-			...guildOnly,
-		});
-	}
+const whenOption = (description: string) =>
+	({
+		type: CommandOptionType.STRING,
+		name: 'when',
+		description,
+		choices: entranceKinds.map(kind => ({ name: entranceEvents[kind].choice, value: kind })),
+	}) as const;
 
-	public override async run(ctx: CommandContext) {
-		const settings = await GuildSetting.for(guildOf(ctx));
-		await replyV2(ctx, configCard(settingValues(settings)));
-	}
-}
-
-/** `config:<key>` button; component clicks skip command permissions, so they are checked here */
-export async function toggleSetting(ctx: ComponentContext, key: SettingKey) {
-	const guild = guildOf(ctx);
-	if (!hasAnyPermission(ctx.member?.permissions.valueOf(), permissions.MANAGE_GUILD)) {
-		throw new UserError('You need the **Manage Server** permission to change settings.');
-	}
-	const settings = await GuildSetting.for(guild);
-	settings[key] = !settings[key];
-	await settings.save();
-	await ctx.editParent({ components: configCard(settingValues(settings)), flags: MessageFlags.IS_COMPONENTS_V2 });
-}
+const entranceKind = (input: unknown) => entranceKinds.find(k => k === input);
 
 export class EntranceCommand extends Command {
 	public constructor(creator: SlashCreator) {
 		super(creator, {
 			name: 'entrance',
-			description: 'A sound that plays when you join a voice channel on this server',
+			description: 'Sounds that play when you join or leave voice or go live on this server',
 			options: [
 				{
 					type: CommandOptionType.SUB_COMMAND,
 					name: 'set',
-					description: `Pick your entrance sound (at most ${limits.entranceMaxMs / 1000} seconds)`,
-					options: [soundOption()],
+					description: `Pick a sound of up to ${limits.entranceMaxMs / 1000} seconds`,
+					options: [soundOption(), whenOption('When it plays (default: join)')],
 				},
-				{ type: CommandOptionType.SUB_COMMAND, name: 'clear', description: 'Remove your entrance sound' },
+				{
+					type: CommandOptionType.SUB_COMMAND,
+					name: 'clear',
+					description: 'Remove your sounds',
+					options: [whenOption('Which one to remove (default: all of them)')],
+				},
 			],
 			...guildOnly,
 		});
@@ -78,24 +65,38 @@ export class EntranceCommand extends Command {
 
 	public override async run(ctx: CommandContext) {
 		const guild = guildOf(ctx);
+		const opts = leafOptions(ctx);
 		if (ctx.subcommands[0] === 'clear') {
-			await EntranceSound.delete({ guild, user: ctx.user.id });
-			return reply(ctx, 'Removed your entrance sound.');
-		}
-		const sound = await playableSound(ctx, leafOptions(ctx).sound);
-		if (sound.duration > limits.entranceMaxMs) {
-			throw new UserError(
-				`**${md(sound.name)}** is ${formatDuration(sound.duration)} long. Entrance sounds can be at most ${limits.entranceMaxMs / 1000} seconds.`,
+			const kind = entranceKind(opts.when);
+			const { affected } = await EntranceSound.delete(
+				kind ? { guild, user: ctx.user.id, kind } : { guild, user: ctx.user.id },
+			);
+			if (kind) {
+				const { noun } = entranceEvents[kind];
+				return reply(ctx, affected ? `Removed your ${noun}.` : `You have no ${noun} on this server.`);
+			}
+			return reply(
+				ctx,
+				affected
+					? 'Removed your join, leave and Go Live sounds.'
+					: 'You have no join, leave or Go Live sounds on this server.',
 			);
 		}
-		await EntranceSound.upsert({ guild, user: ctx.user.id, soundId: sound.id }, ['guild', 'user']);
+		const kind = entranceKind(opts.when) ?? 'join';
+		const sound = await playableSound(ctx, opts.sound);
+		if (sound.duration > limits.entranceMaxMs) {
+			throw new UserError(
+				`**${md(sound.name)}** is ${formatDuration(sound.duration)} long. These sounds can be at most ${limits.entranceMaxMs / 1000} seconds.`,
+			);
+		}
+		await EntranceSound.upsert({ guild, user: ctx.user.id, kind, soundId: sound.id }, ['guild', 'user', 'kind']);
 		const { entranceSounds } = await GuildSetting.for(guild);
 		await reply(
 			ctx,
-			`🚪 **${md(sound.name)}** now plays when you join a voice channel here.` +
+			`🚪 **${md(sound.name)}** now plays ${entranceEvents[kind].when}.` +
 				(entranceSounds
 					? ''
-					: '\n-# Entrance sounds are turned off on this server; an admin can turn them on in `/config`.'),
+					: '\n-# Join, leave and Go Live sounds are turned off on this server. Someone with Manage Server can turn them on in `/config`.'),
 		);
 	}
 }
