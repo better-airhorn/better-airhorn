@@ -31,8 +31,9 @@ The Bot only stores what it needs to operate:
 
 - Discord IDs (user IDs, server IDs, and the channel and message IDs of soundboard panels).
 - Audio files uploaded by users, converted for playback, together with each sound's details (such as its name and visibility).
-- Likes and dislikes, entrance-sound settings, server settings, and soundboard panels.
+- Likes and dislikes, join, leave and Go Live sound settings, server settings and house rules, blocked sounds, and soundboard panels.
 - A record of each command used, including the options entered.
+- A record of each sound played: which sound, on which server, by whom, how it was started, and when.
 - Votes for the Bot received from top.gg.
 
 The [Privacy Policy](./Privacy%20Policy.md) describes this data, how long it is kept, and how to delete it.

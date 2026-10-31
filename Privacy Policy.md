@@ -18,24 +18,27 @@ We collect and store audio files uploaded by users for use with the Bot. Each up
 We store which sounds you like or dislike, together with your user ID and the date.
 
 ### 1.4 Settings
-We store your entrance sound for each server where you set one, each server's Bot settings, and the soundboard panels created on a server (title, sounds, channel and message ID, and the user ID of the creator).
+We store the sounds you pick to play when you join or leave a voice channel or go live, for each server where you set them; each server's Bot settings and house rules (such as quiet hours and their time zone, a length cap, and the ID of the role members need to play sounds); the sounds blocked on a server, with the user ID of the member who blocked each one and the date; and the soundboard panels created on a server (title, sounds, channel and message ID, and the user ID of the creator).
 
 ### 1.5 Command Usage
 Each time you run a command, we store the command name, your user ID, the server ID (if any), the time, and the options you entered (for example a search text or a panel title).
 
-### 1.6 top.gg Votes
+### 1.6 Plays
+Each time a sound starts playing, we store which sound it was, the server ID, the user ID of the member who played it (or whose join, leave or Go Live sound it was), how it was started (for example a command, a panel button or a quiz), and the time.
+
+### 1.7 top.gg Votes
 When you vote for the Bot on top.gg, top.gg sends us your user ID. We store it with the time of the vote to grant the voting bonus. The Bot also sends top.gg the number of servers it is in; this contains no personal information.
 
-### 1.7 Logs
+### 1.8 Logs
 Technical logs, such as error reports and received votes, can contain Discord IDs.
 
-### 1.8 What We Do Not Collect
-The Bot does not listen to or record voice channels; it joins them deafened and only plays sounds. It does not read messages, except an attachment you pick with "Save as sound". Usernames and display names are fetched from Discord to show who uploaded a sound, and are not stored.
+### 1.9 What We Do Not Collect
+The Bot does not listen to or record voice channels; it joins them deafened and only plays sounds. It notices when you join or leave a voice channel or start a Go Live stream, to play your sounds, but it does not watch streams. It does not read messages, except an attachment you pick with "Save as sound". Usernames and display names are fetched from Discord to show who uploaded a sound, and are not stored. The answers and scores of a `/quiz` are kept only in memory while the quiz runs, and `/wrapped` results for up to 10 minutes; neither is written to the database.
 
 ## 2. How We Use Your Information
 
 ### 2.1 Provide and Improve the Bot
-We use the collected information to operate, maintain, and improve the Bot. This includes using Discord IDs to manage user interactions, audio files to play the sounds you request, likes and dislikes to rank and recommend sounds, votes to apply the voting bonus, and command usage for statistics and to investigate errors and abuse.
+We use the collected information to operate, maintain, and improve the Bot. This includes using Discord IDs to manage user interactions, audio files to play the sounds you request, likes and dislikes to rank and recommend sounds, house rules and blocked sounds to decide which sounds may play on a server, plays for `/wrapped` and statistics, votes to apply the voting bonus, and command usage for statistics and to investigate errors and abuse.
 
 ### 2.2 Legal Compliance
 We may use your information to comply with applicable laws, regulations, and legal processes.
@@ -49,7 +52,7 @@ We do not share your information with third-party service providers. All data is
 The Bot runs on Discord, so everything it does passes through Discord's services and is also subject to [Discord's Privacy Policy](https://discord.com/privacy). When you use `/export`, the sound clip is uploaded to the server's Discord soundboard, and the server's audit log shows your username and user ID. Votes are received from top.gg, which handles them under its own privacy policy.
 
 ### 3.3 Other Users
-Sounds can be played by the users you choose when uploading (everyone, the server, or only you). Other users who can play a sound can see its name, uploader, play count, likes and dislikes.
+Sounds can be played by the users you choose when uploading (everyone, the server, or only you). Other users who can play a sound can see its name, uploader, play count, likes and dislikes. On a server, anyone can use `/wrapped` to see that server's plays for a year, including its three most active players and their play counts. Your own `/wrapped` is shown only to you unless you post it to the channel. `/quiz` round results and scores are posted in the channel. Members who can use `/config` see the server's house rules and which sounds are blocked, but not who blocked them.
 
 ### 3.4 Legal Requirements
 We may disclose your information if required to do so by law or in response to valid requests by public authorities (e.g., a court or a government agency).
@@ -65,7 +68,7 @@ We implement reasonable security measures to protect your information from unaut
 
 We retain the information we collect for as long as necessary to provide the Bot's services, comply with our legal obligations, resolve disputes, and enforce our agreements. To request the deletion of your data, please contact us [here](https://discord.gg/5bfhkJ3) or message chy4e on Discord.
 
-You can delete data yourself with commands: `/delete` removes a sound, its audio file, and its likes, dislikes and entrance-sound settings; `/entrance clear` removes your entrance sound; `/panel delete` removes a panel and its message; clicking Like or Dislike again removes your rating. Data deleted this way is removed from the live service immediately. Our backups are rotated automatically, so deleted data also disappears from all backups no later than 189 days after it was deleted. Command usage records and vote records cannot be deleted with commands; contact us to have them deleted.
+You can delete data yourself with commands: `/delete` removes a sound, its audio file, its likes and dislikes, its plays, any blocks of it, and any join, leave or Go Live settings that use it; `/entrance clear` removes your join, leave and Go Live sounds on a server (or one of them); `/panel delete` removes a panel and its message; clicking Like or Dislike again removes your rating. On a server, members with the Manage Server permission can remove a block with `/unblock` and clear the house rules with Reset house rules in `/config`. Data deleted this way is removed from the live service immediately. Our backups are rotated automatically, so deleted data also disappears from all backups no later than 189 days after it was deleted. Command usage records, plays and vote records cannot be deleted with commands; contact us to have them deleted.
 
 ## 6. Your Rights
 
