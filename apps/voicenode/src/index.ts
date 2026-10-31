@@ -1,144 +1,113 @@
-import { Dislike, GuildSetting, SoundCommand, Like } from '@better-airhorn/entities';
-import { QueueEvent } from '@better-airhorn/structures';
-import { AudioPlayerStatus, createAudioPlayer, createAudioResource, entersState, StreamType } from '@discordjs/voice';
-import { json, text } from 'body-parser';
-import { Client, Intents, VoiceChannel } from 'discord.js';
-import { createServer } from 'http';
-import { Client as MinIo } from 'minio';
-import restana from 'restana';
-import { fromEvent } from 'rxjs';
-import { filter, takeUntil } from 'rxjs/operators';
-import { createConnection, getConnection } from 'typeorm';
-import { Config } from './Config';
-import { addRoutes } from './Routes';
-import { QueueService } from './service/QueueService';
-import { getSubLogger, TypeORMLogger } from './util/Logger';
-import { connectToChannel, getVoiceConnection } from './util/Utils';
+import { createDataSource } from '@better-airhorn/entities';
+import { createLogger } from '@better-airhorn/structures';
+import { generateDependencyReport } from '@discordjs/voice';
+import { ActivityType, Client, Events, GatewayIntentBits } from 'discord.js';
+import { mkdir } from 'node:fs/promises';
+import { loadConfig } from './env';
+import { createServer } from './http';
+import { createVoice } from './voice';
 
-const log = getSubLogger('http');
+const log = createLogger('voicenode');
 
-const minio = new MinIo({
-	endPoint: Config.credentials.minio.url,
-	port: Config.credentials.minio.port,
-	accessKey: Config.credentials.minio.accessKey,
-	secretKey: Config.credentials.minio.secretKey,
-	useSSL: false,
+let config: ReturnType<typeof loadConfig>;
+try {
+	config = loadConfig();
+} catch (err) {
+	log.error((err as Error).message);
+	process.exit(1);
+}
+
+log.debug(`voice dependencies\n${generateDependencyReport()}`);
+await mkdir(config.soundsDir, { recursive: true });
+
+// slashbackend runs the migrations
+const dataSource = createDataSource(config.databaseUrl, { migrationsRun: false });
+// Discord requires sharding beyond 2,500 guilds; 'auto' runs the recommended shard count in this process
+const client = new Client({ shards: 'auto', intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates] });
+const voice = createVoice(client, config.soundsDir);
+
+/** custom status lines shown under the bot's name, rotated so members discover the newer commands */
+const statusLines = [
+	'New: pin a soundboard with /panel',
+	'New: entrance sounds with /entrance',
+	'New: /export a sound to your server soundboard',
+	'New: right-click a voice message to save it as a sound',
+	'Upload your own sounds with /upload',
+];
+let statusIndex = 0;
+function rotateStatus() {
+	if (!client.isReady()) return;
+	const state = statusLines[statusIndex++ % statusLines.length];
+	client.user.setPresence({ activities: [{ type: ActivityType.Custom, name: 'status', state }] });
+}
+
+client.once(Events.ClientReady, c => {
+	log.info(`logged in as ${c.user.tag}`);
+	rotateStatus();
 });
-minio
-	.bucketExists(Config.credentials.minio.bucketName)
-	.then(exists => {
-		if (!exists)
-			minio.makeBucket(Config.credentials.minio.bucketName, 'us-east-1').catch(e => {
-				throw e;
-			});
-	})
-	.catch(e => {
-		throw e;
+client.on(Events.VoiceStateUpdate, (old, next) =>
+	voice.onVoiceStateUpdate(old, next).catch(err => log.error('voice state update failed', err)),
+);
+client.on(Events.Error, err => log.error('discord client error', err));
+
+const sweeper = setInterval(() => voice.sweep(), 60_000);
+const statusRotation = setInterval(rotateStatus, 10 * 60_000);
+
+/** keeps the server count on the top.gg listing current */
+async function postTopggStats(token: string) {
+	if (!client.isReady()) return;
+	const res = await fetch(`https://top.gg/api/bots/${client.user.id}/stats`, {
+		method: 'POST',
+		headers: { authorization: token, 'content-type': 'application/json' },
+		body: JSON.stringify({ server_count: client.guilds.cache.size }),
+		signal: AbortSignal.timeout(10_000),
 	});
-const client = new Client({
-	shards: 'auto',
-	intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_VOICE_STATES],
-});
-
-client.on('ready', () => {
-	log.info('connected to discord as', client.user?.tag);
-});
-// eslint-disable-next-line @typescript-eslint/no-floating-promises
-client.login(Config.credentials.discord.token);
-
-const queue = new QueueService(async (obj, queueLength, ac) => {
-	const guild = client.guilds.cache.get(obj.guildId);
-	if (!guild) throw new Error('guild not found');
-	const member = await guild.members.fetch(obj.userId);
-	const channel = member.voice.channel as VoiceChannel;
-	if (!channel) throw new Error('user is not in a channel');
-
-	const connection = await connectToChannel(channel);
-	const player = createAudioPlayer();
-	connection.subscribe(player);
-	const stream = await minio.getObject(Config.credentials.minio.bucketName, obj.sound.toString());
-	const resource = createAudioResource(stream, { inputType: StreamType.OggOpus });
-	player.play(resource);
-	await entersState(player, AudioPlayerStatus.Playing, 5e3);
-	// wait for the player to enter idle (finished playing) or until it throws an error (the AbortController fired)
-	await entersState(player, AudioPlayerStatus.Idle, ac.signal).catch(() => player.stop());
-	const guildSettings = (await GuildSetting.findOne({ where: { guild: obj.guildId } })) ?? GuildSetting.create();
-	if (queueLength === 0 && guildSettings.leaveAfterPlay) {
-		connection.destroy();
-	}
-});
-
-client.on('voiceStateUpdate', (oldState, newState) => {
-	const channel = newState.channel ?? oldState.channel;
-	if (!channel) return;
-	const { id } = client.user!;
-	if (channel.members.some(m => m.id === id) && channel.members.filter(m => m.id !== id && !m.user.bot).size < 1) {
-		getVoiceConnection(channel.id)?.disconnect();
-	}
-});
-
-const http = createServer();
-export const service = restana({
-	server: http,
-	errorHandler: (err, req, res) => {
-		log.error(err, req.body);
-		res.send(500);
-	},
-});
-createConnection({
-	name: 'default',
-	type: 'postgres',
-	url: Config.credentials.postgres,
-	logging: true,
-	logger: new TypeORMLogger(),
-	synchronize: false,
-	entities: [GuildSetting, SoundCommand, Like, Dislike],
-}).catch(e => {
-	throw e;
-});
-http.listen(8888);
-
-service.use(text());
-service.use(json());
-
-service.get('/docker-up', (req, res) => {
-	res.send(200);
-});
-
-service.get('/health', (req, res) => {
-	try {
-		return res.send(client.ws.shards.each(shard => shard.status === 1) && getConnection().isConnected ? 200 : 503);
-	} catch {
-		res.send(503);
-	}
-});
-
-service.use((req, res, next) => {
-	if (req.headers.authorization !== Config.credentials.accessKey) {
-		res.send(401);
-		return;
-	}
-	next();
-});
-
-service.get('/events', (req, res) => {
-	res.writeHead(200, {
-		'Content-Type': 'text/event-stream',
-		'Cache-Control': 'no-cache',
-		Connection: 'keep-alive',
-	});
-	res.flushHeaders();
-
-	const lastEvent = parseInt(req.headers['Last-Event-ID']?.toString() ?? queue.eventID.toString(), 10);
-	queue.events
-		.pipe(
-			takeUntil(fromEvent(req, 'close')),
-			filter((val: QueueEvent) => val.id > lastEvent),
+	if (!res.ok) throw new Error(`top.gg answered ${res.status}`);
+}
+if (config.topggToken) {
+	client.once(Events.ClientReady, () =>
+		postTopggStats(config.topggToken!).catch(err => log.warn('could not post top.gg stats', err)),
+	);
+}
+const topggStats = config.topggToken
+	? setInterval(
+			() => postTopggStats(config.topggToken!).catch(err => log.warn('could not post top.gg stats', err)),
+			30 * 60_000,
 		)
-		.subscribe(value => {
-			res.write(`data: ${JSON.stringify(value)}\n\n`);
-			res.write(`id: ${value.id}\n\n`);
-		});
-});
+	: undefined;
+const server = createServer(
+	{
+		accessKey: config.accessKey,
+		soundsDir: config.soundsDir,
+		client,
+		isDatabaseReady: () => dataSource.isInitialized,
+		voice,
+	},
+	config.port,
+);
+log.info(`listening on ${server.port}`);
 
-addRoutes(service, queue, client, minio);
+/** a failed start exits with one clear log line; the restart policy decides whether to try again */
+function fatal(message: string): (err: unknown) => never {
+	return err => {
+		log.error(message, err);
+		process.exit(1);
+	};
+}
+
+await dataSource.initialize().catch(fatal('could not connect to the database'));
+await client.login(config.discordToken).catch(fatal('Discord login failed, check DISCORD_TOKEN'));
+
+async function shutdown(signal: string) {
+	log.info(`${signal} received, shutting down`);
+	clearInterval(sweeper);
+	clearInterval(statusRotation);
+	clearInterval(topggStats);
+	await server.stop(true);
+	voice.destroyAll();
+	await client.destroy();
+	await dataSource.destroy();
+	process.exit(0);
+}
+process.once('SIGTERM', () => void shutdown('SIGTERM'));
+process.once('SIGINT', () => void shutdown('SIGINT'));

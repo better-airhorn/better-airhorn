@@ -1,215 +1,102 @@
-import { spawn, spawnSync } from 'child_process';
-import { pipeline, Readable } from 'stream';
-import { HotWordEngine, HotWords } from './hotword-engine';
+/** Thin wrappers around the ffmpeg and ffprobe binaries, which must be on PATH. */
 
-let thrown = false;
-try {
-	const exec = spawnSync('ffmpeg', ['-version']);
-	if (exec.status !== 0) {
-		thrown = true;
-		throw new Error('ffmpeg executable not found or not working\n');
+/** loudness target for stored sounds (EBU R128 style, single-pass) */
+const loudnorm = 'loudnorm=I=-16:TP=-1.5:LRA=11';
+
+/** runs a binary and resolves with stdout; rejects with the tail of stderr on a non-zero exit */
+async function run(cmd: string[]): Promise<Uint8Array> {
+	const proc = Bun.spawn(cmd, { stdin: 'ignore', stdout: 'pipe', stderr: 'pipe' });
+	const [stdout, stderr, code] = await Promise.all([
+		new Response(proc.stdout).bytes(),
+		new Response(proc.stderr).text(),
+		proc.exited,
+	]);
+	if (code !== 0) throw new Error(`${cmd[0]} exited with ${code}: ${stderr.trim().split('\n').slice(-3).join(' | ')}`);
+	return stdout;
+}
+
+/** duration of an audio file in ms; rejects when the file is not readable media */
+export async function probeDurationMs(path: string): Promise<number> {
+	const out = await run(['ffprobe', '-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', path]);
+	const seconds = Number.parseFloat(new TextDecoder().decode(out));
+	if (!Number.isFinite(seconds)) throw new Error('ffprobe reported no duration');
+	return Math.round(seconds * 1000);
+}
+
+/**
+ * Converts any audio file to loudness-normalised 48 kHz stereo Ogg/Opus at 96 kbit/s, the format
+ * Discord voice plays without transcoding. The optional trim is applied before normalisation.
+ */
+export async function convertToOpus(
+	input: string,
+	output: string,
+	trim: { startMs?: number; endMs?: number } = {},
+): Promise<void> {
+	const filters: string[] = [];
+	if (trim.startMs !== undefined || trim.endMs !== undefined) {
+		const bounds = [`start=${(trim.startMs ?? 0) / 1000}`];
+		if (trim.endMs !== undefined) bounds.push(`end=${trim.endMs / 1000}`);
+		filters.push(`atrim=${bounds.join(':')}`, 'asetpts=PTS-STARTPTS');
 	}
-} catch (e) {
-	if (thrown) throw e;
-	throw new Error(`ffmpeg executable not found or not working\n${e}`);
+	// loudnorm resamples internally to 192 kHz; opus only takes 48 kHz
+	filters.push(loudnorm, 'aresample=48000');
+	await run([
+		'ffmpeg',
+		'-v',
+		'error',
+		'-y',
+		'-i',
+		input,
+		'-vn',
+		'-map_metadata',
+		'-1',
+		'-af',
+		filters.join(','),
+		'-ac',
+		'2',
+		'-c:a',
+		'libopus',
+		'-b:a',
+		'96k',
+		'-f',
+		'ogg',
+		output,
+	]);
 }
 
 /**
- * Returns OGG stream and duration in ms
- *
- * @param stream input stream
- * @returns {Promise<{ stream: Readable; duration: Promise<number> }>}
+ * Cuts `[startMs, startMs + durationMs)` out of `input` and encodes it as mp3, lowering the bitrate
+ * until the result fits into `maxBytes`. Rejects with a RangeError when `startMs` is past the end.
  */
-function convertToOGG(stream: Readable): Promise<{ stream: Readable; duration: Promise<number> }> {
-	return new Promise((res, rej) => {
-		const child = spawn('ffmpeg', [
+export async function encodeMp3Clip(
+	input: string,
+	opts: { startMs: number; durationMs: number; maxBytes: number },
+): Promise<Uint8Array> {
+	if (opts.startMs >= (await probeDurationMs(input)))
+		throw new RangeError('the clip starts after the end of the sound');
+	for (const kbps of [192, 128, 96, 64, 32]) {
+		const mp3 = await run([
+			'ffmpeg',
+			'-v',
+			'error',
+			'-ss',
+			`${opts.startMs / 1000}`,
+			'-t',
+			`${opts.durationMs / 1000}`,
 			'-i',
-			'pipe:0', // take stdin as input
-			'-c:a',
-			'libopus',
-			'-compression_level',
-			'10', // use max compression for the output
+			input,
+			'-vn',
 			'-map_metadata',
-			'-1', // remove metadata
-			'-b:a',
-			'96k',
-			'-f',
-			'ogg',
-			'pipe:1', // output to stdout
-		]);
-		child.once('error', rej);
-		const pipe = pipeline(stream, child.stdin, err => {
-			if (err) rej(err);
-		});
-		const duration = new Promise<number>((res2, rej2) => {
-			let totalTime = -1;
-			child.stderr.once('error', rej2);
-			child.on('exit', () => {
-				res2(totalTime);
-			});
-
-			child.stderr.on('data', (b: Buffer) => {
-				// ffmpeg writes the usual output into stderr
-				if (b.toString().includes('pipe:0: Invalid data found when processing input')) {
-					rej(
-						new TypeError(
-							`invalid data found in stream\n\n${b
-								.toString()
-								.split('\n')
-								.slice(-2)
-								.join('\n')}`,
-						),
-					);
-					pipe.destroy();
-					return;
-				}
-				const matches = /time=(\d\d):(\d\d):(\d\d).(\d\d)/.exec(b.toString());
-				// this might not be a chunk that includes the time so just skip it
-				if (!matches) return;
-				// overwrite time with new one
-				totalTime =
-					(parseInt(matches[1], 10) * 3_600_000 + parseInt(matches[2], 10)) * 60_000 +
-					parseInt(matches[3], 10) * 1_000 +
-					parseInt(matches[4], 10);
-			});
-		});
-
-		child.stdout.once('readable', () => res({ stream: child.stdout, duration }));
-	});
-}
-convertToOGG.supportedFormats = ['aac', 'ac3', 'flac', 'mp3', 'ogg', 'opus', 'wav', 'wma'];
-
-function normalizeAudio(stream: Readable): Promise<Readable> {
-	return new Promise((res, rej) => {
-		const child = spawn('ffmpeg', [
-			'-i',
-			'pipe:0', // take stdin as input
+			'-1',
 			'-c:a',
-			'libopus',
-			'-filter:a',
-			'loudnorm=I=-14:LRA=7:tp=-2',
+			'libmp3lame',
+			'-b:a',
+			`${kbps}k`,
 			'-f',
-			'ogg',
+			'mp3',
 			'pipe:1',
 		]);
-		child.once('error', rej);
-		const pipe = pipeline(stream, child.stdin, err => {
-			if (err) rej(err);
-		});
-		child.stderr.on('data', (b: Buffer) => {
-			// ffmpeg writes the usual output into stderr
-			if (b.toString().includes('pipe:0: Invalid data found when processing input')) {
-				rej(
-					new TypeError(
-						`invalid data found in stream\n\n${b
-							.toString()
-							.split('\n')
-							.slice(-2)
-							.join('\n')}`,
-					),
-				);
-				pipe.destroy();
-			}
-		});
-		child.stdout.once('readable', () => res(child.stdout));
-	});
+		if (mp3.byteLength <= opts.maxBytes) return mp3;
+	}
+	throw new Error(`clip does not fit into ${opts.maxBytes} bytes`);
 }
-
-/**
- * Converts [pcm_s16le, 48kH, 2 ac] to [pcm_s16le, 16kH, 1ac]
- *
- * @param stream
- */
-function convertPcmTo16khPCM(stream: Readable): Promise<Readable> {
-	return new Promise((res, rej) => {
-		const child = spawn('ffmpeg', [
-			'-f',
-			's16le',
-			'-ar',
-			'48000',
-			'-ac',
-			'2',
-			'-i',
-			'pipe:0',
-			'-acodec',
-			'pcm_s16le',
-			'-ac',
-			'1',
-			'-ar',
-			'16000',
-			'-f',
-			's16le',
-			'pipe:1',
-		]);
-		child.once('error', rej);
-		const pipe = pipeline(stream, child.stdin, err => {
-			if (err) throw err;
-		});
-		child.stderr.on('data', (b: Buffer) => {
-			// ffmpeg writes the usual output into stderr
-			if (b.toString().includes('pipe:0: Invalid data found when processing input')) {
-				rej(
-					new TypeError(
-						`invalid data found in stream\n\n${b
-							.toString()
-							.split('\n')
-							.slice(-2)
-							.join('\n')}`,
-					),
-				);
-				pipe.destroy();
-			}
-		});
-		child.stdout.once('readable', () => res(child.stdout));
-	});
-}
-
-async function getDuration(stream: Readable): Promise<{ duration: number }> {
-	return new Promise((res, rej) => {
-		const child = spawn('ffmpeg', [
-			'-f',
-			'ogg',
-			'-i',
-			'pipe:0',
-			'-f',
-			'null',
-			'pipe:1', // output nothing to stdout
-		]);
-		child.once('error', rej);
-		const pipe = pipeline(stream, child.stdin, err => {
-			if (err) rej(err);
-		});
-		let totalTime = -1;
-		child.stderr.once('error', rej);
-		child.on('exit', () => {
-			res({ duration: totalTime });
-		});
-
-		child.stderr.on('data', (b: Buffer) => {
-			// ffmpeg writes the usual output into stderr
-			if (b.toString().includes('pipe:0: Invalid data found when processing input')) {
-				rej(
-					new TypeError(
-						`invalid data found in stream\n\n${b
-							.toString()
-							.split('\n')
-							.slice(-2)
-							.join('\n')}`,
-					),
-				);
-				pipe.destroy();
-				return;
-			}
-			const matches = /time=(\d\d):(\d\d):(\d\d).(\d\d)/.exec(b.toString());
-			// this might not be a chunk that includes the time so just skip it
-			if (!matches) return;
-			// overwrite time with new one
-			totalTime =
-				(parseInt(matches[1], 10) * 3_600_000 + parseInt(matches[2], 10)) * 60_000 +
-				parseInt(matches[3], 10) * 1_000 +
-				parseInt(matches[4], 10);
-		});
-	});
-}
-
-export = { normalizeAudio, convertToOGG, convertPcmTo16khPCM, HotWordEngine, HotWords, getDuration };
