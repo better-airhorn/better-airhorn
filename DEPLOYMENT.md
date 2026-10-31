@@ -84,7 +84,8 @@ Expect around 30 minutes of downtime, most of it spent copying sounds.
    - `ADMIN_IDS` only if the admins differ from the built-in owner ids (see `.env.example`)
    - `LOG_LEVEL=info`
    - `DATA_ROOT` / `BACKUP_ROOT` if they differ from the defaults
-   - `BOTLISTS_DBL_SECRET` stays; it is the `Authorization` value top.gg sends.
+   - `TOPGG_WEBHOOK_SECRET`, the `whs_` signing secret top.gg shows for the vote webhook (see step 5).
+   - `BOTLISTS_DBL_SECRET` stays for legacy top.gg webhooks that send it as `Authorization`.
    - `BOTLISTS_TOPGG` stays; voicenode uses it to post the server count to top.gg.
 
 ### 1. Full backups (stack still running)
@@ -187,8 +188,11 @@ Then the external routes:
   Discord Developer Portal. slashbackend no longer publishes host port 1212; if the reverse proxy reached it through
   that port, point it at `slashbackend:8080` on `nexternal` (or add `ports: ["127.0.0.1:1212:8080"]`).
 - **top.gg votes**: the voteserver (`voteserver:7777`) is gone. Route the vote path to `slashbackend:8080`
-  `POST /votes/topgg` in the reverse proxy, then on top.gg (bot page → Edit → Webhooks) set the webhook URL to
-  `https://<domain>/votes/topgg`, keep the Authorization value equal to `BOTLISTS_DBL_SECRET`, and press "Test".
+  `POST /votes/topgg` in the reverse proxy, then set the webhook URL in the top.gg dashboard to
+  `https://<domain>/votes/topgg`. top.gg then shows a signing secret starting with `whs_`; put it in the env file
+  as `TOPGG_WEBHOOK_SECRET` and restart slashbackend. Legacy webhooks that send a shared `Authorization` value keep
+  working through `BOTLISTS_DBL_SECRET`. Accepted and rejected deliveries are logged by slashbackend; rejections
+  include top.gg's trace id.
 - **uptime-proxy**: no longer publishes host port 7778; it is on `nexternal` like slashbackend. Update the proxy
   route and the external uptime monitor if they used the port. Monitors are now `postgres`, `voicenode`,
   `slashbackend`.

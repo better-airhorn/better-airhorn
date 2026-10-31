@@ -28,8 +28,8 @@ export const env = {
 	token: required('DISCORD_TOKEN'),
 	voicenodeUrl: (process.env.VOICENODE_URL || 'http://voicenode:8888').replace(/\/$/, ''),
 	voicenodeKey: required('VOICENODE_ACCESS_KEY'),
-	/** top.gg webhook secret; the vote endpoint answers 503 while it is unset */
-	topggSecret: process.env.BOTLISTS_DBL_SECRET ?? '',
+	/** top.gg webhook secrets: v1 is the `whs_` signing secret, v0 the legacy Authorization value */
+	topgg: { v1: process.env.TOPGG_WEBHOOK_SECRET ?? '', v0: process.env.BOTLISTS_DBL_SECRET ?? '' },
 	port: Number(process.env.PORT || 8080),
 	devGuildIds: list(process.env.DEV_GUILD_IDS),
 	adminIds: list(process.env.ADMIN_IDS ?? '196214245770133504,329651188641431574'),

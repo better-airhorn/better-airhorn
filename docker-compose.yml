@@ -22,7 +22,8 @@ services:
       DISCORD_TOKEN: ${DISCORD_TOKEN}
       VOICENODE_URL: http://voicenode:8888
       VOICENODE_ACCESS_KEY: ${VOICENODE_ACCESS_KEY}
-      BOTLISTS_DBL_SECRET: ${BOTLISTS_DBL_SECRET}
+      TOPGG_WEBHOOK_SECRET: ${TOPGG_WEBHOOK_SECRET:-}
+      BOTLISTS_DBL_SECRET: ${BOTLISTS_DBL_SECRET:-}
       # unset uses the built-in owner ids; an empty value means no admins
       ADMIN_IDS:
       LOG_LEVEL: ${LOG_LEVEL:-info}

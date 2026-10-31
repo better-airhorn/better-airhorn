@@ -6,7 +6,7 @@ import { db, recordVote } from './db';
 import { env, voice } from './env';
 import { handleComponent, handleModal } from './interactions';
 import { replyError } from './respond';
-import { safeEqual } from './util';
+import { checkTopggVote } from './topgg';
 
 const log = createLogger('slashbackend');
 
@@ -42,17 +42,14 @@ creator.on('warn', warning => log.warn(String(warning)));
 creator.on('debug', message => log.debug(message));
 
 async function topggVote(req: Request): Promise<Response> {
-	if (!env.topggSecret) return new Response('vote webhook is not configured', { status: 503 });
-	if (!safeEqual(req.headers.get('authorization') ?? '', env.topggSecret)) {
-		return new Response('unauthorized', { status: 401 });
+	// the v1 signature covers the body exactly as sent, so it is read as text before parsing
+	const check = checkTopggVote(req.headers, await req.text(), env.topgg);
+	if (!check.ok) {
+		log.warn(`top.gg webhook rejected with ${check.status} (trace ${req.headers.get('x-topgg-trace') ?? 'none'})`);
+		return new Response(null, { status: check.status });
 	}
-	const body = (await req.json().catch(() => null)) as { user?: unknown; type?: unknown } | null;
-	const user = typeof body?.user === 'string' && /^\d{15,21}$/.test(body.user) ? body.user : null;
-	if (!user || (body?.type !== 'upvote' && body?.type !== 'test')) {
-		return new Response('bad request', { status: 400 });
-	}
-	await recordVote(user);
-	log.info(`top.gg ${body.type} from ${user}`);
+	if (check.isVote) await recordVote(check.user);
+	log.info(`top.gg ${check.event} from ${check.user}`);
 	return new Response(null, { status: 204 });
 }
 
@@ -73,7 +70,9 @@ const server = Bun.serve({
 	},
 });
 log.info(`listening on :${server.port}`);
-if (!env.topggSecret) log.warn('BOTLISTS_DBL_SECRET is not set; /votes/topgg rejects every request');
+if (!env.topgg.v1 && !env.topgg.v0) {
+	log.warn('neither TOPGG_WEBHOOK_SECRET nor BOTLISTS_DBL_SECRET is set; /votes/topgg rejects every request');
+}
 
 creator.syncCommands({ deleteCommands: true }).then(
 	() =>
