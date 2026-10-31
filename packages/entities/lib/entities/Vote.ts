@@ -1,6 +1,7 @@
-import { BaseEntity, Column, CreateDateColumn, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { BaseEntity, Column, CreateDateColumn, Entity, Index, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity('blvotes')
+@Index('IDX_blvotes_user_createdAt', ['user', 'createdAt'])
 export class BotListVote extends BaseEntity {
 	@PrimaryGeneratedColumn()
 	public id!: number;

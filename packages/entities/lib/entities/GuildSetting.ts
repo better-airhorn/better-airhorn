@@ -5,7 +5,8 @@ export class GuildSetting extends BaseEntity {
 	@PrimaryColumn()
 	public guild!: string;
 
-	@Column({ length: 5 })
+	/** unused, kept so existing rows stay valid */
+	@Column({ length: 5, default: '' })
 	public prefix!: string;
 
 	@Column({ default: false })
@@ -14,11 +15,11 @@ export class GuildSetting extends BaseEntity {
 	@Column({ default: true })
 	public sendMessageAfterPlay!: boolean;
 
-	public constructor(values?: { guild: string; prefix: string }) {
-		super();
-		if (values) {
-			this.prefix = values.prefix;
-			this.guild = values.guild;
-		}
+	/** play members' entrance sounds when they join a voice channel */
+	@Column({ default: true })
+	public entranceSounds!: boolean;
+
+	public static async for(guild: string): Promise<GuildSetting> {
+		return (await GuildSetting.findOneBy({ guild })) ?? GuildSetting.create({ guild });
 	}
 }
