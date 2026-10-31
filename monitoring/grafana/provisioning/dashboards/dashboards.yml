@@ -1,0 +1,11 @@
+apiVersion: 1
+
+providers:
+  - name: better-airhorn
+    type: file
+    # the JSON files are the source of truth; edits in the UI can't be saved
+    allowUiUpdates: false
+    disableDeletion: true
+    updateIntervalSeconds: 30
+    options:
+      path: /etc/grafana/dashboards

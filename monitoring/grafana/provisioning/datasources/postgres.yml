@@ -1,0 +1,19 @@
+apiVersion: 1
+
+datasources:
+  - name: Better Airhorn
+    # the dashboard JSON refers to this uid
+    uid: better-airhorn-pg
+    type: grafana-postgresql-datasource
+    url: postgres:5432
+    user: grafana_ro
+    isDefault: true
+    editable: false
+    jsonData:
+      database: postgres
+      sslmode: disable
+      postgresVersion: 1700
+      maxOpenConns: 4
+      maxIdleConns: 2
+    secureJsonData:
+      password: $GRAFANA_DB_PASSWORD

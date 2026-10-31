@@ -1,6 +1,7 @@
-import { BaseEntity, Column, CreateDateColumn, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { BaseEntity, Column, CreateDateColumn, Entity, Index, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity('usages')
+@Index('IDX_usages_createdAt', ['createdAt'])
 export class Usage extends BaseEntity {
 	@PrimaryGeneratedColumn()
 	public id!: number;

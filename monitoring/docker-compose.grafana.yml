@@ -1,0 +1,34 @@
+# Grafana service to merge into the production stack (docker-compose.yml), next to metabase.
+# Paths are relative to the stack's compose file: copy monitoring/grafana next to it. See monitoring/README.md.
+
+services:
+  grafana:
+    image: grafana/grafana:13.2.5
+    ports:
+      - '127.0.0.1:3389:3000'
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:?set GRAFANA_ADMIN_PASSWORD in the env file}
+      # password of the grafana_ro database role, read by provisioning/datasources/postgres.yml
+      GRAFANA_DB_PASSWORD: ${GRAFANA_DB_PASSWORD:?set GRAFANA_DB_PASSWORD in the env file}
+      GF_AUTH_ANONYMOUS_ENABLED: 'false'
+      GF_USERS_ALLOW_SIGN_UP: 'false'
+      GF_AUTH_DISABLE_LOGIN_FORM: 'false'
+      GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /etc/grafana/dashboards/better-airhorn.json
+      GF_ANALYTICS_REPORTING_ENABLED: 'false'
+      GF_ANALYTICS_CHECK_FOR_UPDATES: 'false'
+      GF_ANALYTICS_CHECK_FOR_PLUGIN_UPDATES: 'false'
+      GF_NEWS_NEWS_FEED_ENABLED: 'false'
+      # no plugin downloads on startup; the Postgres data source is built in
+      GF_PLUGINS_PREINSTALL_DISABLED: 'true'
+    volumes:
+      - ./monitoring/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources:ro
+      - ./monitoring/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./monitoring/grafana/dashboards:/etc/grafana/dashboards:ro
+    # no data volume: data source and dashboard are provisioned on every start, and the
+    # admin password is taken from the env file whenever the container is recreated
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - databases
+    restart: always

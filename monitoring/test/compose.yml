@@ -1,0 +1,30 @@
+# Local test stack: an empty Postgres 17 and the production Grafana service.
+# Usage is in monitoring/README.md ("Testing locally").
+name: airhorn-monitoring-test
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_PASSWORD: test
+    ports:
+      - '127.0.0.1:55432:5432'
+    networks:
+      - databases
+    healthcheck:
+      test: ['CMD', 'pg_isready', '-U', 'postgres']
+      interval: 2s
+      timeout: 5s
+      retries: 15
+
+  grafana:
+    extends:
+      file: ../docker-compose.grafana.yml
+      service: grafana
+    volumes: !override
+      - ../grafana/provisioning/datasources:/etc/grafana/provisioning/datasources:ro
+      - ../grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ../grafana/dashboards:/etc/grafana/dashboards:ro
+
+networks:
+  databases:

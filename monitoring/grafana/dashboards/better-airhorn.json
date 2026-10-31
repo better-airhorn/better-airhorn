@@ -1,0 +1,814 @@
+{
+	"uid": "better-airhorn",
+	"title": "Better Airhorn",
+	"tags": ["better-airhorn"],
+	"timezone": "utc",
+	"editable": false,
+	"graphTooltip": 1,
+	"schemaVersion": 41,
+	"version": 1,
+	"refresh": "5m",
+	"time": {
+		"from": "now-30d",
+		"to": "now"
+	},
+	"timepicker": {},
+	"templating": {
+		"list": []
+	},
+	"annotations": {
+		"list": []
+	},
+	"panels": [
+		{
+			"type": "row",
+			"title": "Overview",
+			"collapsed": false,
+			"gridPos": {
+				"x": 0,
+				"y": 0,
+				"w": 24,
+				"h": 1
+			},
+			"panels": [],
+			"id": 1
+		},
+		{
+			"type": "stat",
+			"title": "Overview",
+			"datasource": {
+				"type": "grafana-postgresql-datasource",
+				"uid": "better-airhorn-pg"
+			},
+			"gridPos": {
+				"x": 0,
+				"y": 1,
+				"w": 24,
+				"h": 4
+			},
+			"targets": [
+				{
+					"refId": "A",
+					"datasource": {
+						"type": "grafana-postgresql-datasource",
+						"uid": "better-airhorn-pg"
+					},
+					"editorMode": "code",
+					"rawQuery": true,
+					"format": "table",
+					"rawSql": "SELECT\n  (SELECT count(DISTINCT \"user\") FROM usages WHERE \"createdAt\" > x.now - interval '24 hours') AS \"Users, 24 h\",\n  (SELECT count(DISTINCT \"user\") FROM usages WHERE \"createdAt\" > x.now - interval '30 days') AS \"Users, 30 days\",\n  (SELECT count(*) FROM usages WHERE \"createdAt\" > x.now - interval '24 hours') AS \"Commands, 24 h\",\n  (SELECT round(count(*)::numeric / nullif(count(DISTINCT \"user\"), 0), 2)\n     FROM usages WHERE \"createdAt\" > x.now - interval '48 hours') AS \"Commands per user, 48 h\",\n  (SELECT count(DISTINCT guild) FROM usages WHERE \"createdAt\" > x.now - interval '7 days') AS \"Servers, 7 days\",\n  (SELECT count(*) FROM blvotes WHERE list = 0 AND \"createdAt\" > x.now - interval '30 days') AS \"top.gg votes, 30 days\"\nFROM (SELECT (now() AT TIME ZONE 'UTC') AS now) x"
+				}
+			],
+			"description": "Users and servers that ran a slash command (usages). Plays from panels, buttons and entrance sounds are in the Plays row.",
+			"fieldConfig": {
+				"defaults": {
+					"color": {
+						"mode": "fixed",
+						"fixedColor": "text"
+					}
+				},
+				"overrides": []
+			},
+			"options": {
+				"reduceOptions": {
+					"calcs": ["lastNotNull"],
+					"fields": "",
+					"values": false
+				},
+				"colorMode": "none",
+				"graphMode": "none",
+				"textMode": "value_and_name",
+				"orientation": "vertical",
+				"justifyMode": "center"
+			},
+			"id": 2
+		},
+		{
+			"type": "row",
+			"title": "Activity",
+			"collapsed": false,
+			"gridPos": {
+				"x": 0,
+				"y": 5,
+				"w": 24,
+				"h": 1
+			},
+			"panels": [],
+			"id": 3
+		},
+		{
+			"type": "timeseries",
+			"title": "Daily active users and commands",
+			"datasource": {
+				"type": "grafana-postgresql-datasource",
+				"uid": "better-airhorn-pg"
+			},
+			"gridPos": {
+				"x": 0,
+				"y": 6,
+				"w": 12,
+				"h": 8
+			},
+			"targets": [
+				{
+					"refId": "A",
+					"datasource": {
+						"type": "grafana-postgresql-datasource",
+						"uid": "better-airhorn-pg"
+					},
+					"editorMode": "code",
+					"rawQuery": true,
+					"format": "time_series",
+					"rawSql": "SELECT $__timeGroupAlias(\"createdAt\", 1d, 0), count(*) AS \"commands\", count(DISTINCT \"user\") AS \"active users\"\nFROM usages\nWHERE $__timeFilter(\"createdAt\")\nGROUP BY 1\nORDER BY 1"
+				}
+			],
+			"description": "Slash commands per UTC day, and the people who ran them.",
+			"fieldConfig": {
+				"defaults": {
+					"custom": {
+						"drawStyle": "line",
+						"lineWidth": 2,
+						"fillOpacity": 10
+					},
+					"min": 0,
+					"decimals": 0
+				},
+				"overrides": []
+			},
+			"options": {
+				"legend": {
+					"displayMode": "list",
+					"placement": "bottom"
+				},
+				"tooltip": {
+					"mode": "multi"
+				}
+			},
+			"id": 4
+		},
+		{
+			"type": "timeseries",
+			"title": "Commands per day",
+			"datasource": {
+				"type": "grafana-postgresql-datasource",
+				"uid": "better-airhorn-pg"
+			},
+			"gridPos": {
+				"x": 12,
+				"y": 6,
+				"w": 12,
+				"h": 8
+			},
+			"targets": [
+				{
+					"refId": "A",
+					"datasource": {
+						"type": "grafana-postgresql-datasource",
+						"uid": "better-airhorn-pg"
+					},
+					"editorMode": "code",
+					"rawQuery": true,
+					"format": "time_series",
+					"rawSql": "SELECT $__timeGroupAlias(\"createdAt\", 1d, 0), command AS metric, count(*) AS value\nFROM usages\nWHERE $__timeFilter(\"createdAt\")\nGROUP BY 1, 2\nORDER BY 1"
+				}
+			],
+			"description": "Slash commands per UTC day, by top-level command name.",
+			"fieldConfig": {
+				"defaults": {
+					"custom": {
+						"drawStyle": "bars",
+						"fillOpacity": 80,
+						"lineWidth": 1,
+						"stacking": {
+							"mode": "normal",
+							"group": "A"
+						}
+					},
+					"min": 0,
+					"decimals": 0
+				},
+				"overrides": []
+			},
+			"options": {
+				"legend": {
+					"displayMode": "list",
+					"placement": "bottom"
+				},
+				"tooltip": {
+					"mode": "multi",
+					"sort": "desc"
+				}
+			},
+			"id": 5
+		},
+		{
+			"type": "timeseries",
+			"title": "New uploads per day",
+			"datasource": {
+				"type": "grafana-postgresql-datasource",
+				"uid": "better-airhorn-pg"
+			},
+			"gridPos": {
+				"x": 0,
+				"y": 14,
+				"w": 8,
+				"h": 8
+			},
+			"targets": [
+				{
+					"refId": "A",
+					"datasource": {
+						"type": "grafana-postgresql-datasource",
+						"uid": "better-airhorn-pg"
+					},
+					"editorMode": "code",
+					"rawQuery": true,
+					"format": "time_series",
+					"rawSql": "SELECT $__timeGroupAlias(\"createdAt\", 1d, 0), count(*) AS \"uploads\", count(DISTINCT \"user\") AS \"uploaders\"\nFROM sound_commands\nWHERE $__timeFilter(\"createdAt\")\nGROUP BY 1\nORDER BY 1"
+				}
+			],
+			"description": "Sounds that still exist, by upload day. Deleted sounds are gone from this count.",
+			"fieldConfig": {
+				"defaults": {
+					"custom": {
+						"drawStyle": "bars",
+						"fillOpacity": 80,
+						"lineWidth": 1,
+						"stacking": {
+							"mode": "none",
+							"group": "A"
+						}
+					},
+					"min": 0,
+					"decimals": 0
+				},
+				"overrides": []
+			},
+			"options": {
+				"legend": {
+					"displayMode": "list",
+					"placement": "bottom"
+				},
+				"tooltip": {
+					"mode": "multi",
+					"sort": "desc"
+				}
+			},
+			"id": 6
+		},
+		{
+			"type": "timeseries",
+			"title": "Likes per day",
+			"datasource": {
+				"type": "grafana-postgresql-datasource",
+				"uid": "better-airhorn-pg"
+			},
+			"gridPos": {
+				"x": 8,
+				"y": 14,
+				"w": 8,
+				"h": 8
+			},
+			"targets": [
+				{
+					"refId": "A",
+					"datasource": {
+						"type": "grafana-postgresql-datasource",
+						"uid": "better-airhorn-pg"
+					},
+					"editorMode": "code",
+					"rawQuery": true,
+					"format": "time_series",
+					"rawSql": "SELECT $__timeGroupAlias(\"createdAt\", 1d, 0), count(*) AS \"likes\"\nFROM likes\nWHERE $__timeFilter(\"createdAt\")\nGROUP BY 1\nORDER BY 1"
+				}
+			],
+			"fieldConfig": {
+				"defaults": {
+					"custom": {
+						"drawStyle": "bars",
+						"fillOpacity": 80,
+						"lineWidth": 1,
+						"stacking": {
+							"mode": "none",
+							"group": "A"
+						}
+					},
+					"min": 0,
+					"decimals": 0
+				},
+				"overrides": []
+			},
+			"options": {
+				"legend": {
+					"displayMode": "list",
+					"placement": "bottom"
+				},
+				"tooltip": {
+					"mode": "multi",
+					"sort": "desc"
+				}
+			},
+			"id": 7
+		},
+		{
+			"type": "timeseries",
+			"title": "top.gg votes per day",
+			"datasource": {
+				"type": "grafana-postgresql-datasource",
+				"uid": "better-airhorn-pg"
+			},
+			"gridPos": {
+				"x": 16,
+				"y": 14,
+				"w": 8,
+				"h": 8
+			},
+			"targets": [
+				{
+					"refId": "A",
+					"datasource": {
+						"type": "grafana-postgresql-datasource",
+						"uid": "better-airhorn-pg"
+					},
+					"editorMode": "code",
+					"rawQuery": true,
+					"format": "time_series",
+					"rawSql": "SELECT $__timeGroupAlias(\"createdAt\", 1d, 0), count(*) AS \"votes\"\nFROM blvotes\nWHERE list = 0 AND $__timeFilter(\"createdAt\")\nGROUP BY 1\nORDER BY 1"
+				}
+			],
+			"description": "Votes received through the top.gg webhook. None arrived from March to October 2026 while the webhook was broken.",
+			"fieldConfig": {
+				"defaults": {
+					"custom": {
+						"drawStyle": "bars",
+						"fillOpacity": 80,
+						"lineWidth": 1,
+						"stacking": {
+							"mode": "none",
+							"group": "A"
+						}
+					},
+					"min": 0,
+					"decimals": 0
+				},
+				"overrides": []
+			},
+			"options": {
+				"legend": {
+					"displayMode": "list",
+					"placement": "bottom"
+				},
+				"tooltip": {
+					"mode": "multi",
+					"sort": "desc"
+				}
+			},
+			"id": 8
+		},
+		{
+			"type": "table",
+			"title": "Most active users, 48 h",
+			"datasource": {
+				"type": "grafana-postgresql-datasource",
+				"uid": "better-airhorn-pg"
+			},
+			"gridPos": {
+				"x": 0,
+				"y": 22,
+				"w": 8,
+				"h": 7
+			},
+			"targets": [
+				{
+					"refId": "A",
+					"datasource": {
+						"type": "grafana-postgresql-datasource",
+						"uid": "better-airhorn-pg"
+					},
+					"editorMode": "code",
+					"rawQuery": true,
+					"format": "table",
+					"rawSql": "SELECT \"user\" AS \"User ID\", count(*) AS \"Commands\"\nFROM usages\nWHERE \"createdAt\" > (now() AT TIME ZONE 'UTC') - interval '48 hours'\nGROUP BY 1\nORDER BY 2 DESC\nLIMIT 5"
+				}
+			],
+			"options": {
+				"showHeader": true,
+				"cellHeight": "sm"
+			},
+			"fieldConfig": {
+				"defaults": {},
+				"overrides": []
+			},
+			"id": 9
+		},
+		{
+			"type": "table",
+			"title": "Features (v5.0)",
+			"datasource": {
+				"type": "grafana-postgresql-datasource",
+				"uid": "better-airhorn-pg"
+			},
+			"gridPos": {
+				"x": 8,
+				"y": 22,
+				"w": 8,
+				"h": 7
+			},
+			"targets": [
+				{
+					"refId": "A",
+					"datasource": {
+						"type": "grafana-postgresql-datasource",
+						"uid": "better-airhorn-pg"
+					},
+					"editorMode": "code",
+					"rawQuery": true,
+					"format": "table",
+					"rawSql": "SELECT 'Soundboard panels' AS \"Feature\", count(DISTINCT guild) AS \"Servers\", count(*) AS \"Items\" FROM soundboard_panels\nUNION ALL\nSELECT 'Entrance sounds', count(DISTINCT guild), count(*) FROM entrance_sounds\nUNION ALL\nSELECT f.feature, f.servers, NULL FROM (\n  SELECT count(*) FILTER (WHERE \"leaveAfterPlay\") AS leave,\n         count(*) FILTER (WHERE NOT \"sendMessageAfterPlay\") AS silent,\n         count(*) FILTER (WHERE NOT \"entranceSounds\") AS no_entrance\n  FROM guild_settings\n) g CROSS JOIN LATERAL (VALUES\n  ('Leave after play', g.leave),\n  ('No message after play', g.silent),\n  ('Entrance sounds turned off', g.no_entrance)\n) f(feature, servers)"
+				}
+			],
+			"description": "Servers using each setting. Items is the number of panels or entrance sounds.",
+			"options": {
+				"showHeader": true,
+				"cellHeight": "sm"
+			},
+			"fieldConfig": {
+				"defaults": {},
+				"overrides": []
+			},
+			"id": 10
+		},
+		{
+			"type": "table",
+			"title": "House rules (v5.1)",
+			"datasource": {
+				"type": "grafana-postgresql-datasource",
+				"uid": "better-airhorn-pg"
+			},
+			"gridPos": {
+				"x": 16,
+				"y": 22,
+				"w": 8,
+				"h": 7
+			},
+			"targets": [
+				{
+					"refId": "A",
+					"datasource": {
+						"type": "grafana-postgresql-datasource",
+						"uid": "better-airhorn-pg"
+					},
+					"editorMode": "code",
+					"rawQuery": true,
+					"format": "table",
+					"rawSql": "SELECT f.feature AS \"Rule\", f.servers AS \"Servers\", NULL::bigint AS \"Items\" FROM (\n  SELECT count(*) FILTER (WHERE \"playRole\" IS NOT NULL) AS play_role,\n         count(*) FILTER (WHERE \"quietStart\" IS NOT NULL AND \"quietEnd\" IS NOT NULL AND \"quietStart\" <> \"quietEnd\") AS quiet,\n         count(*) FILTER (WHERE \"serverSoundsOnly\") AS own_sounds,\n         count(*) FILTER (WHERE \"maxSoundSeconds\" IS NOT NULL) AS max_length\n  FROM guild_settings\n) g CROSS JOIN LATERAL (VALUES\n  ('Play role', g.play_role),\n  ('Quiet hours', g.quiet),\n  ('Server sounds only', g.own_sounds),\n  ('Max sound length', g.max_length)\n) f(feature, servers)\nUNION ALL\nSELECT 'Blocked sounds', count(DISTINCT guild), count(*) FROM blocked_sounds\nUNION ALL\nSELECT 'Entrance sounds: ' || kind, count(DISTINCT guild), count(*) FROM entrance_sounds GROUP BY kind"
+				}
+			],
+			"description": "Needs the v5.1 migration (house-rule columns, blocked_sounds, entrance kinds); shows an error until it has run.",
+			"options": {
+				"showHeader": true,
+				"cellHeight": "sm"
+			},
+			"fieldConfig": {
+				"defaults": {},
+				"overrides": []
+			},
+			"id": 11
+		},
+		{
+			"type": "row",
+			"title": "Plays (v5.1 plays table; earlier days come from /play and /random in usages)",
+			"collapsed": false,
+			"gridPos": {
+				"x": 0,
+				"y": 29,
+				"w": 24,
+				"h": 1
+			},
+			"panels": [],
+			"id": 12
+		},
+		{
+			"type": "stat",
+			"title": "Plays, 24 h",
+			"datasource": {
+				"type": "grafana-postgresql-datasource",
+				"uid": "better-airhorn-pg"
+			},
+			"gridPos": {
+				"x": 0,
+				"y": 30,
+				"w": 4,
+				"h": 8
+			},
+			"targets": [
+				{
+					"refId": "A",
+					"datasource": {
+						"type": "grafana-postgresql-datasource",
+						"uid": "better-airhorn-pg"
+					},
+					"editorMode": "code",
+					"rawQuery": true,
+					"format": "table",
+					"rawSql": "WITH since AS (SELECT coalesce((SELECT \"createdAt\" FROM plays ORDER BY id LIMIT 1), 'infinity') AS first_play),\nrecent AS (\n  SELECT \"user\" FROM plays WHERE \"createdAt\" > (now() AT TIME ZONE 'UTC') - interval '24 hours'\n  UNION ALL\n  SELECT u.\"user\" FROM usages u, since\n  WHERE u.command IN ('play', 'random') AND u.\"createdAt\" > (now() AT TIME ZONE 'UTC') - interval '24 hours' AND u.\"createdAt\" < since.first_play\n)\nSELECT count(*) AS \"Plays\", count(DISTINCT \"user\") AS \"Players\" FROM recent"
+				}
+			],
+			"description": "Started playbacks from every source (commands, panels, buttons, entrance sounds) and the people who started them.",
+			"fieldConfig": {
+				"defaults": {
+					"color": {
+						"mode": "fixed",
+						"fixedColor": "text"
+					}
+				},
+				"overrides": []
+			},
+			"options": {
+				"reduceOptions": {
+					"calcs": ["lastNotNull"],
+					"fields": "",
+					"values": false
+				},
+				"colorMode": "none",
+				"graphMode": "none",
+				"textMode": "value_and_name",
+				"orientation": "vertical",
+				"justifyMode": "center"
+			},
+			"id": 13
+		},
+		{
+			"type": "timeseries",
+			"title": "Plays per day by source",
+			"datasource": {
+				"type": "grafana-postgresql-datasource",
+				"uid": "better-airhorn-pg"
+			},
+			"gridPos": {
+				"x": 4,
+				"y": 30,
+				"w": 20,
+				"h": 8
+			},
+			"targets": [
+				{
+					"refId": "A",
+					"datasource": {
+						"type": "grafana-postgresql-datasource",
+						"uid": "better-airhorn-pg"
+					},
+					"editorMode": "code",
+					"rawQuery": true,
+					"format": "time_series",
+					"rawSql": "WITH since AS (SELECT coalesce((SELECT \"createdAt\" FROM plays ORDER BY id LIMIT 1), 'infinity') AS first_play)\nSELECT $__timeGroupAlias(t, 1d, 0), metric, count(*) AS value\nFROM (\n  SELECT \"createdAt\" AS t, source AS metric FROM plays WHERE $__timeFilter(\"createdAt\")\n  UNION ALL\n  SELECT u.\"createdAt\", 'command (from usages)' FROM usages u, since\n  WHERE u.command IN ('play', 'random') AND u.\"createdAt\" < since.first_play AND $__timeFilter(u.\"createdAt\")\n) p\nGROUP BY 1, 2\nORDER BY 1"
+				}
+			],
+			"description": "Days before the first row in plays count /play and /random commands instead (commands only, no panel or entrance plays).",
+			"fieldConfig": {
+				"defaults": {
+					"custom": {
+						"drawStyle": "bars",
+						"fillOpacity": 80,
+						"lineWidth": 1,
+						"stacking": {
+							"mode": "normal",
+							"group": "A"
+						}
+					},
+					"min": 0,
+					"decimals": 0
+				},
+				"overrides": []
+			},
+			"options": {
+				"legend": {
+					"displayMode": "list",
+					"placement": "bottom"
+				},
+				"tooltip": {
+					"mode": "multi",
+					"sort": "desc"
+				}
+			},
+			"id": 14
+		},
+		{
+			"type": "table",
+			"title": "Top sounds, 7 days",
+			"datasource": {
+				"type": "grafana-postgresql-datasource",
+				"uid": "better-airhorn-pg"
+			},
+			"gridPos": {
+				"x": 0,
+				"y": 38,
+				"w": 12,
+				"h": 10
+			},
+			"targets": [
+				{
+					"refId": "A",
+					"datasource": {
+						"type": "grafana-postgresql-datasource",
+						"uid": "better-airhorn-pg"
+					},
+					"editorMode": "code",
+					"rawQuery": true,
+					"format": "table",
+					"rawSql": "WITH since AS (SELECT coalesce((SELECT \"createdAt\" FROM plays ORDER BY id LIMIT 1), 'infinity') AS first_play),\nplay_args AS (\n  SELECT CASE WHEN u.args IS JSON OBJECT THEN u.args::jsonb ->> 'sound' END AS v\n  FROM usages u, since\n  WHERE u.command = 'play' AND u.\"createdAt\" > (now() AT TIME ZONE 'UTC') - interval '7 days' AND u.\"createdAt\" < since.first_play\n),\nrecent AS (\n  SELECT \"soundId\" AS id FROM plays WHERE \"createdAt\" > (now() AT TIME ZONE 'UTC') - interval '7 days'\n  UNION ALL\n  -- /play logs the sound id since v5 and the sound name before\n  SELECT CASE WHEN v ~ '^[0-9]{1,9}$' THEN v::int END FROM play_args\n  UNION ALL\n  SELECT s.id FROM play_args a JOIN sound_commands s ON s.name = a.v WHERE a.v !~ '^[0-9]{1,9}$'\n)\nSELECT s.name AS \"Sound\", count(*) AS \"Plays, 7 days\", s.uses AS \"Plays, all time\"\nFROM recent r JOIN sound_commands s ON s.id = r.id\nGROUP BY s.id\nORDER BY 2 DESC, 3 DESC\nLIMIT 15"
+				}
+			],
+			"options": {
+				"showHeader": true,
+				"cellHeight": "sm"
+			},
+			"fieldConfig": {
+				"defaults": {},
+				"overrides": []
+			},
+			"id": 15
+		},
+		{
+			"type": "table",
+			"title": "Top servers by plays, 7 days",
+			"datasource": {
+				"type": "grafana-postgresql-datasource",
+				"uid": "better-airhorn-pg"
+			},
+			"gridPos": {
+				"x": 12,
+				"y": 38,
+				"w": 12,
+				"h": 10
+			},
+			"targets": [
+				{
+					"refId": "A",
+					"datasource": {
+						"type": "grafana-postgresql-datasource",
+						"uid": "better-airhorn-pg"
+					},
+					"editorMode": "code",
+					"rawQuery": true,
+					"format": "table",
+					"rawSql": "WITH since AS (SELECT coalesce((SELECT \"createdAt\" FROM plays ORDER BY id LIMIT 1), 'infinity') AS first_play),\nrecent AS (\n  SELECT guild, \"user\" FROM plays WHERE \"createdAt\" > (now() AT TIME ZONE 'UTC') - interval '7 days'\n  UNION ALL\n  SELECT u.guild, u.\"user\" FROM usages u, since\n  WHERE u.command IN ('play', 'random') AND u.guild IS NOT NULL\n    AND u.\"createdAt\" > (now() AT TIME ZONE 'UTC') - interval '7 days' AND u.\"createdAt\" < since.first_play\n)\nSELECT guild AS \"Server ID\", count(*) AS \"Plays\", count(DISTINCT \"user\") AS \"Players\"\nFROM recent\nGROUP BY guild\nORDER BY 2 DESC\nLIMIT 15"
+				}
+			],
+			"description": "Server names aren't stored; look an ID up in Discord.",
+			"options": {
+				"showHeader": true,
+				"cellHeight": "sm"
+			},
+			"fieldConfig": {
+				"defaults": {},
+				"overrides": []
+			},
+			"id": 16
+		},
+		{
+			"type": "row",
+			"title": "Sounds and storage",
+			"collapsed": false,
+			"gridPos": {
+				"x": 0,
+				"y": 48,
+				"w": 24,
+				"h": 1
+			},
+			"panels": [],
+			"id": 17
+		},
+		{
+			"type": "stat",
+			"title": "Sounds",
+			"datasource": {
+				"type": "grafana-postgresql-datasource",
+				"uid": "better-airhorn-pg"
+			},
+			"gridPos": {
+				"x": 0,
+				"y": 49,
+				"w": 12,
+				"h": 8
+			},
+			"targets": [
+				{
+					"refId": "A",
+					"datasource": {
+						"type": "grafana-postgresql-datasource",
+						"uid": "better-airhorn-pg"
+					},
+					"editorMode": "code",
+					"rawQuery": true,
+					"format": "table",
+					"rawSql": "SELECT count(*) AS \"Sounds\",\n       sum(size) AS \"Storage\",\n       count(*) FILTER (WHERE uses = 0 AND \"createdAt\" < (now() AT TIME ZONE 'UTC') - interval '1 year') AS \"Never played, over a year old\",\n       coalesce(sum(size) FILTER (WHERE uses = 0 AND \"createdAt\" < (now() AT TIME ZONE 'UTC') - interval '1 year'), 0) AS \"Their storage\",\n       count(*) FILTER (WHERE duration < 2) AS \"Without duration\"\nFROM sound_commands"
+				}
+			],
+			"description": "Counted from sound_commands rows, so stray files on disk without a row are not included. Without duration: the length couldn't be read at upload (v4 sounds).",
+			"fieldConfig": {
+				"defaults": {
+					"color": {
+						"mode": "fixed",
+						"fixedColor": "text"
+					}
+				},
+				"overrides": [
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "Storage"
+						},
+						"properties": [
+							{
+								"id": "unit",
+								"value": "bytes"
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "Their storage"
+						},
+						"properties": [
+							{
+								"id": "unit",
+								"value": "bytes"
+							}
+						]
+					}
+				]
+			},
+			"options": {
+				"reduceOptions": {
+					"calcs": ["lastNotNull"],
+					"fields": "",
+					"values": false
+				},
+				"colorMode": "none",
+				"graphMode": "none",
+				"textMode": "value_and_name",
+				"orientation": "vertical",
+				"justifyMode": "center"
+			},
+			"id": 18
+		},
+		{
+			"type": "timeseries",
+			"title": "Sounds by week last played",
+			"datasource": {
+				"type": "grafana-postgresql-datasource",
+				"uid": "better-airhorn-pg"
+			},
+			"gridPos": {
+				"x": 12,
+				"y": 49,
+				"w": 12,
+				"h": 8
+			},
+			"targets": [
+				{
+					"refId": "A",
+					"datasource": {
+						"type": "grafana-postgresql-datasource",
+						"uid": "better-airhorn-pg"
+					},
+					"editorMode": "code",
+					"rawQuery": true,
+					"format": "time_series",
+					"rawSql": "SELECT $__timeGroupAlias(\"lastUsedAt\", 7d, 0), count(*) AS \"sounds\"\nFROM sound_commands\nWHERE $__timeFilter(\"lastUsedAt\")\nGROUP BY 1\nORDER BY 1"
+				}
+			],
+			"description": "How many sounds were last played in each week. A new upload counts as played.",
+			"timeFrom": "30w",
+			"fieldConfig": {
+				"defaults": {
+					"custom": {
+						"drawStyle": "bars",
+						"fillOpacity": 80,
+						"lineWidth": 1,
+						"stacking": {
+							"mode": "none",
+							"group": "A"
+						}
+					},
+					"min": 0,
+					"decimals": 0
+				},
+				"overrides": []
+			},
+			"options": {
+				"legend": {
+					"displayMode": "list",
+					"placement": "bottom"
+				},
+				"tooltip": {
+					"mode": "multi",
+					"sort": "desc"
+				}
+			},
+			"id": 19
+		}
+	]
+}

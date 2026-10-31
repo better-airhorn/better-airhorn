@@ -2,7 +2,7 @@ import type { MigrationInterface, QueryRunner } from 'typeorm';
 
 /**
  * v5.1: the plays log, leave and Go Live sounds next to entrance sounds, house rules on guild settings, and
- * per-server blocked sounds. New tables are empty and every added column has a constant default or is
+ * per-server blocked sounds, plus date indexes for statistics queries. New tables are empty and every added column has a constant default or is
  * nullable, so no existing table is rewritten.
  */
 export class PlaysAndHouseRules1793491200000 implements MigrationInterface {
@@ -22,6 +22,9 @@ export class PlaysAndHouseRules1793491200000 implements MigrationInterface {
 		await q.query(`CREATE INDEX "IDX_plays_soundId" ON "plays" ("soundId")`);
 		await q.query(`CREATE INDEX "IDX_plays_user_createdAt" ON "plays" ("user", "createdAt")`);
 		await q.query(`CREATE INDEX "IDX_plays_guild_createdAt" ON "plays" ("guild", "createdAt")`);
+		await q.query(`CREATE INDEX "IDX_plays_createdAt" ON "plays" ("createdAt")`);
+		// ~130K rows: a plain index build takes well under a second and keeps date-range stats queries off full scans
+		await q.query(`CREATE INDEX "IDX_usages_createdAt" ON "usages" ("createdAt")`);
 
 		await q.query(`CREATE TABLE "blocked_sounds" (
 			"guild" character varying NOT NULL,
@@ -65,6 +68,7 @@ export class PlaysAndHouseRules1793491200000 implements MigrationInterface {
 		);
 		await q.query(`ALTER TABLE "entrance_sounds" DROP COLUMN "kind"`);
 
+		await q.query(`DROP INDEX "IDX_usages_createdAt"`);
 		await q.query(`DROP TABLE "blocked_sounds"`);
 		await q.query(`DROP TABLE "plays"`);
 	}

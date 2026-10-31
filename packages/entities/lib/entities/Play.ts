@@ -16,6 +16,7 @@ export type PlaySource = 'command' | 'panel' | 'button' | 'quiz' | 'entrance' | 
 
 /** one row per playback that actually started; written by voicenode */
 @Entity('plays')
+@Index('IDX_plays_createdAt', ['createdAt'])
 @Index('IDX_plays_guild_createdAt', ['guild', 'createdAt'])
 @Index('IDX_plays_user_createdAt', ['user', 'createdAt'])
 export class Play extends BaseEntity {
