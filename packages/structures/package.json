@@ -1,28 +1,5 @@
 {
 	"name": "@better-airhorn/structures",
-	"description": "shared structures used by better-airhorn",
-	"version": "0.0.1",
-	"bugs": "https://github.com/better-airhorn/better-airhorn/issues",
-	"contributors": [
-		"Clemens E (https://github.com/Clemens-E)"
-	],
-	"directories": {
-		"lib": "lib"
-	},
-	"files": [
-		"/dist"
-	],
-	"homepage": "https://github.com/better-airhorn/better-airhorn/tree/master/apps/structures#readme",
-	"license": "PolyForm Perimeter License 1.0.0 (https://polyformproject.org/licenses/perimeter/1.0.0/)",
-	"main": "dist/index.js",
-	"publishConfig": {
-		"access": "public",
-		"registry": "https://npm.pkg.github.com/"
-	},
-	"repository": "github:better-airhorn/better-airhorn",
-	"scripts": {
-		"build": "tsc",
-		"test": "exit 0"
-	},
-	"typings": "dist/index.d.ts"
+	"private": true,
+	"main": "lib/index.ts"
 }

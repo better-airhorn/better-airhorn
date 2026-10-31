@@ -1,33 +1,10 @@
 {
 	"name": "@better-airhorn/entities",
-	"description": "shared entities used by better-airhorn",
-	"version": "0.0.4",
-	"bugs": "https://github.com/better-airhorn/better-airhorn/issues",
-	"contributors": [
-		"Clemens E (https://github.com/Clemens-E)"
-	],
+	"private": true,
+	"main": "lib/index.ts",
 	"dependencies": {
-		"body-parser": "^1.20.2",
-		"tslib": "^2.6.0",
-		"typeorm": "^0.3.17"
-	},
-	"directories": {
-		"lib": "lib"
-	},
-	"files": [
-		"/dist"
-	],
-	"homepage": "https://github.com/better-airhorn/better-airhorn/tree/master/packages/entities#readme",
-	"license": "PolyForm Perimeter License 1.0.0 (https://polyformproject.org/licenses/perimeter/1.0.0/)",
-	"main": "dist/index.js",
-	"publishConfig": {
-		"access": "public",
-		"registry": "https://npm.pkg.github.com/"
-	},
-	"repository": "github:better-airhorn/better-airhorn",
-	"scripts": {
-		"test": "exit 0",
-		"build": "tsc"
-	},
-	"typings": "dist/index.d.ts"
+		"pg": "^8.23.1",
+		"reflect-metadata": "^0.2.2",
+		"typeorm": "^1.1.2"
+	}
 }

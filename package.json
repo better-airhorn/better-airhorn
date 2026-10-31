@@ -1,116 +1,33 @@
 {
-	"$schema": "http://json.schemastore.org/package",
+	"$schema": "https://json.schemastore.org/package",
 	"name": "better-airhorn",
-	"description": "A feature-rich discord bot to use as soundboard, including a web dashboard",
-	"version": "3.0.0-dev",
-	"bugs": "https://github.com/better-airhorn/better-airhorn/issues",
-	"commitlint": {
-		"extends": [
-			"@commitlint/config-angular"
-		],
-		"rules": {
-			"type-enum": [
-				2,
-				"always",
-				[
-					"chore",
-					"build",
-					"ci",
-					"feat",
-					"fix",
-					"perf",
-					"refactor",
-					"revert",
-					"style",
-					"test",
-					"types",
-					"wip",
-					"config"
-				]
-			]
-		}
-	},
+	"description": "A Discord soundboard bot: upload your own sounds, play them in voice, discover and like other people's sounds",
+	"version": "5.0.0",
+	"private": true,
+	"license": "SEE LICENSE IN ./LICENSE.md",
+	"repository": "github:better-airhorn/better-airhorn",
 	"contributors": [
 		"Clemens E (https://github.com/Clemens-E)",
 		"Quentin W (https://github.com/qwright10)"
 	],
-	"dependencies": {},
-	"devDependencies": {
-		"@commitlint/cli": "^17.6.6",
-		"@commitlint/config-angular": "^11.0.0",
-		"@typescript-eslint/eslint-plugin": "^2.22.0",
-		"@typescript-eslint/parser": "^2.22.0",
-		"eslint": "^6.8.0",
-		"eslint-config-marine": "^6.0.0",
-		"eslint-config-prettier": "^6.10.0",
-		"eslint-plugin-import": "^2.20.1",
-		"eslint-plugin-prettier": "^3.1.2",
-		"husky": "^4.2.3",
-		"lint-staged": "^10.0.8",
-		"prettier": "^1.19.1",
-		"typescript": "^4.5.4"
-	},
-	"engines": {
-		"node": ">=14.0.0"
-	},
-	"eslintConfig": {
-		"extends": "marine/prettier/node",
-		"rules": {
-			"@typescript-eslint/no-unnecessary-type-assertion": "off",
-			"@typescript-eslint/no-extraneous-class": "off",
-			"@typescript-eslint/no-floating-promises": 1,
-			"@typescript-eslint/no-use-before-define": [
-				"error",
-				{
-					"functions": false
-				}
-			],
-			"no-useless-constructor": "off"
-		}
-	},
-	"homepage": "https://github.com/better-airhorn/better-airhorn#readme",
-	"husky": {
-		"hooks": {
-			"pre-commit": "lint-staged",
-			"commit-msg": "commitlint -E HUSKY_GIT_PARAMS"
-		}
-	},
-	"keywords": [
-		"better-airhorn",
-		"discord",
-		"soundboard",
-		"web-dashboard"
-	],
-	"license": "SEE LICENSE IN ./LICENSE.md",
-	"lint-staged": {
-		"*.ts": [
-			"eslint --fix",
-			"prettier --write --use-tabs --single-quote --print-width 120 --trailing-comma all --end-of-line lf"
-		],
-		"*.{json,yml,yaml}": [
-			"prettier --write --use-tabs --single-quote --print-width 120 --trailing-comma all --end-of-line lf"
-		]
-	},
-	"private": true,
-	"publishConfig": {
-		"registry": "https://npm.pkg.github.com/"
-	},
-	"repository": "github:better-airhorn/better-airhorn",
-	"scripts": {
-		"build:bot": "sh ./scripts/buildprod.sh",
-		"lint": "eslint . --ext .ts",
-		"lint:fix": "eslint . --ext .ts --fix",
-		"prettier": "prettier --write --use-tabs --single-quote --print-width 120 --trailing-comma all --end-of-line lf",
-		"test": "yarn workspaces run test",
-		"build": "yarn workspaces run build"
-	},
 	"workspaces": [
-		"packages/raccoon",
-		"packages/audio",
-		"packages/entities",
-		"packages/structures",
-		"apps/voteserver",
-		"apps/voicenode",
-		"apps/slashbackend"
-	]
+		"apps/*",
+		"packages/*"
+	],
+	"scripts": {
+		"lint": "eslint .",
+		"format": "prettier --write .",
+		"format:check": "prettier --check .",
+		"typecheck": "tsc --noEmit",
+		"test": "bun test"
+	},
+	"devDependencies": {
+		"@eslint/js": "^9.39.0",
+		"@types/bun": "^1.3.5",
+		"eslint": "^9.39.0",
+		"eslint-config-prettier": "^10.1.8",
+		"prettier": "^3.6.2",
+		"typescript": "^5.9.3",
+		"typescript-eslint": "^8.46.2"
+	}
 }

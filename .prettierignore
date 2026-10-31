@@ -1,0 +1,8 @@
+assets/
+bun.lock
+node_modules/
+coverage/
+# legal texts keep their published formatting
+LICENSE.md
+Privacy Policy.md
+Terms of Service.md
