@@ -23,12 +23,19 @@ export enum VoiceErrorCode {
 	/** the guild's native soundboard has no free slots */
 	SOUNDBOARD_FULL = 'SOUNDBOARD_FULL',
 	INVALID_INPUT = 'INVALID_INPUT',
+	/** one of the server's house rules stops this sound; `rule` says which */
+	HOUSE_RULE = 'HOUSE_RULE',
 	INTERNAL = 'INTERNAL',
 }
+
+/** mirrors `HouseRule` in packages/entities/lib/house-rules.ts */
+export type HouseRuleName = 'blocked' | 'play_role' | 'quiet_hours' | 'server_sounds_only' | 'too_long';
 
 export interface VoiceError {
 	code: VoiceErrorCode;
 	message: string;
+	/** set with HOUSE_RULE; `message` is then the member-facing sentence from `houseRuleMessage` */
+	rule?: HouseRuleName;
 }
 
 // ---- playback -------------------------------------------------------------
@@ -49,6 +56,8 @@ export const terminalStates: readonly TransactionState[] = ['finished', 'skipped
 export interface EnqueueRequest {
 	userId: string;
 	soundId: number;
+	/** how the playback was started; stored in the plays log when it starts. Mirrors `PlaySource` in entities. */
+	source: 'command' | 'panel' | 'button' | 'quiz';
 }
 
 /** 201 */
