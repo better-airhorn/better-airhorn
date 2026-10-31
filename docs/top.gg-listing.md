@@ -19,7 +19,13 @@ anything else; irrelevant tags put the bot in front of people who will not invit
 
 ## Long description
 
-top.gg renders HTML, so the styled version in [top.gg-listing.html](./top.gg-listing.html) (feature cards, a comparison table and buttons, inline styles only) is the one to paste. The Markdown below is the plain fallback with the same content.
+top.gg renders HTML and `<style>`. Paste the whole of [top.gg-listing.paste.html](./top.gg-listing.paste.html): it is a one-line copy of [top.gg-listing.html](./top.gg-listing.html), because top.gg runs the description through Markdown, which turns line breaks inside HTML into extra breaks. Edit the readable file, then regenerate the one-line copy with:
+
+```sh
+bun -e "const t = await Bun.file('docs/top.gg-listing.html').text(); await Bun.write('docs/top.gg-listing.paste.html', t.replace(/\s*\n\s*/g, ' ').replace(/>\s+</g, '><').trim() + '\n')"
+```
+
+The Markdown below is the plain fallback with the same content.
 
 ```markdown
 # Better Airhorn: a soundboard with no slot limit
