@@ -6,10 +6,9 @@ Production runs as one Docker Compose stack (`docker-compose.yml`) on a single h
 | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `slashbackend` | Discord interactions (`POST /interactions`), top.gg votes (`POST /votes/topgg`), `GET /health`, port 8080. Runs database migrations on startup. On the `nexternal` network for the reverse proxy. |
 | `voicenode`    | Discord gateway and voice, stores sounds as `<id>.ogg` in `/data/sounds`, port 8888.                                                                                                              |
-| `postgres`     | PostgreSQL 17 with the `postgres` (bot) and `metabase` databases.                                                                                                                                 |
-| `pgbackups`    | Dumps both databases every 5 hours to `${BACKUP_ROOT}/postgres`; see [Backups](#backups) for retention.                                                                                           |
+| `postgres`     | PostgreSQL 17 with the bot database `postgres`.                                                                                                                                                   |
+| `pgbackups`    | Dumps the bot database every 5 hours to `${BACKUP_ROOT}/postgres`; see [Backups](#backups) for retention.                                                                                         |
 | `uptime-proxy` | Health monitors for postgres, voicenode and slashbackend.                                                                                                                                         |
-| `metabase`     | Statistics on `127.0.0.1:3388` (reach it through an SSH tunnel or the reverse proxy).                                                                                                             |
 | `grafana`      | Statistics dashboard on `127.0.0.1:3389`, provisioned from `monitoring/` on every start; reads the bot database as the read-only `grafana_ro` role. See [Grafana](#grafana).                      |
 | `soundsbackup` | Mirrors the sound files to `${BACKUP_ROOT}/sounds` every 24 hours; see [Sounds mirror](#sounds-mirror).                                                                                           |
 
@@ -19,7 +18,6 @@ Host folders:
 | ------------------------- | ------------------------------ | --------------------------------- |
 | `${DATA_ROOT}/pgsql17`    | PostgreSQL 17 data             | set by the postgres image         |
 | `${DATA_ROOT}/sounds`     | sound files, `<id>.ogg`        | `1000:1000` (the `bun` user)      |
-| `${DATA_ROOT}/stats`      | metabase                       | unchanged                         |
 | `${BACKUP_ROOT}/postgres` | pgbackups dumps                | `999:999` (postgres in pgbackups) |
 | `${BACKUP_ROOT}/sounds`   | sounds mirror (`soundsbackup`) | created by the container          |
 
@@ -34,10 +32,10 @@ docker compose --env-file ./env/better-airhorn.env up -d --build
 
 ## Backups
 
-| What                   | How                                           | Kept                                              |
-| ---------------------- | --------------------------------------------- | ------------------------------------------------- |
-| `postgres`, `metabase` | `pgbackups`, every 5 hours                    | 7 days of dumps, plus 4 weekly and 6 monthly ones |
-| sound files            | `soundsbackup`, daily `rsync --delete` mirror | a deleted sound leaves the mirror on the next run |
+| What        | How                                           | Kept                                              |
+| ----------- | --------------------------------------------- | ------------------------------------------------- |
+| `postgres`  | `pgbackups`, every 5 hours                    | 7 days of dumps, plus 4 weekly and 6 monthly ones |
+| sound files | `soundsbackup`, daily `rsync --delete` mirror | a deleted sound leaves the mirror on the next run |
 
 pgbackups (`BACKUP_KEEP_DAYS=7`, `BACKUP_KEEP_WEEKS=4`, `BACKUP_KEEP_MONTHS=6`) removes a monthly dump once it is
 188 days old, checked on every 5-hour run, so every dump is gone at most **189 days** after it was taken. The
@@ -84,7 +82,7 @@ http://localhost:3389, then log in as `admin` with `GRAFANA_ADMIN_PASSWORD`:
 ssh -N -L 3389:127.0.0.1:3389 <user>@<server>
 ```
 
-Anonymous access and sign-up are off. Metabase keeps running next to it on `127.0.0.1:3388`.
+Anonymous access and sign-up are off.
 
 ---
 
